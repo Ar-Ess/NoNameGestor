@@ -13,7 +13,10 @@ public: // Functions
 
 	~UnasignedMoneyRecipient() {}
 
-	void Start() override {}
+	void Start() override
+	{
+		money = 0.0f;
+	}
 
 	void Update() override {}
 

@@ -1,5 +1,4 @@
-#ifndef __FILTER_RECIPIENT_H__
-#define __FILTER_RECIPIENT_H__
+#pragma once
 
 #include "Recipient.h"
 #include "imgui/imgui_stdlib.h"
@@ -29,5 +28,3 @@ private: // Functions
 
 protected: // Variables
 };
-
-#endif // !__FILTER_RECIPIENT_H__

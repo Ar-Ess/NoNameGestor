@@ -12,7 +12,8 @@ private:
 	{
 		OPEN,
 		EDIT,
-		VIEW
+		VIEW,
+		ERROR
 	};
 
 	struct Editor
@@ -30,6 +31,8 @@ private:
 
 			Editor Number(double number)
 			{
+				if (access == Access::ERROR) return Editor(name, access);
+
 				std::fstream file;
 
 				file.open(name, std::ios::app | std::ios::ate);
@@ -45,6 +48,8 @@ private:
 
 			Editor Number(float number)
 			{
+				if (access == Access::ERROR) return Editor(name, access);
+
 				std::fstream file;
 
 				file.open(name, std::ios::app | std::ios::ate);
@@ -60,6 +65,8 @@ private:
 
 			Editor Number(int number)
 			{
+				if (access == Access::ERROR) return Editor(name, access);
+
 				std::fstream file;
 
 				file.open(name, std::ios::app | std::ios::ate);
@@ -75,6 +82,8 @@ private:
 
 			Editor String(std::string string)
 			{
+				if (access == Access::ERROR) return Editor(name, access);
+
 				std::fstream file;
 
 				file.open(name, std::ios::app | std::ios::ate);
@@ -107,6 +116,8 @@ private:
 
 			Editor AsInt(int& number)
 			{
+				if (access == Access::ERROR) return *editor;
+
 				std::fstream file;
 
 				file.open(name, std::ios::in);
@@ -150,6 +161,8 @@ private:
 
 			Editor AsFloat(float& number)
 			{
+				if (access == Access::ERROR) return *editor;
+
 				std::fstream file;
 
 				file.open(name, std::ios::in);
@@ -193,6 +206,8 @@ private:
 
 			Editor AsDouble(double& number)
 			{
+				if (access == Access::ERROR) return *editor;
+
 				std::fstream file;
 
 				file.open(name, std::ios::in);
@@ -236,6 +251,8 @@ private:
 
 			Editor AsString(std::string& string)
 			{
+				if (access == Access::ERROR) return *editor;
+
 				std::fstream file;
 
 				file.open(name, std::ios::in);
@@ -370,7 +387,7 @@ public:
 	{
 		name = InternalExtensionCheck(name);
 
-		assert(InternalExists(name));
+		if (!InternalExists(name)) return Editor(name, Access::ERROR);
 
 		return Editor(name, Access::EDIT);
 	}
@@ -379,16 +396,19 @@ public:
 	{
 		name = InternalExtensionCheck(name);
 
-		assert(InternalExists(name));
+		if (!InternalExists(name)) return Editor(name, Access::ERROR, jumpLines);
 
 		return Editor(name, Access::VIEW, jumpLines);
 	}
 
-	bool Exists(const char* name) const
+	bool Exists(const char* name, bool addExtension = true) const
 	{
-		std::string fileName = name;
-		fileName += extension;
-		name = fileName.c_str();
+		if (addExtension)
+		{
+			std::string fileName = name;
+			fileName += extension;
+			name = fileName.c_str();
+		}
 		std::fstream file;
 
 		// In mode (read)

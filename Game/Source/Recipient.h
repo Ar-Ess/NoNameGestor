@@ -9,7 +9,8 @@ enum class RecipientType
 	NO_RECIPIENT,
 	TOTAL_MONEY,
 	UNASIGNED_MONEY,
-	FILTER
+	FILTER,
+	LIMIT,
 };
 
 class Recipient
@@ -37,6 +38,7 @@ public: // Functions
 		switch (type)
 		{
 		case RecipientType::FILTER: return "FILTER";
+		case RecipientType::LIMIT: return "LIMIT";
 		}
 		return "NO RECIPIENT";
 	}

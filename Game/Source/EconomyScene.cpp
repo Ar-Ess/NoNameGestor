@@ -35,11 +35,12 @@ bool EconomyScene::Update()
 {
 	UpdateShortcuts();
 
-	if (ctrl && shft && d) demoWindow = !demoWindow;
-	if (ctrl && shft && p) preferencesWindow = !preferencesWindow;
+	if (ctrl &&  shft && d) demoWindow = !demoWindow;
+	if (ctrl &&  shft && p) preferencesWindow = !preferencesWindow;
 	if (ctrl && !shft && s) Save();
-	if (ctrl && shft && s) SaveAs();
+	if (ctrl &&  shft && s) SaveAs();
 	if (ctrl && !shft && l) Load();
+	if (ctrl && !shft && n) NewFile();
 
 	totalRecipient->Update();
 	float totalMoney = totalRecipient->GetMoney();
@@ -81,6 +82,16 @@ bool EconomyScene::CleanUp()
 	return true;
 }
 
+void EconomyScene::NewFile()
+{
+	openFileName = "New_File";
+	openFilePath.clear();
+
+	DeleteAllRecipients();
+
+	totalRecipient->SetMoney(0.0f);
+}
+
 void EconomyScene::SaveAs()
 {
 	if (!savingAs)
@@ -119,15 +130,17 @@ void EconomyScene::SaveAs()
 
 	savingAs = false;
 
+	openFilePath = path;
+
 	if (name.empty())
 		path += openFileName;
 	else
 	{
-		name.erase(name.end() - format, name.end());
-		path += name;
 		openFileName.clear();
 		openFileName.shrink_to_fit();
 		openFileName = name.c_str();
+		name.erase(name.end() - format, name.end());
+		path += name;
 	}
 
 	float total = totalRecipient->GetMoney();
@@ -143,6 +156,23 @@ void EconomyScene::SaveAs()
 			Write("name").String(r->GetName()).
 			Write("type").Number((int)r->GetType()).
 			Write("money").Number(r->GetMoney());
+
+		switch (r->GetType())
+		{
+		case RecipientType::FILTER: 
+			break;
+
+		case RecipientType::LIMIT:
+		{
+			LimitRecipient* lR = (LimitRecipient*)r;
+			file->EditFile(path.c_str()).
+				Write("limit").Number(lR->GetLimit());
+			break;
+		}
+
+		default: 
+			break;
+		}
 	}
 }
 
@@ -174,6 +204,23 @@ void EconomyScene::Save()
 			Write("name").String(r->GetName()).
 			Write("type").Number((int)r->GetType()).
 			Write("money").Number(r->GetMoney());
+
+		switch (r->GetType())
+		{
+		case RecipientType::FILTER:
+			break;
+
+		case RecipientType::LIMIT:
+		{
+			LimitRecipient* lR = (LimitRecipient*)r;
+			file->EditFile(savePath.c_str()).
+				Write("limit").Number(lR->GetLimit());
+			break;
+		}
+
+		default: 
+			break;
+		}
 	}
 }
 
@@ -194,7 +241,8 @@ void EconomyScene::Load()
 	if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
 	{
 		// action if OK
-		if (ImGuiFileDialog::Instance()->IsOk() == true)
+		// MIRANT DE CLICKAR OK AMB UN NOM QUE NO EXISTEIXI PERQUE NO FAGI RES, I EN CAS D'EXISTIR, CARREGUI
+		if (ImGuiFileDialog::Instance()->IsOk() == true && file->Exists(ImGuiFileDialog::Instance()->GetFilePathName().c_str(), false))
 		{
 			path = ImGuiFileDialog::Instance()->GetCurrentPath() + "\\";
 			name = ImGuiFileDialog::Instance()->GetCurrentFileName();
@@ -232,16 +280,28 @@ void EconomyScene::Load()
 
 	for (unsigned int i = 0; i < size; ++i)
 	{
+		int positionToRead = (i * 3) + 2;
 		int type = -1;
 		float money = 0;
 		std::string name;
+		float limit = 0;
 
-		file->ViewFile(path.c_str(), (i * 3) + 2).
+		file->ViewFile(path.c_str(), positionToRead).
 			Read("name").AsString(name).
 			Read("type").AsInt(type).
 			Read("money").AsFloat(money);
 
-		CreateRecipient((RecipientType)type, name.c_str(), money);
+		switch ((RecipientType)type)
+		{
+		case RecipientType::FILTER: break;
+		case RecipientType::LIMIT:
+			file->ViewFile(path.c_str(), positionToRead + 3).
+				Read("limit").AsFloat(limit);
+			break;
+		default: break;
+		}
+
+		CreateRecipient((RecipientType)type, name.c_str(), money, limit);
 	}
 
 	totalRecipient->SetMoney(total);
@@ -254,6 +314,11 @@ bool EconomyScene::DrawMenuBar()
 	{
 		if (ImGui::BeginMenu("File"))
 		{
+			if (ImGui::MenuItem("New File", "Ctrl + N"))
+				NewFile();
+
+			ImGui::Separator();
+
 			if (ImGui::MenuItem("Save", "Ctrl + S"))
 				Save();
 
@@ -285,6 +350,9 @@ bool EconomyScene::DrawMenuBar()
 		{
 			if (ImGui::MenuItem("Filter"))
 				CreateRecipient(RecipientType::FILTER);
+
+			if (ImGui::MenuItem("Limit "))
+				CreateRecipient(RecipientType::LIMIT);
 
 			ImGui::EndMenu();
 		}
@@ -332,8 +400,9 @@ bool EconomyScene::DrawPreferencesWindow(bool* open)
 	bool ret = true;
 	if (!(*open)) return ret;
 
-	if (ImGui::Begin("Preferences", open))
+	if (ImGui::Begin("Preferences", open, ImGuiWindowFlags_NoDocking))
 	{
+		ImGui::Checkbox("Show Recipient Type", &showRecipientType);
 		ImGui::End();
 	}
 
@@ -349,47 +418,78 @@ bool EconomyScene::DrawMainWindow(bool* open)
 	{
 		ImGui::Text(openFileName.c_str());
 		AddSeparator(1);
-		AddSpacing(3);
+		AddSpacing(2);
+
 		totalRecipient->Draw();
 
+		AddSpacing(2);
+
 		size_t size = recipients.size();
-		int i = 0;
-		for (Recipient* r : recipients)
+		for (suint i = 0; i < size; ++i)
 		{
+			Recipient* r = recipients[i];
 			bool reordered = false;
-			ImGui::PushID(i);
-			ImGui::PushItemWidth(200.0f);
-
-			ImGui::Text(r->GetTypeString()); ImGui::SameLine(); ImGui::InputText("##LabelName", r->GetString()); ImGui::PopItemWidth(); ImGui::SameLine();
-			if (ImGui::TreeNodeEx("[]", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding))
+			if (ImGui::BeginTable("##table", 2, ImGuiTableFlags_SizingStretchProp))
 			{
-				if (ImGui::BeginDragDropSource())
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+				ImGui::Text("  |");
+
+				ImGui::TableNextColumn();
+
+				ImGui::PushID(i);
+				ImGui::PushItemWidth(200.0f);
+
+				if (ImGui::Button("X"))
 				{
-					intptr_t id = r->GetId();
-					ImGui::SetDragDropPayload("Recipient", &id, sizeof(intptr_t));
-					ImGui::Text(r->GetName());
-					ImGui::EndDragDropSource();
+					DeleteRecipient(i);
+					ImGui::PopID();
+					ImGui::PopItemWidth();
+					ImGui::EndTable();
+					break;
 				}
-				if (ImGui::BeginDragDropTarget())
+				ImGui::SameLine();
+				if (showRecipientType)
+				{ 
+					ImGui::Text(r->GetTypeString()); 
+					ImGui::SameLine();
+				}
+				ImGui::InputText("##LabelName", r->GetString()); ImGui::PopItemWidth(); ImGui::SameLine();
+				if (ImGui::TreeNodeEx("[]", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding))
 				{
-					const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Recipient");
-					if (payload)
+					if (ImGui::BeginDragDropSource())
 					{
-						MoveRecipient(ReturnRecipientIndex(*((intptr_t*)payload->Data)), i);
-						reordered = true;
+						intptr_t id = r->GetId();
+						ImGui::SetDragDropPayload("Recipient", &id, sizeof(intptr_t));
+						ImGui::Text(r->GetName());
+						ImGui::EndDragDropSource();
 					}
-					ImGui::EndDragDropTarget();
+					if (ImGui::BeginDragDropTarget())
+					{
+						const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Recipient");
+						if (payload)
+						{
+							MoveRecipient(ReturnRecipientIndex(*((intptr_t*)payload->Data)), i);
+							reordered = true;
+						}
+						ImGui::EndDragDropTarget();
+					}
+
+					r->Draw();
+
+					ImGui::TreePop();
 				}
-
-				r->Draw();
-
-				ImGui::TreePop();
+				ImGui::PopID();
 			}
-			ImGui::PopID();
 
-			++i;
+			ImGui::EndTable();
+
+			AddSpacing(1);
+
 			if (reordered) break;
 		}
+
+		AddSpacing(1);
 
 		unasignedRecipient->Draw();
 
@@ -406,6 +506,8 @@ bool EconomyScene::DrawToolbarWindow(bool* open)
 
 	if (ImGui::Begin("Toolbar", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar))
 	{
+		if (ImGui::Button("FILTER")) CreateRecipient(RecipientType::FILTER);
+		if (ImGui::Button("LIMIT ")) CreateRecipient(RecipientType::LIMIT);
 		ImGui::End();
 	}
 
@@ -421,13 +523,15 @@ void EconomyScene::UpdateShortcuts()
 	p    = input->GetKey(SDL_SCANCODE_P) == KeyState::KEY_DOWN;
 	s    = input->GetKey(SDL_SCANCODE_S) == KeyState::KEY_DOWN;
 	l    = input->GetKey(SDL_SCANCODE_L) == KeyState::KEY_DOWN;
+	n    = input->GetKey(SDL_SCANCODE_N) == KeyState::KEY_DOWN;
 }
 
-void EconomyScene::CreateRecipient(RecipientType recipient, const char* name, float money)
+void EconomyScene::CreateRecipient(RecipientType recipient, const char* name, float money, float limit)
 {
 	switch (recipient)
 	{
-	case RecipientType::FILTER: recipients.push_back((Recipient*)(new FilterRecipient(name, money)));
+	case RecipientType::FILTER: recipients.push_back((Recipient*)(new FilterRecipient(name, money))); break;
+	case RecipientType::LIMIT: recipients.push_back((Recipient*)(new LimitRecipient(name, money, limit))); break;
 
 	default:
 		return;

@@ -152,6 +152,7 @@
     <ClInclude Include="Source\GuiManager.h" />
     <ClInclude Include="Source\GuiSlider.h" />
     <ClInclude Include="Source\GuiString.h" />
+    <ClInclude Include="Source\LimitRecipient.h" />
     <ClInclude Include="Source\Multibool.h" />
     <ClInclude Include="Source\RecipientHeader.h" />
     <ClInclude Include="Source\UnasignedMoneyRecipient.h" />
