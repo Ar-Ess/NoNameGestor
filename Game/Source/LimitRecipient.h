@@ -16,12 +16,13 @@ public: // Functions
 
 	void Draw() override
 	{
+		ImGui::PushID(id);
 		if (ImGui::BeginTable(name.c_str(), 1))
 		{
 			ImGui::TableNextRow();
 			ImGui::TableNextColumn();
 
-			ImGui::PushItemWidth(150.0f);
+			ImGui::PushItemWidth(150.f);
 			ImGui::DragFloat("##Drag", &money, 1.0f, 0.0f, limit, "%.2f EUR");
 			ImVec2 size = ImGui::GetItemRectSize();
 			size.y -= 15;
@@ -38,7 +39,11 @@ public: // Functions
 			ImGui::EndTable();
 		}
 
-		if (!editLimit) return;
+		if (!editLimit)
+		{
+			ImGui::PopID();
+			return;
+		}
 
 		ImGui::OpenPopup("Edit limit");
 		ImGui::SetNextWindowPos(ImVec2((ImGui::GetWindowSize().x / 2) - 70, (ImGui::GetWindowSize().y / 2) - 50));
@@ -53,6 +58,7 @@ public: // Functions
 			}
 			ImGui::EndPopup();
 		}
+		ImGui::PopID();
 	}
 
 	float GetLimit() const

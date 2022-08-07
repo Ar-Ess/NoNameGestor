@@ -3,6 +3,7 @@
 
 #include "imgui/imgui.h"
 #include <string>
+static float textFieldSize = 150.0f;
 
 enum class RecipientType
 {
@@ -61,6 +62,11 @@ public: // Functions
 	float GetMoney() const
 	{
 		return money;
+	}
+
+	float* GetMoneyPtr()
+	{
+		return &money;
 	}
 
 	void SetMoney(float money)

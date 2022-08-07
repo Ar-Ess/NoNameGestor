@@ -11,20 +11,54 @@ public: // Functions
 	{
 	}
 
-	void Draw() override
+	void Update() override
 	{
-		ImGui::Text(name.c_str()); ImGui::SameLine();
-		ImGui::Text(": %.2f EUR", money);
+		if (showFutureMoney && futureMoney > 0 && actualMoney < 0)
+		{
+			float debt = -actualMoney;
+			if (debt <= futureMoney)
+			{
+				futureMoney -= debt;
+				actualMoney = 0;
+			}
+			else
+			{
+				actualMoney += futureMoney;
+				futureMoney = 0;
+			}
+		}
 	}
 
-	void SetMoney(float money)
+	void Draw() override
+	{
+		if (!showFutureMoney)
+		{
+			ImGui::Text(name.c_str()); ImGui::SameLine();
+			ImGui::Text(": %.2f EUR", money);
+		}
+		else
+		{
+			ImGui::Text("Unasigned Actual Money"); ImGui::SameLine();
+			ImGui::Text(": %.2f EUR", actualMoney);
+			ImGui::Text("Unasigned Future Money"); ImGui::SameLine();
+			ImGui::Text(": %.2f EUR", futureMoney);
+		}
+	}
+
+	void SetMoney(float money, float actualMoney, float futureMoney, bool showFuture)
 	{
 		this->money = money;
+		this->actualMoney = actualMoney;
+		this->showFutureMoney = showFuture;
+		this->futureMoney = futureMoney;
 	}
 
 private: // Functions
 
-protected: // Variables
+private: // Variables
+	float futureMoney = 0.0f;
+	float actualMoney = 0.0f;
+	bool showFutureMoney = false;
 };
 
 #endif // !__UNASIGNED_MONEY_RECIPIENT_H__

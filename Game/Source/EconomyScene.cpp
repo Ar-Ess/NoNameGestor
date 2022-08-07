@@ -37,18 +37,20 @@ bool EconomyScene::Update()
 
 	totalRecipient->Update();
 	float totalMoney = totalRecipient->GetMoney();
+	float futureMoney = 0;
 
 	for (Recipient* r : recipients)
 	{
 		r->Update();
 		if (r->GetType() == RecipientType::FUTURE)
-			totalMoney += r->GetMoney();
+			futureMoney += r->GetMoney();
 		else
 			totalMoney -= r->GetMoney();
 	}
 
+	unasignedRecipient->SetMoney(totalMoney + futureMoney, totalMoney, futureMoney, showFutureUnasigned);
 	unasignedRecipient->Update();
-	unasignedRecipient->SetMoney(totalMoney);
+
 
 	return true;
 }
@@ -302,9 +304,11 @@ void EconomyScene::Load()
 		Read("total").AsFloat(total).
 		Read("size").AsInt(size);
 
+	int added = 0;
+
 	for (unsigned int i = 0; i < size; ++i)
 	{
-		int positionToRead = (i * 3) + 2;
+		int positionToRead = (i * 3) + 2 + added;
 		int type = -1;
 		float money = 0;
 		std::string name;
@@ -330,17 +334,37 @@ void EconomyScene::Load()
 
 			CreateRecipient((RecipientType)type, name.c_str(), money, limit);
 
+			added++;
+
 			break;
 		}
 
 		case RecipientType::FUTURE:
 		{
 			CreateRecipient((RecipientType)type, name.c_str(), money);
+			FutureRecipient* fR = (FutureRecipient*)recipients.back();
+			fR->ClearFutures();
+			
+			int fSize = 0;
+			int futurePositionToRead = positionToRead + 3;
 
-			//file->ViewFile(path.c_str(), positionToRead + 3).
-			//	Read("limit").AsFloat();
+			file->ViewFile(path.c_str(), futurePositionToRead).
+				Read("size").AsInt(fSize);
 
+			added++;
 
+			for (suint i = 0; i < fSize; ++i)
+			{
+				std::string fName;
+				float fMoney;
+				file->ViewFile(path.c_str(), (futurePositionToRead + 1) + (i * 2)).
+					Read("name").AsString(fName).
+					Read("money").AsFloat(fMoney);
+
+				fR->NewFuture(fName.c_str(), fMoney);
+
+				added += 2;
+			}
 
 			break;
 		}
@@ -447,7 +471,11 @@ bool EconomyScene::DrawPreferencesWindow(bool* open)
 
 	if (ImGui::Begin("Preferences", open, ImGuiWindowFlags_NoDocking))
 	{
-		ImGui::Checkbox("Show Recipient Type", &showRecipientType);
+		ImGui::Checkbox("Show Recipient Typology Name", &showRecipientType);
+		ImGui::Checkbox("Show Unasigned Future Money ", &showFutureUnasigned);
+		ImGui::PushItemWidth(textFieldSize);
+		ImGui::DragFloat("Text Fiend Size", &textFieldSize, 0.1f, 1.0f, 1000.0f, "%f pts");
+		ImGui::PopItemWidth();
 		ImGui::End();
 	}
 
@@ -473,6 +501,7 @@ bool EconomyScene::DrawMainWindow(bool* open)
 		for (suint i = 0; i < size; ++i)
 		{
 			Recipient* r = recipients[i];
+			ImGui::PushID((i / size) * size / r->GetId());
 			bool reordered = false;
 			if (ImGui::BeginTable("##table", 2, ImGuiTableFlags_SizingStretchProp))
 			{
@@ -482,15 +511,14 @@ bool EconomyScene::DrawMainWindow(bool* open)
 
 				ImGui::TableNextColumn();
 
-				ImGui::PushID(i);
-				ImGui::PushItemWidth(200.0f);
+				ImGui::PushItemWidth(textFieldSize);
 
 				if (ImGui::Button("X"))
 				{
 					DeleteRecipient(i);
-					ImGui::PopID();
 					ImGui::PopItemWidth();
 					ImGui::EndTable();
+					ImGui::PopID();
 					break;
 				}
 				ImGui::SameLine();
@@ -524,9 +552,9 @@ bool EconomyScene::DrawMainWindow(bool* open)
 
 					ImGui::TreePop();
 				}
-				ImGui::PopID();
 			}
 			ImGui::EndTable();
+			ImGui::PopID();
 
 			AddSpacing(0);
 
@@ -576,9 +604,8 @@ void EconomyScene::CreateRecipient(RecipientType recipient, const char* name, fl
 	switch (recipient)
 	{
 	case RecipientType::FILTER: recipients.push_back((Recipient*)(new FilterRecipient(name, money))); break;
-	case RecipientType::LIMIT: recipients.push_back((Recipient*)(new LimitRecipient(name, money, limit))); break;
-	case RecipientType::FUTURE: recipients.push_back((Recipient*)(new FutureRecipient(name, money))); break;
-	default:
-		return;
+	case RecipientType::LIMIT : recipients.push_back((Recipient*)(new  LimitRecipient(name, money, limit))); break;
+	case RecipientType::FUTURE: recipients.push_back((Recipient*)(new FutureRecipient(name, money, totalRecipient->GetMoneyPtr()))); break;
+	default: break;
 	}
 }
