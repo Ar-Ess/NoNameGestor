@@ -2,6 +2,7 @@
 
 #include "Recipient.h"
 #include "imgui/imgui_stdlib.h"
+#include "Rect.h"
 
 class LimitRecipient : public Recipient
 {
@@ -13,19 +14,29 @@ public: // Functions
 		this->tempLimit = limit;
 	}
 
-	virtual ~LimitRecipient() {}
-
-	void Start() override {}
-
-	void Update() override {}
-
 	void Draw() override
 	{
-		ImGui::PushItemWidth(150.0f);
-		ImGui::DragFloat("##Drag", &money, 1.0f, 0.0f, limit, "%.2f EUR");
-		ImGui::PopItemWidth(); ImGui::SameLine();
-		ImGui::Text(" / %.2f", limit); ImGui::SameLine();
-		if (ImGui::Button("Edit")) editLimit = true;
+		if (ImGui::BeginTable(name.c_str(), 1))
+		{
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+
+			ImGui::PushItemWidth(150.0f);
+			ImGui::DragFloat("##Drag", &money, 1.0f, 0.0f, limit, "%.2f EUR");
+			ImVec2 size = ImGui::GetItemRectSize();
+			size.y -= 15;
+			ImGui::PopItemWidth();
+
+			ImGui::SameLine();
+			ImGui::Text(" / %.2f", limit); ImGui::SameLine();
+			if (ImGui::Button("Edit")) editLimit = true;
+
+			ImGui::TableNextColumn();
+
+			ImGui::ProgressBar(money / limit, size, "");
+
+			ImGui::EndTable();
+		}
 
 		if (!editLimit) return;
 
@@ -48,6 +59,7 @@ public: // Functions
 	{
 		return limit;
 	}
+
 private: // Functions
 
 private: // Variables
@@ -55,5 +67,4 @@ private: // Variables
 	float limit = 1.0f;
 	float tempLimit = 0.0f;
 	bool editLimit = false;
-
 };

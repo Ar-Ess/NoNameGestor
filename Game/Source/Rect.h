@@ -44,10 +44,31 @@ public:
 		y = position.y;
 	}
 
+	void SetPosition(float x, float y)
+	{
+		this->x = x;
+		this->y = y;
+	}
+
 	void SetDimensions(Point dimension)
 	{
 		w = dimension.x;
 		h = dimension.y;
+	}
+
+	void SetDimensions(float w, float h)
+	{
+		this->w = w;
+		this->h = h;
+	}
+
+	// Top left = min, Bottom right = max
+	void SetRectMinMax(Point min, Point max)
+	{
+		x = min.x;
+		y = min.y;
+		w = max.x - min.x;
+		h = max.y - min.y;
 	}
 
 	Point GetPosition() const

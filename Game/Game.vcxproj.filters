@@ -252,6 +252,9 @@
     <ClInclude Include="Source\LimitRecipient.h">
       <Filter>Recipients</Filter>
     </ClInclude>
+    <ClInclude Include="Source\FutureRecipient.h">
+      <Filter>Recipients</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="External">

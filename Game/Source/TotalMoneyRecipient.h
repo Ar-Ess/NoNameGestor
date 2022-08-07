@@ -11,15 +11,6 @@ public: // Functions
 	{
 	}
 
-	~TotalMoneyRecipient() {}
-
-	void Start() override 
-	{
-		money = 0.0f;
-	}
-
-	void Update() override {}
-
 	void Draw() override
 	{
 		ImGui::Text(name.c_str()); ImGui::SameLine();

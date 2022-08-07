@@ -11,12 +11,6 @@ public: // Functions
 	{
 	}
 
-	virtual ~FilterRecipient() {}
-
-	void Start() override {}
-
-	void Update() override {}
-
 	void Draw() override
 	{
 		ImGui::PushItemWidth(150.0f);

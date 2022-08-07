@@ -35,6 +35,11 @@ bool Render::Start()
 {
 	LOG("render start");
 	// back background
+	//uint32 flags = SDL_RENDERER_ACCELERATED;
+	//flags |= SDL_RENDERER_PRESENTVSYNC;
+
+	//renderer = SDL_CreateRenderer(win->window, -1, flags);
+	//SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
 	LOG("Creating 3D Renderer context");
 	bool ret = true;
@@ -120,7 +125,6 @@ bool Render::Start()
 bool Render::PreUpdate(float dt)
 {
 	bool ret = true;
-	//SDL_RenderClear(renderer);
 	// Generate new frame
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplSDL2_NewFrame(win->window);
@@ -129,6 +133,8 @@ bool Render::PreUpdate(float dt)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 	glMatrixMode(GL_MODELVIEW);
+
+	SDL_RenderClear(renderer);
 
 	return ret;
 }

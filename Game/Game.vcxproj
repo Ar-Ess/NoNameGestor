@@ -145,6 +145,7 @@
     <ClInclude Include="Source\External\imgui\imstb_truetype.h" />
     <ClInclude Include="Source\FileManager.h" />
     <ClInclude Include="Source\FilterRecipient.h" />
+    <ClInclude Include="Source\FutureRecipient.h" />
     <ClInclude Include="Source\GuiButton.h" />
     <ClInclude Include="Source\GuiCheckBox.h" />
     <ClInclude Include="Source\GuiControl.h" />

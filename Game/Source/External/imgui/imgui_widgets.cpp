@@ -227,6 +227,33 @@ bool ImGui::Knob(const char* label, float* p_value, float v_min, float v_max, bo
     return value_changed;
 }
 
+bool ImGui::ProgressLine(const char* label, float value, const ImVec2& size, const ImU32& background, const ImU32& frontground)
+{
+    ImGuiWindow* window = GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+
+    ImGuiContext& g = *GImGui;
+    const ImGuiStyle& style = g.Style;
+    const ImGuiID id = window->GetID(label);
+
+    ImVec2 pos = window->DC.CursorPos;
+    ImVec2 s = size;
+    s.x -= style.FramePadding.x * 2;
+
+    const ImRect bb(pos, ImVec2(pos.x + s.x, pos.y + s.y));
+    ItemSize(bb, style.FramePadding.y);
+    if (!ItemAdd(bb, id))
+        return false;
+
+    const float circleStart = s.x * 0.7f;
+    const float circleEnd = s.x;
+    const float circleWidth = circleEnd - circleStart;
+
+    window->DrawList->AddRectFilled(bb.Min, ImVec2(pos.x + circleStart, bb.Max.y), background);
+    window->DrawList->AddRectFilled(bb.Min, ImVec2(pos.x + circleStart * value, bb.Max.y), frontground);
+}
+
 void ImGui::TextEx(const char* text, const char* text_end, ImGuiTextFlags flags)
 {
     ImGuiWindow* window = GetCurrentWindow();

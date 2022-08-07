@@ -31,6 +31,8 @@ public:
 	void SetViewPort(const SDL_Rect& rect);
 	void ResetViewPort();
 
+	void StackDrawRectangle(Rect rect, SDL_Color color = { 255, 255, 255, 255 }, Point size = { 1.0f, 1.0f }, bool anchored = true, bool fill = true);
+
 	// Drawing
 	bool DrawTexture(SDL_Texture* texture, Point position, Point size, bool anchored = false, Rect* section = nullptr, double angle = 0, SDL_RendererFlip flip = SDL_FLIP_NONE) const;
 	bool DrawRectangle(Rect rect, SDL_Color color = { 255, 255, 255, 255 }, Point size = {1.0f, 1.0f}, bool anchored = true, bool fill = true) const;

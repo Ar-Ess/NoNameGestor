@@ -2894,6 +2894,7 @@ namespace ImGui
 
     // Widgets
     IMGUI_API bool          Knob(const char* label, float* p_value, float v_min, float v_max, bool tooltip = true, bool active = true, float x_text_offset = 0, bool* reminder_bool = nullptr);
+    IMGUI_API bool          ProgressLine(const char* label, float value, const ImVec2& size, const ImU32& background, const ImU32& frontground);
     IMGUI_API void          TextEx(const char* text, const char* text_end = NULL, ImGuiTextFlags flags = 0);
     IMGUI_API bool          ButtonEx(const char* label, const ImVec2& size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
     IMGUI_API bool          CloseButton(ImGuiID id, const ImVec2& pos);

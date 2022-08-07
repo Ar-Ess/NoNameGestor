@@ -21,13 +21,6 @@ EconomyScene::~EconomyScene()
 
 bool EconomyScene::Start()
 {
-	totalRecipient->Start();
-
-	for (Recipient* r : recipients)
-		r->Start();
-
-	unasignedRecipient->Start();
-
 	return true;
 }
 
@@ -48,7 +41,10 @@ bool EconomyScene::Update()
 	for (Recipient* r : recipients)
 	{
 		r->Update();
-		totalMoney -= r->GetMoney();
+		if (r->GetType() == RecipientType::FUTURE)
+			totalMoney += r->GetMoney();
+		else
+			totalMoney -= r->GetMoney();
 	}
 
 	unasignedRecipient->Update();
@@ -169,6 +165,20 @@ void EconomyScene::SaveAs()
 				Write("limit").Number(lR->GetLimit());
 			break;
 		}
+		case RecipientType::FUTURE:
+		{
+			FutureRecipient* fR = (FutureRecipient*)r;
+			int size = fR->GetSize();
+			file->EditFile(path.c_str()).
+				Write("size").Number(size);
+
+			for (int i = 0; i < size; ++i)
+			{
+				file->EditFile(path.c_str())
+					.Write("name").String(fR->GetFutureName(i))
+					.Write("money").Number(fR->GetFutureMoney(i));
+			}
+		}
 
 		default: 
 			break;
@@ -216,6 +226,20 @@ void EconomyScene::Save()
 			file->EditFile(savePath.c_str()).
 				Write("limit").Number(lR->GetLimit());
 			break;
+		}
+		case RecipientType::FUTURE:
+		{
+			FutureRecipient* fR = (FutureRecipient*)r;
+			int size = fR->GetSize();
+			file->EditFile(savePath.c_str()).
+				Write("size").Number(size);
+
+			for (int i = 0; i < size; ++i)
+			{
+				file->EditFile(savePath.c_str())
+					.Write("name").String(fR->GetFutureName(i))
+					.Write("money").Number(fR->GetFutureMoney(i));
+			}
 		}
 
 		default: 
@@ -284,7 +308,6 @@ void EconomyScene::Load()
 		int type = -1;
 		float money = 0;
 		std::string name;
-		float limit = 0;
 
 		file->ViewFile(path.c_str(), positionToRead).
 			Read("name").AsString(name).
@@ -293,15 +316,37 @@ void EconomyScene::Load()
 
 		switch ((RecipientType)type)
 		{
-		case RecipientType::FILTER: break;
-		case RecipientType::LIMIT:
-			file->ViewFile(path.c_str(), positionToRead + 3).
-				Read("limit").AsFloat(limit);
+		case RecipientType::FILTER:
+		{
+			CreateRecipient((RecipientType)type, name.c_str(), money);
 			break;
-		default: break;
 		}
 
-		CreateRecipient((RecipientType)type, name.c_str(), money, limit);
+		case RecipientType::LIMIT:
+		{
+			float limit = 1;
+			file->ViewFile(path.c_str(), positionToRead + 3).
+				Read("limit").AsFloat(limit);
+
+			CreateRecipient((RecipientType)type, name.c_str(), money, limit);
+
+			break;
+		}
+
+		case RecipientType::FUTURE:
+		{
+			CreateRecipient((RecipientType)type, name.c_str(), money);
+
+			//file->ViewFile(path.c_str(), positionToRead + 3).
+			//	Read("limit").AsFloat();
+
+
+
+			break;
+		}
+
+		default: break;
+		}
 	}
 
 	totalRecipient->SetMoney(total);
@@ -433,7 +478,7 @@ bool EconomyScene::DrawMainWindow(bool* open)
 			{
 				ImGui::TableNextRow();
 				ImGui::TableNextColumn();
-				ImGui::Text("  |");
+				ImGui::Text("|");
 
 				ImGui::TableNextColumn();
 
@@ -481,15 +526,14 @@ bool EconomyScene::DrawMainWindow(bool* open)
 				}
 				ImGui::PopID();
 			}
-
 			ImGui::EndTable();
 
-			AddSpacing(1);
+			AddSpacing(0);
 
 			if (reordered) break;
 		}
 
-		AddSpacing(1);
+		AddSpacing(0);
 
 		unasignedRecipient->Draw();
 
@@ -508,6 +552,7 @@ bool EconomyScene::DrawToolbarWindow(bool* open)
 	{
 		if (ImGui::Button("FILTER")) CreateRecipient(RecipientType::FILTER);
 		if (ImGui::Button("LIMIT ")) CreateRecipient(RecipientType::LIMIT);
+		if (ImGui::Button("FUTURE")) CreateRecipient(RecipientType::FUTURE);
 		ImGui::End();
 	}
 
@@ -532,7 +577,7 @@ void EconomyScene::CreateRecipient(RecipientType recipient, const char* name, fl
 	{
 	case RecipientType::FILTER: recipients.push_back((Recipient*)(new FilterRecipient(name, money))); break;
 	case RecipientType::LIMIT: recipients.push_back((Recipient*)(new LimitRecipient(name, money, limit))); break;
-
+	case RecipientType::FUTURE: recipients.push_back((Recipient*)(new FutureRecipient(name, money))); break;
 	default:
 		return;
 	}

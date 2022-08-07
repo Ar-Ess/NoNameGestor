@@ -11,15 +11,19 @@ enum class RecipientType
 	UNASIGNED_MONEY,
 	FILTER,
 	LIMIT,
+	FUTURE,
 };
 
 class Recipient
 {
 public: // Functions
 
-	~Recipient() {}
+	virtual ~Recipient() 
+	{
+		name.clear();
+		name.shrink_to_fit();
+	}
 
-	virtual void Start() {}
 	virtual void Update() {}
 	virtual void Draw() {}
 
@@ -38,7 +42,8 @@ public: // Functions
 		switch (type)
 		{
 		case RecipientType::FILTER: return "FILTER";
-		case RecipientType::LIMIT: return "LIMIT";
+		case RecipientType::LIMIT: return "LIMIT ";
+		case RecipientType::FUTURE: return "FUTURE";
 		}
 		return "NO RECIPIENT";
 	}
