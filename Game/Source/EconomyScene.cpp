@@ -9,7 +9,7 @@ EconomyScene::EconomyScene(Input* input)
 	this->file = new FileManager(EXTENSION);
 
 	totalRecipient = new TotalMoneyRecipient("Total Money", 0.0f);
-	unasignedRecipient = new UnasignedMoneyRecipient("Unasigned Money", 0.0f);
+	unasignedRecipient = new UnasignedMoneyRecipient("Unasigned Money", 0.0f, &showFutureUnasigned, &allowFutureCovering);
 
 	openFileName = "New_File";
 	openFilePath.clear();
@@ -48,7 +48,7 @@ bool EconomyScene::Update()
 			totalMoney -= r->GetMoney();
 	}
 
-	unasignedRecipient->SetMoney(totalMoney + futureMoney, totalMoney, futureMoney, showFutureUnasigned);
+	unasignedRecipient->SetMoney(totalMoney + futureMoney, totalMoney, futureMoney);
 	unasignedRecipient->Update();
 
 
@@ -405,13 +405,15 @@ bool EconomyScene::DrawMenuBar()
 		}
 		if (ImGui::BeginMenu("Edit"))
 		{
-			ImGui::MenuItem("Undo", "Ctrl + Z");
-			ImGui::MenuItem("Redo", "Ctrl + Shft + Z");
+			ImGui::Text("Undo/Redo Future Implementation");
+			//ImGui::MenuItem("Undo", "Ctrl + Z");
+			//ImGui::MenuItem("Redo", "Ctrl + Shft + Z");
 			ImGui::Separator();
-			ImGui::MenuItem("Copy", "Ctrl + C");
-			ImGui::MenuItem("Paste", "Ctrl + V");
-			ImGui::MenuItem("Cut", "Ctrl + X");
-			ImGui::MenuItem("Duplicate", "Ctrl + D");
+			ImGui::Text("Copy/Paste/Cut/Duplicate Future Implementation");
+			//ImGui::MenuItem("Copy", "Ctrl + C");
+			//ImGui::MenuItem("Paste", "Ctrl + V");
+			//ImGui::MenuItem("Cut", "Ctrl + X");
+			//ImGui::MenuItem("Duplicate", "Ctrl + D");
 
 			ImGui::EndMenu();
 		}
@@ -422,6 +424,9 @@ bool EconomyScene::DrawMenuBar()
 
 			if (ImGui::MenuItem("Limit "))
 				CreateRecipient(RecipientType::LIMIT);
+
+			if (ImGui::MenuItem("Future"))
+				CreateRecipient(RecipientType::FUTURE);
 
 			ImGui::EndMenu();
 		}
@@ -471,11 +476,24 @@ bool EconomyScene::DrawPreferencesWindow(bool* open)
 
 	if (ImGui::Begin("Preferences", open, ImGuiWindowFlags_NoDocking))
 	{
-		ImGui::Checkbox("Show Recipient Typology Name", &showRecipientType);
+		AddHelper("Shows, at the side of each recipient,\na text noting it's type.", "?"); ImGui::SameLine();
+		ImGui::Checkbox("Show Recipient Typology Name", &showRecipientType); 
+
+		AddHelper("Shows the unsigned money splitted\nin terms of actual income and\nfuture income.\n", "?"); ImGui::SameLine();
 		ImGui::Checkbox("Show Unasigned Future Money ", &showFutureUnasigned);
+		
+		if (showFutureUnasigned)
+		{
+			ImGui::Dummy(ImVec2{ 6, 0 }); ImGui::SameLine();
+			AddHelper("Allows future money to cover\nactual money whenever it goes\nin negative numbers.\nIMPORTANT:\nUse this option if you know for sure\nyou'll receive the future income.", "?"); ImGui::SameLine();
+			ImGui::Checkbox("Allow Future Money Covering ", &allowFutureCovering);
+		}
+
+		AddHelper("Enlarges the size of the text\nlabels of each recipient.", "?"); ImGui::SameLine();
 		ImGui::PushItemWidth(textFieldSize);
 		ImGui::DragFloat("Text Fiend Size", &textFieldSize, 0.1f, 1.0f, 1000.0f, "%f pts");
 		ImGui::PopItemWidth();
+
 		ImGui::End();
 	}
 

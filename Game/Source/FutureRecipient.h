@@ -116,6 +116,8 @@ public: // Functions
 
 private:
 
+	// TODO: "Future Money not saving my actual money negativity"
+
 	void DeleteFuture(int index)
 	{
 		futures[index].name.clear();

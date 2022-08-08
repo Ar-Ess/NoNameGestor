@@ -187,6 +187,7 @@ private: // Variables
 	// Preferences
 	bool showRecipientType = true;
 	bool showFutureUnasigned = false;
+	bool allowFutureCovering = false;
 
 	// Save & Load
 	bool saving = false, loading = false, savingAs = false;
