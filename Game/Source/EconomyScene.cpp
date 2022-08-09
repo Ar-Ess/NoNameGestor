@@ -141,51 +141,7 @@ void EconomyScene::SaveAs()
 		path += name;
 	}
 
-	float total = totalRecipient->GetMoney();
-	float unasigned = unasignedRecipient->GetMoney();
-
-	file->OpenFile(path.c_str()).
-		Write("total").Number(total).
-		Write("size").Number((int)recipients.size());
-
-	for (Recipient* r : recipients)
-	{
-		file->EditFile(path.c_str()).
-			Write("name").String(r->GetName()).
-			Write("type").Number((int)r->GetType()).
-			Write("money").Number(r->GetMoney());
-
-		switch (r->GetType())
-		{
-		case RecipientType::FILTER: 
-			break;
-
-		case RecipientType::LIMIT:
-		{
-			LimitRecipient* lR = (LimitRecipient*)r;
-			file->EditFile(path.c_str()).
-				Write("limit").Number(lR->GetLimit());
-			break;
-		}
-		case RecipientType::FUTURE:
-		{
-			FutureRecipient* fR = (FutureRecipient*)r;
-			int size = fR->GetSize();
-			file->EditFile(path.c_str()).
-				Write("size").Number(size);
-
-			for (int i = 0; i < size; ++i)
-			{
-				file->EditFile(path.c_str())
-					.Write("name").String(fR->GetFutureName(i))
-					.Write("money").Number(fR->GetFutureMoney(i));
-			}
-		}
-
-		default: 
-			break;
-		}
-	}
+	InternalSave(path.c_str());
 }
 
 void EconomyScene::Save()
@@ -203,16 +159,28 @@ void EconomyScene::Save()
 
 	std::string savePath = openFilePath + openFileName;
 
+	InternalSave(savePath.c_str());
+
+}
+
+void EconomyScene::InternalSave(const char* path)
+{
 	float total = totalRecipient->GetMoney();
 	float unasigned = unasignedRecipient->GetMoney();
 
-	file->OpenFile(savePath.c_str()).
+	file->OpenFile(path).
+		// Preferences
+		Write("cnfSRT").Bool(showRecipientType).
+		Write("cnfSFU").Bool(showFutureUnasigned).
+		Write("cnfAFC").Bool(allowFutureCovering).
+		Write("cnfTFS").Number(textFieldSize).
+		// Generic File
 		Write("total").Number(total).
 		Write("size").Number((int)recipients.size());
 
 	for (Recipient* r : recipients)
 	{
-		file->EditFile(savePath.c_str()).
+		file->EditFile(path).
 			Write("name").String(r->GetName()).
 			Write("type").Number((int)r->GetType()).
 			Write("money").Number(r->GetMoney());
@@ -225,7 +193,7 @@ void EconomyScene::Save()
 		case RecipientType::LIMIT:
 		{
 			LimitRecipient* lR = (LimitRecipient*)r;
-			file->EditFile(savePath.c_str()).
+			file->EditFile(path).
 				Write("limit").Number(lR->GetLimit());
 			break;
 		}
@@ -233,18 +201,18 @@ void EconomyScene::Save()
 		{
 			FutureRecipient* fR = (FutureRecipient*)r;
 			int size = fR->GetSize();
-			file->EditFile(savePath.c_str()).
+			file->EditFile(path).
 				Write("size").Number(size);
 
 			for (int i = 0; i < size; ++i)
 			{
-				file->EditFile(savePath.c_str())
+				file->EditFile(path)
 					.Write("name").String(fR->GetFutureName(i))
 					.Write("money").Number(fR->GetFutureMoney(i));
 			}
 		}
 
-		default: 
+		default:
 			break;
 		}
 	}
@@ -267,7 +235,6 @@ void EconomyScene::Load()
 	if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
 	{
 		// action if OK
-		// MIRANT DE CLICKAR OK AMB UN NOM QUE NO EXISTEIXI PERQUE NO FAGI RES, I EN CAS D'EXISTIR, CARREGUI
 		if (ImGuiFileDialog::Instance()->IsOk() == true && file->Exists(ImGuiFileDialog::Instance()->GetFilePathName().c_str(), false))
 		{
 			path = ImGuiFileDialog::Instance()->GetCurrentPath() + "\\";
@@ -278,7 +245,7 @@ void EconomyScene::Load()
 		else
 		{
 			ImGuiFileDialog::Instance()->Close();
-			savingAs = false;
+			loading = false;
 			return;
 		}
 	}
@@ -301,14 +268,20 @@ void EconomyScene::Load()
 	for (Recipient* r : recipients) DeleteAllRecipients();
 
 	file->ViewFile(path.c_str()).
+		// Preferences
+		Read("cnfSRT").AsBool(showRecipientType).
+		Read("cnfSFU").AsBool(showFutureUnasigned).
+		Read("cnfAFC").AsBool(allowFutureCovering).
+		Read("cnfTFS").AsFloat(textFieldSize).
+		// General Project
 		Read("total").AsFloat(total).
 		Read("size").AsInt(size);
 
 	int added = 0;
 
 	for (unsigned int i = 0; i < size; ++i)
-	{
-		int positionToRead = (i * 3) + 2 + added;
+	{//                               \/ Change it depending on how many variables readed on top
+		int positionToRead = (i * 3) + 6 + added;
 		int type = -1;
 		float money = 0;
 		std::string name;
@@ -414,7 +387,6 @@ bool EconomyScene::DrawMenuBar()
 			//ImGui::MenuItem("Paste", "Ctrl + V");
 			//ImGui::MenuItem("Cut", "Ctrl + X");
 			//ImGui::MenuItem("Duplicate", "Ctrl + D");
-
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Create"))
@@ -427,17 +399,15 @@ bool EconomyScene::DrawMenuBar()
 
 			if (ImGui::MenuItem("Future"))
 				CreateRecipient(RecipientType::FUTURE);
-
 			ImGui::EndMenu();
 		}
-		if (ImGui::BeginMenu("Window"))
-		{
-			ImGui::MenuItem("Demo Window", "Ctrl + Shft + D", &demoWindow);
-
-			ImGui::EndMenu();
-		}
-		ImGui::EndMainMenuBar();
+		//if (ImGui::BeginMenu("Window"))
+		//{
+		//	ImGui::MenuItem("Demo Window", "Ctrl + Shft + D", &demoWindow);
+		//	ImGui::EndMenu();
+		//}
 	}
+	ImGui::EndMainMenuBar();
 
 	return true;
 }
@@ -494,8 +464,8 @@ bool EconomyScene::DrawPreferencesWindow(bool* open)
 		ImGui::DragFloat("Text Fiend Size", &textFieldSize, 0.1f, 1.0f, 1000.0f, "%f pts");
 		ImGui::PopItemWidth();
 
-		ImGui::End();
 	}
+	ImGui::End();
 
 	return ret;
 }
@@ -567,9 +537,8 @@ bool EconomyScene::DrawMainWindow(bool* open)
 					}
 
 					r->Draw();
-
-					ImGui::TreePop();
 				}
+				ImGui::TreePop();
 			}
 			ImGui::EndTable();
 			ImGui::PopID();
@@ -582,9 +551,8 @@ bool EconomyScene::DrawMainWindow(bool* open)
 		AddSpacing(0);
 
 		unasignedRecipient->Draw();
-
-		ImGui::End();
 	}
+	ImGui::End();
 
 	return ret;
 }
@@ -599,8 +567,8 @@ bool EconomyScene::DrawToolbarWindow(bool* open)
 		if (ImGui::Button("FILTER")) CreateRecipient(RecipientType::FILTER);
 		if (ImGui::Button("LIMIT ")) CreateRecipient(RecipientType::LIMIT);
 		if (ImGui::Button("FUTURE")) CreateRecipient(RecipientType::FUTURE);
-		ImGui::End();
 	}
+	ImGui::End();
 
 	return ret;
 }

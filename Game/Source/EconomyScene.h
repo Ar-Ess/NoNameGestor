@@ -26,6 +26,7 @@ private: // Functions
 	void NewFile();
 	void SaveAs();
 	void Save();
+	void InternalSave(const char* path);
 	void Load();
 
 	bool DrawMenuBar();
@@ -37,7 +38,7 @@ private: // Functions
 
 	void UpdateShortcuts();
 
-	void CreateRecipient(RecipientType recipient, const char* name = "New Recipient", float money = 0.0f, float limit = 0.0f);
+	void CreateRecipient(RecipientType recipient, const char* name = "New Recipient", float money = 0.0f, float limit = 1.0f);
 
 	// Input from 0 (smallest spacing) to whatever you need
 	void AddSpacing(unsigned int spaces = 1)

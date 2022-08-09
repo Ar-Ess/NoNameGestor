@@ -97,6 +97,25 @@ private:
 				return Editor(name, access);
 			}
 
+			Editor Bool(bool boolean)
+			{
+				if (access == Access::ERROR) return Editor(name, access);
+
+				std::fstream file;
+
+				file.open(name, std::ios::app | std::ios::ate);
+
+				assert(file.is_open()); // File is not open
+				int intBool = 0;
+				boolean ? intBool = 1 : intBool = 0;
+
+				file << variable << " " << intBool << "," << std::endl;
+
+				file.close();
+
+				return Editor(name, access);
+			}
+
 		private:
 
 			const char* name = nullptr;
@@ -285,6 +304,51 @@ private:
 				assert(variableExists);
 
 				std::getline(file, string, ',');
+
+				file.close();
+
+				return *editor;
+			}
+
+			Editor AsBool(bool& boolean)
+			{
+				if (access == Access::ERROR) return *editor;
+
+				std::fstream file;
+
+				file.open(name, std::ios::in);
+
+				assert(file.is_open()); // File is not open
+
+				if (editor->jumpLines > 0) editor->InternalJumpLines(&file);
+
+				bool variableExists = false;
+				while (!file.eof())
+				{
+					std::string line;
+					std::getline(file, line, ' ');
+					if (editor->InternalSameString(variable, line))
+					{
+						variableExists = true;
+						line.clear();
+						line.shrink_to_fit();
+						break;
+					}
+					line.clear();
+					line.shrink_to_fit();
+
+					std::getline(file, line, '\n');
+					line.clear();
+					line.shrink_to_fit();
+				}
+
+				// The variable inputted in the function Read("variable") does not exist in the document
+				assert(variableExists);
+
+				int value = 0.0;
+				file >> value;
+
+				boolean = bool(value);
 
 				file.close();
 

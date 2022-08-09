@@ -249,10 +249,10 @@
     <ClInclude Include="Source\GuiManager.h">
       <Filter>GuiControls</Filter>
     </ClInclude>
-    <ClInclude Include="Source\LimitRecipient.h">
+    <ClInclude Include="Source\FutureRecipient.h">
       <Filter>Recipients</Filter>
     </ClInclude>
-    <ClInclude Include="Source\FutureRecipient.h">
+    <ClInclude Include="Source\LimitRecipient.h">
       <Filter>Recipients</Filter>
     </ClInclude>
   </ItemGroup>

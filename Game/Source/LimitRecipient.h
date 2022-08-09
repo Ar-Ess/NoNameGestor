@@ -8,7 +8,7 @@ class LimitRecipient : public Recipient
 {
 public: // Functions
 
-	LimitRecipient(const char* name, float money, float limit = 0) : Recipient(name, money, RecipientType::LIMIT)
+	LimitRecipient(const char* name, float money, float limit = 1.0f) : Recipient(name, money, RecipientType::LIMIT)
 	{
 		this->limit = limit;
 		this->tempLimit = limit;
@@ -29,15 +29,14 @@ public: // Functions
 			ImGui::PopItemWidth();
 
 			ImGui::SameLine();
-			ImGui::Text(" / %.2f", limit); ImGui::SameLine();
+			ImGui::Text(" / %.2f EUR", limit); ImGui::SameLine();
 			if (ImGui::Button("Edit")) editLimit = true;
 
 			ImGui::TableNextColumn();
 
 			ImGui::ProgressBar(money / limit, size, "");
-
-			ImGui::EndTable();
 		}
+		ImGui::EndTable();
 
 		if (!editLimit)
 		{
@@ -56,8 +55,8 @@ public: // Functions
 				limit = tempLimit;
 				editLimit = false;
 			}
-			ImGui::EndPopup();
 		}
+		ImGui::EndPopup();
 		ImGui::PopID();
 	}
 
