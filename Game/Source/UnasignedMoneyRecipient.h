@@ -7,10 +7,12 @@ class UnasignedMoneyRecipient : public Recipient
 {
 public: // Functions
 
-	UnasignedMoneyRecipient(const char* name, float money, bool* showFutureMoney, bool* allowFutureCover) : Recipient(name, money, RecipientType::UNASIGNED_MONEY)
+	UnasignedMoneyRecipient(const char* name, float money, bool* showFutureMoney, bool* allowFutureCover, bool* showArrearMoney, bool* allowArrearsFill) : Recipient(name, money, RecipientType::UNASIGNED_MONEY)
 	{
 		this->showFutureMoney = showFutureMoney;
 		this->allowFutureCover = allowFutureCover;
+		this->showArrearMoney = showArrearMoney;
+		this->allowArrearsFill = allowArrearsFill;
 	}
 
 	void Update() override
@@ -29,11 +31,26 @@ public: // Functions
 				futureMoney = 0;
 			}
 		}
+
+		if (*showArrearMoney && *allowArrearsFill && arrearMoney < 0 && actualMoney > 0)
+		{
+			float debt = -arrearMoney;
+			if (debt <= actualMoney)
+			{
+				actualMoney -= debt;
+				arrearMoney = 0;
+			}
+			else
+			{
+				arrearMoney += actualMoney;
+				actualMoney = 0;
+			}
+		}
 	}
 
 	void Draw() override
 	{
-		if (!*showFutureMoney)
+		if (!*showFutureMoney && !*showArrearMoney)
 		{
 			ImGui::Text(name.c_str()); ImGui::SameLine();
 			ImGui::Text(": %.2f EUR", money);
@@ -42,16 +59,25 @@ public: // Functions
 		{
 			ImGui::Text("Unasigned Actual Money"); ImGui::SameLine();
 			ImGui::Text(": %.2f EUR", actualMoney);
-			ImGui::Text("Unasigned Future Money"); ImGui::SameLine();
-			ImGui::Text(": %.2f EUR", futureMoney);
+			if (*showFutureMoney)
+			{
+				ImGui::Text("Unasigned Future Money"); ImGui::SameLine();
+				ImGui::Text(": %.2f EUR", futureMoney);
+			}
+			if (*showArrearMoney)
+			{
+				ImGui::Text("Unasigned Arrear Money"); ImGui::SameLine();
+				ImGui::Text(": %.2f EUR", arrearMoney);
+			}
 		}
 	}
 
-	void SetMoney(float money, float actualMoney, float futureMoney)
+	void SetMoney(float money, float actualMoney, float futureMoney, float arrearMoney)
 	{
 		this->money = money;
 		this->actualMoney = actualMoney;
 		this->futureMoney = futureMoney;
+		this->arrearMoney = arrearMoney;
 	}
 
 private: // Functions
@@ -59,8 +85,11 @@ private: // Functions
 private: // Variables
 	float futureMoney = 0.0f;
 	float actualMoney = 0.0f;
+	float arrearMoney = 0.0f;
 	bool* showFutureMoney = nullptr;
 	bool* allowFutureCover = nullptr;
+	bool* showArrearMoney = nullptr;
+	bool* allowArrearsFill = nullptr;
 };
 
 #endif // !__UNASIGNED_MONEY_RECIPIENT_H__

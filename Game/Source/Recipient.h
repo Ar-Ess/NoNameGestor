@@ -13,6 +13,7 @@ enum class RecipientType
 	FILTER,
 	LIMIT,
 	FUTURE,
+	ARREAR,
 };
 
 class Recipient
@@ -45,6 +46,7 @@ public: // Functions
 		case RecipientType::FILTER: return "FILTER";
 		case RecipientType::LIMIT: return "LIMIT ";
 		case RecipientType::FUTURE: return "FUTURE";
+		case RecipientType::ARREAR: return "ARREAR";
 		}
 		return "NO RECIPIENT";
 	}

@@ -189,6 +189,8 @@ private: // Variables
 	bool showRecipientType = true;
 	bool showFutureUnasigned = false;
 	bool allowFutureCovering = false;
+	bool showArrearUnasigned = false;
+	bool allowArrearsFill = false;
 
 	// Save & Load
 	bool saving = false, loading = false, savingAs = false;

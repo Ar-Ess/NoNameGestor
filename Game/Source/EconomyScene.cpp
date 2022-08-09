@@ -9,7 +9,7 @@ EconomyScene::EconomyScene(Input* input)
 	this->file = new FileManager(EXTENSION);
 
 	totalRecipient = new TotalMoneyRecipient("Total Money", 0.0f);
-	unasignedRecipient = new UnasignedMoneyRecipient("Unasigned Money", 0.0f, &showFutureUnasigned, &allowFutureCovering);
+	unasignedRecipient = new UnasignedMoneyRecipient("Unasigned Money", 0.0f, &showFutureUnasigned, &allowFutureCovering, &showArrearUnasigned, &allowArrearsFill);
 
 	openFileName = "New_File";
 	openFilePath.clear();
@@ -38,17 +38,22 @@ bool EconomyScene::Update()
 	totalRecipient->Update();
 	float totalMoney = totalRecipient->GetMoney();
 	float futureMoney = 0;
+	float arrearMoney = 0;
 
 	for (Recipient* r : recipients)
 	{
 		r->Update();
-		if (r->GetType() == RecipientType::FUTURE)
-			futureMoney += r->GetMoney();
-		else
-			totalMoney -= r->GetMoney();
+		switch (r->GetType())
+		{
+		case RecipientType::FUTURE: futureMoney += r->GetMoney(); break;
+		case RecipientType::ARREAR: arrearMoney -= r->GetMoney(); break;
+		case RecipientType::FILTER:
+		case RecipientType::LIMIT:
+		default: totalMoney -= r->GetMoney(); break;
+		}
 	}
 
-	unasignedRecipient->SetMoney(totalMoney + futureMoney, totalMoney, futureMoney);
+	unasignedRecipient->SetMoney(totalMoney + futureMoney + arrearMoney, totalMoney, futureMoney, arrearMoney);
 	unasignedRecipient->Update();
 
 
@@ -399,6 +404,10 @@ bool EconomyScene::DrawMenuBar()
 
 			if (ImGui::MenuItem("Future"))
 				CreateRecipient(RecipientType::FUTURE);
+
+			if (ImGui::MenuItem("Arrear"))
+				CreateRecipient(RecipientType::ARREAR);
+
 			ImGui::EndMenu();
 		}
 		//if (ImGui::BeginMenu("Window"))
@@ -449,7 +458,7 @@ bool EconomyScene::DrawPreferencesWindow(bool* open)
 		AddHelper("Shows, at the side of each recipient,\na text noting it's type.", "?"); ImGui::SameLine();
 		ImGui::Checkbox("Show Recipient Typology Name", &showRecipientType); 
 
-		AddHelper("Shows the unsigned money splitted\nin terms of actual income and\nfuture income.\n", "?"); ImGui::SameLine();
+		AddHelper("Shows the unsigned money in terms\nof future income.", "?"); ImGui::SameLine();
 		ImGui::Checkbox("Show Unasigned Future Money ", &showFutureUnasigned);
 		
 		if (showFutureUnasigned)
@@ -457,6 +466,16 @@ bool EconomyScene::DrawPreferencesWindow(bool* open)
 			ImGui::Dummy(ImVec2{ 6, 0 }); ImGui::SameLine();
 			AddHelper("Allows future money to cover\nactual money whenever it goes\nin negative numbers.\nIMPORTANT:\nUse this option if you know for sure\nyou'll receive the future income.", "?"); ImGui::SameLine();
 			ImGui::Checkbox("Allow Future Money Covering ", &allowFutureCovering);
+		}
+
+		AddHelper("Shows the unsigned money in terms\nof arrears outcome.", "?"); ImGui::SameLine();
+		ImGui::Checkbox("Show Unasigned Arrears Money ", &showArrearUnasigned);
+
+		if (showArrearUnasigned)
+		{
+			ImGui::Dummy(ImVec2{ 6, 0 }); ImGui::SameLine();
+			AddHelper("Allows unasigned actual money to fill\nunasigned arrears whenever they exist.", "?"); ImGui::SameLine();
+			ImGui::Checkbox("Allow Arrears Money Filling", &allowArrearsFill);
 		}
 
 		AddHelper("Enlarges the size of the text\nlabels of each recipient.", "?"); ImGui::SameLine();
@@ -565,8 +584,9 @@ bool EconomyScene::DrawToolbarWindow(bool* open)
 	if (ImGui::Begin("Toolbar", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar))
 	{
 		if (ImGui::Button("FILTER")) CreateRecipient(RecipientType::FILTER);
-		if (ImGui::Button("LIMIT ")) CreateRecipient(RecipientType::LIMIT);
+		if (ImGui::Button("LIMIT ")) CreateRecipient(RecipientType::LIMIT );
 		if (ImGui::Button("FUTURE")) CreateRecipient(RecipientType::FUTURE);
+		if (ImGui::Button("ARREAR")) CreateRecipient(RecipientType::ARREAR);
 	}
 	ImGui::End();
 
@@ -592,6 +612,7 @@ void EconomyScene::CreateRecipient(RecipientType recipient, const char* name, fl
 	case RecipientType::FILTER: recipients.push_back((Recipient*)(new FilterRecipient(name, money))); break;
 	case RecipientType::LIMIT : recipients.push_back((Recipient*)(new  LimitRecipient(name, money, limit))); break;
 	case RecipientType::FUTURE: recipients.push_back((Recipient*)(new FutureRecipient(name, money, totalRecipient->GetMoneyPtr()))); break;
+	case RecipientType::ARREAR: recipients.push_back((Recipient*)(new ArrearRecipient(name, money, totalRecipient->GetMoneyPtr()))); break;
 	default: break;
 	}
 }

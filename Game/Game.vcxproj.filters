@@ -156,6 +156,9 @@
     <ClInclude Include="resource.h">
       <Filter>Resources</Filter>
     </ClInclude>
+    <ClInclude Include="Source\ArrearRecipient.h">
+      <Filter>Recipients</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="External">
