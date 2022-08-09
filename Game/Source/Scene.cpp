@@ -1,18 +1,13 @@
 #include "Scene.h"
-#include "GuiManager.h"
-
 #include "Defs.h"
 #include "Log.h"
 #include "imgui/imgui.h"
 
-Scene::Scene(Render* render, Input* input, Textures* texture, Window* window, Audio* audio)
+Scene::Scene(Render* render, Input* input, Window* window)
 {
-	this->gui = new GuiManager(input, render, audio, texture);
 	this->render = render;
 	this->input = input;
-	this->texture = texture;
 	this->window = window;
-	this->audio = audio;
 	this->economyScene = new EconomyScene(input);
 }
 
@@ -21,9 +16,6 @@ Scene::~Scene()
 
 bool Scene::Start()
 {
-	//DEBUG BOOLS
-	gui->Start(this);
-
 	//FIRST SCENE
 	if (!SetScene(Scenes::ECONOMY_SCENE)) return false;
 
@@ -137,27 +129,8 @@ bool Scene::UpdateEconomyScene(float dt)
 	return ret;
 }
 
-// GUI CONTROLS
-
-bool Scene::OnGuiMouseClickEvent(GuiControl* control, float value, bool check)
-{
-	switch (currScene)
-	{
-	case Scenes::ECONOMY_SCENE:
-		switch (control->id)
-		{
-			break;
-		}
-		break;
-	}
-
-	return true;
-}
-
 void Scene::DebugCommands()
 {
-	if (input->GetKey(SDL_SCANCODE_F1) == KeyState::KEY_DOWN) gui->debug = !gui->debug;
-
 	if (input->GetKey(SDL_SCANCODE_F11) == KeyState::KEY_DOWN) window->SetWinFullScreen(!window->fullScreen);
 
 	switch (currScene)

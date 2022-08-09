@@ -45,12 +45,12 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)Build\$(Configuration)\</OutDir>
-    <TargetName>Game_Name</TargetName>
+    <TargetName>NoNameGestor</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)Build\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)Build\$(Configuration)\Obj\</IntDir>
-    <TargetName>Game_Name</TargetName>
+    <TargetName>NoNameGestor</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -91,10 +91,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Source\AssetsManager.cpp" />
-    <ClCompile Include="Source\EasingFunctions.cpp" />
     <ClCompile Include="Source\EconomyScene.cpp" />
-    <ClCompile Include="Source\Emitter.cpp" />
     <ClCompile Include="Source\External\ImGuiFileDialog\ImGuiFileDialog.cpp" />
     <ClCompile Include="Source\External\imgui\imgui.cpp" />
     <ClCompile Include="Source\External\imgui\imgui_demo.cpp" />
@@ -104,33 +101,16 @@
     <ClCompile Include="Source\External\imgui\imgui_stdlib.cpp" />
     <ClCompile Include="Source\External\imgui\imgui_tables.cpp" />
     <ClCompile Include="Source\External\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="Source\GuiButton.cpp" />
-    <ClCompile Include="Source\GuiCheckBox.cpp" />
-    <ClCompile Include="Source\GuiImage.cpp" />
-    <ClCompile Include="Source\GuiManager.cpp" />
-    <ClCompile Include="Source\GuiSlider.cpp" />
-    <ClCompile Include="Source\GuiString.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\App.cpp" />
-    <ClCompile Include="Source\Audio.cpp" />
     <ClCompile Include="Source\Input.cpp" />
-    <ClCompile Include="Source\Particle.cpp" />
-    <ClCompile Include="Source\ParticlePool.cpp" />
-    <ClCompile Include="Source\ParticleSystem.cpp" />
     <ClCompile Include="Source\PerfTimer.cpp" />
     <ClCompile Include="Source\Render.cpp" />
     <ClCompile Include="Source\Scene.cpp" />
-    <ClCompile Include="Source\Textures.cpp" />
     <ClCompile Include="Source\Timer.cpp" />
     <ClCompile Include="Source\Window.cpp" />
-    <ClInclude Include="Source\AlignEnum.h" />
-    <ClInclude Include="Source\Animation.h" />
-    <ClInclude Include="Source\AssetsManager.h" />
-    <ClInclude Include="Source\Circle.h" />
-    <ClInclude Include="Source\Collider.h" />
-    <ClInclude Include="Source\EasingFunctions.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="Source\EconomyScene.h" />
-    <ClInclude Include="Source\Emitter.h" />
     <ClInclude Include="Source\External\ImGuiFileDialog\ImGuiFileDialog.h" />
     <ClInclude Include="Source\External\ImGuiFileDialog\ImGuiFileDialogConfig.h" />
     <ClInclude Include="Source\External\imgui\imconfig.h" />
@@ -146,37 +126,30 @@
     <ClInclude Include="Source\FileManager.h" />
     <ClInclude Include="Source\FilterRecipient.h" />
     <ClInclude Include="Source\FutureRecipient.h" />
-    <ClInclude Include="Source\GuiButton.h" />
-    <ClInclude Include="Source\GuiCheckBox.h" />
-    <ClInclude Include="Source\GuiControl.h" />
-    <ClInclude Include="Source\GuiImage.h" />
-    <ClInclude Include="Source\GuiManager.h" />
-    <ClInclude Include="Source\GuiSlider.h" />
-    <ClInclude Include="Source\GuiString.h" />
     <ClInclude Include="Source\LimitRecipient.h" />
     <ClInclude Include="Source\Multibool.h" />
     <ClInclude Include="Source\RecipientHeader.h" />
     <ClInclude Include="Source\UnasignedMoneyRecipient.h" />
-    <ClInclude Include="Source\Particle.h" />
-    <ClInclude Include="Source\ParticlePool.h" />
-    <ClInclude Include="Source\ParticleSystem.h" />
     <ClInclude Include="Source\PerfTimer.h" />
     <ClInclude Include="Source\Point.h" />
-    <ClInclude Include="Source\Audio.h" />
     <ClInclude Include="Source\Input.h" />
     <ClInclude Include="Source\App.h" />
     <ClInclude Include="Source\Module.h" />
     <ClInclude Include="Source\Recipient.h" />
-    <ClInclude Include="Source\Rect.h" />
     <ClInclude Include="Source\Render.h" />
     <ClInclude Include="Source\Scene.h" />
-    <ClInclude Include="Source\Textures.h" />
     <ClInclude Include="Source\Timer.h" />
     <ClInclude Include="Source\TotalMoneyRecipient.h" />
     <ClInclude Include="Source\Window.h" />
     <ClInclude Include="Source\Defs.h" />
     <ClInclude Include="Source\Log.h" />
     <ClCompile Include="Source\Log.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\..\..\Downloads\NNGLogo.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

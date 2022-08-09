@@ -5,8 +5,6 @@
 
 #include "Point.h"
 #include "SDL/include/SDL.h"
-#include "Collider.h"
-#include "Rect.h"
 #include "Window.h"
 
 class Render : public Module
@@ -30,15 +28,6 @@ public:
 	// Utils
 	void SetViewPort(const SDL_Rect& rect);
 	void ResetViewPort();
-
-	void StackDrawRectangle(Rect rect, SDL_Color color = { 255, 255, 255, 255 }, Point size = { 1.0f, 1.0f }, bool anchored = true, bool fill = true);
-
-	// Drawing
-	bool DrawTexture(SDL_Texture* texture, Point position, Point size, bool anchored = false, Rect* section = nullptr, double angle = 0, SDL_RendererFlip flip = SDL_FLIP_NONE) const;
-	bool DrawRectangle(Rect rect, SDL_Color color = { 255, 255, 255, 255 }, Point size = {1.0f, 1.0f}, bool anchored = true, bool fill = true) const;
-	bool DrawLine(Point start, Point end, SDL_Color color = { 255, 255, 255, 255}, bool anchored = true) const;
-	bool DrawCircle(CircleCollider circle, SDL_Color color, bool fill = false, bool anchored = true) const;
-	bool DrawParticle(SDL_Texture* texture, Point position, Rect* section = nullptr, Rect* rectSize = nullptr, SDL_Color color = { 0, 0, 0, 0 }, SDL_BlendMode blendMode = SDL_BLENDMODE_NONE, double angle = 0) const;
 
 	// Set background color
 	void SetBackgroundColor(SDL_Color color);

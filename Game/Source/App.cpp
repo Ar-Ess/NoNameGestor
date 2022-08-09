@@ -3,9 +3,6 @@
 #include "Window.h"
 #include "Input.h"
 #include "Render.h"
-#include "Textures.h"
-#include "Audio.h"
-#include "AssetsManager.h"
 #include "Scene.h"
 
 #if defined(IMGUI_IMPL_OPENGL_ES2)
@@ -28,17 +25,11 @@ App::App(int argc, char* args[]) : argc(argc), args(args)
 
 	win = new Window();
 	input = new Input(win);
-	assetsManager = new AssetsManager();
 	render = new Render(win);
-	tex = new Textures(render, assetsManager);
-	audio = new Audio(assetsManager);
-	scene = new Scene(render, input, tex, win, audio);
+	scene = new Scene(render, input, win);
 
 	AddModule(win);
 	AddModule(input);
-	AddModule(assetsManager);
-	AddModule(tex);
-	AddModule(audio);
 	AddModule(scene);
 	AddModule(render);
 	
@@ -163,11 +154,11 @@ void App::FinishUpdate()
 	uint32 lastFrameMs = frameTime.Read();
 	uint32 framesOnLastUpdate = prevLastSecFrameCount;
 
-	static char title[256];
+	/*static char title[256];
 	sprintf_s(title, 256, "Av.FPS: %.2f Last Frame Ms: %02u Last sec frames: %i Last dt: %.3f Time since startup: %.3f Frame Count: %I64u ",
 			  averageFps, lastFrameMs, framesOnLastUpdate, dt, secondsSinceStartup, frameCount);
-
-	win->SetTitle(title);
+	*/
+	win->SetTitle("No Name Gestor");
 
 	if (frameDelay > lastFrameMs)
 	{

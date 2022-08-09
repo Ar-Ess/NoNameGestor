@@ -4,8 +4,7 @@
 #include "Module.h"
 #include "Input.h"
 #include "Window.h"
-#include "Audio.h"
-#include "Textures.h"
+#include "Render.h"
 #include "EconomyScene.h"
 
 class GuiControl;
@@ -22,7 +21,7 @@ class Scene : public Module
 {
 public:
 
-	Scene(Render* render, Input* input, Textures* texture, Window* window, Audio* audio);
+	Scene(Render* render, Input* input, Window* window);
 
 	virtual ~Scene();
 
@@ -61,12 +60,9 @@ private: // Methods
 
 private: // Variables
 
-	GuiManager* gui = nullptr;
-	Render* render = nullptr;
 	Input* input = nullptr;
-	Textures* texture = nullptr;
 	Window* window = nullptr;
-	Audio* audio = nullptr;
+	Render* render = nullptr;
 
 	EconomyScene* economyScene = nullptr;
 

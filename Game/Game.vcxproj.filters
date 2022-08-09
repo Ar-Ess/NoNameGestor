@@ -6,9 +6,6 @@
     <ClCompile Include="Source\Log.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Audio.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Input.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
@@ -21,47 +18,11 @@
     <ClCompile Include="Source\Render.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Textures.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Window.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\GuiButton.cpp">
-      <Filter>GuiControls</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\GuiCheckBox.cpp">
-      <Filter>GuiControls</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\GuiSlider.cpp">
-      <Filter>GuiControls</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\GuiString.cpp">
-      <Filter>GuiControls</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\EasingFunctions.cpp">
-      <Filter>Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\AssetsManager.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
     <ClCompile Include="Source\Scene.cpp">
       <Filter>Modules</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\ParticleSystem.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\GuiImage.cpp">
-      <Filter>GuiControls</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Particle.cpp">
-      <Filter>Particles</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\ParticlePool.cpp">
-      <Filter>Particles</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Emitter.cpp">
-      <Filter>Particles</Filter>
     </ClCompile>
     <ClCompile Include="Source\External\imgui\imgui.cpp">
       <Filter>External\ImGui</Filter>
@@ -93,9 +54,6 @@
     <ClCompile Include="Source\External\ImGuiFileDialog\ImGuiFileDialog.cpp">
       <Filter>External\ImGuiFileDialog</Filter>
     </ClCompile>
-    <ClCompile Include="Source\GuiManager.cpp">
-      <Filter>GuiControls</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\App.h" />
@@ -104,9 +62,6 @@
     </ClInclude>
     <ClInclude Include="Source\Log.h">
       <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Audio.h">
-      <Filter>Modules</Filter>
     </ClInclude>
     <ClInclude Include="Source\Input.h">
       <Filter>Modules</Filter>
@@ -123,71 +78,17 @@
     <ClInclude Include="Source\Render.h">
       <Filter>Modules</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Textures.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Window.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\GuiButton.h">
-      <Filter>GuiControls</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\GuiControl.h">
-      <Filter>GuiControls</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\GuiCheckBox.h">
-      <Filter>GuiControls</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\GuiSlider.h">
-      <Filter>GuiControls</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\GuiString.h">
-      <Filter>GuiControls</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Collider.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Animation.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\EasingFunctions.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\AssetsManager.h">
       <Filter>Modules</Filter>
     </ClInclude>
     <ClInclude Include="Source\Scene.h">
       <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ParticleSystem.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Rect.h">
-      <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="Source\Point.h">
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="Source\Multibool.h">
       <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\AlignEnum.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\GuiImage.h">
-      <Filter>GuiControls</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Circle.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Particle.h">
-      <Filter>Particles</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ParticlePool.h">
-      <Filter>Particles</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Emitter.h">
-      <Filter>Particles</Filter>
     </ClInclude>
     <ClInclude Include="Source\External\imgui\imconfig.h">
       <Filter>External\ImGui</Filter>
@@ -246,14 +147,14 @@
     <ClInclude Include="Source\External\ImGuiFileDialog\ImGuiFileDialogConfig.h">
       <Filter>External\ImGuiFileDialog</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GuiManager.h">
-      <Filter>GuiControls</Filter>
-    </ClInclude>
     <ClInclude Include="Source\FutureRecipient.h">
       <Filter>Recipients</Filter>
     </ClInclude>
     <ClInclude Include="Source\LimitRecipient.h">
       <Filter>Recipients</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Resources</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -265,12 +166,6 @@
     </Filter>
     <Filter Include="Modules">
       <UniqueIdentifier>{bfe4e094-9e73-4cb6-9027-deaaa69e9993}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="GuiControls">
-      <UniqueIdentifier>{4d3153ed-57fc-4feb-a588-da24db86de8d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Particles">
-      <UniqueIdentifier>{257dd264-c3ff-4f1c-beda-43942a23e913}</UniqueIdentifier>
     </Filter>
     <Filter Include="External\ImGui">
       <UniqueIdentifier>{047f6aee-e865-47ae-9222-8217fb883406}</UniqueIdentifier>
@@ -284,5 +179,18 @@
     <Filter Include="External\ImGuiFileDialog">
       <UniqueIdentifier>{5a7b1ef6-d384-4db9-9159-328f44c61348}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{63ac2d9c-ef6c-494e-859e-482e550faffb}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\..\..\Downloads\NNGLogo.ico">
+      <Filter>Resources</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

@@ -2,7 +2,6 @@
 
 #include "Recipient.h"
 #include "imgui/imgui_stdlib.h"
-#include "Rect.h"
 
 class LimitRecipient : public Recipient
 {
