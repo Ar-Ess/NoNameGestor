@@ -22,7 +22,7 @@ private: //structs
 
 public: // Functions
 
-	ArrearRecipient(const char* name, float money, float* totalMoneyPtr) : Recipient(name, money, RecipientType::ARREAR)
+	ArrearRecipient(const char* name, float money, bool hidden, float* totalMoneyPtr) : Recipient(name, money, hidden, RecipientType::ARREAR)
 	{
 		this->totalMoneyPtr = totalMoneyPtr;
 		NewArrear();
@@ -41,6 +41,8 @@ public: // Functions
 
 	void Draw() override
 	{
+		if (hidden) ImGui::BeginDisabled();
+
 		size_t size = arrears.size();
 
 		for (unsigned short int i = 0; i < size; ++i)
@@ -81,7 +83,7 @@ public: // Functions
 			ImGui::PopID();
 		}
 
-
+		if (hidden) ImGui::EndDisabled();
 	}
 
 	void NewArrear(const char* name = "New Arrear", float money = 0.0f)
@@ -110,7 +112,7 @@ public: // Functions
 		return arrears[i].money;
 	}
 
-	const char* GetFutureName(int i) const
+	const char* GetArrearName(int i) const
 	{
 		return arrears[i].name.c_str();
 	}

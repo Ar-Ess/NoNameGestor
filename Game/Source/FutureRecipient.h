@@ -21,7 +21,7 @@ private: //structs
 
 public: // Functions
 
-	FutureRecipient(const char* name, float money, float* totalMoneyPtr) : Recipient(name, money, RecipientType::FUTURE)
+	FutureRecipient(const char* name, float money, bool hidden, float* totalMoneyPtr) : Recipient(name, money, hidden, RecipientType::FUTURE)
 	{
 		this->totalMoneyPtr = totalMoneyPtr;
 		NewFuture();
@@ -40,6 +40,8 @@ public: // Functions
 
 	void Draw() override
 	{
+		if (hidden) ImGui::BeginDisabled();
+
 		size_t size = futures.size();
 
 		for (suint i = 0; i < size; ++i)
@@ -80,7 +82,7 @@ public: // Functions
 			ImGui::PopID();
 		}
 
-
+		if (hidden) ImGui::EndDisabled();
 	}
 
 	void NewFuture(const char* name = "New Future", float money = 0.0f)

@@ -7,7 +7,7 @@ class LimitRecipient : public Recipient
 {
 public: // Functions
 
-	LimitRecipient(const char* name, float money, float limit = 1.0f) : Recipient(name, money, RecipientType::LIMIT)
+	LimitRecipient(const char* name, float money, bool hidden, float limit = 1.0f) : Recipient(name, money, hidden, RecipientType::LIMIT)
 	{
 		this->limit = limit;
 		this->tempLimit = limit;
@@ -15,6 +15,8 @@ public: // Functions
 
 	void Draw() override
 	{
+		if (hidden) ImGui::BeginDisabled();
+
 		ImGui::PushID(id);
 		if (ImGui::BeginTable(name.c_str(), 1))
 		{
@@ -40,6 +42,7 @@ public: // Functions
 		if (!editLimit)
 		{
 			ImGui::PopID();
+			if (hidden) ImGui::EndDisabled();
 			return;
 		}
 

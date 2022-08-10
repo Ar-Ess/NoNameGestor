@@ -42,6 +42,8 @@ bool EconomyScene::Update()
 
 	for (Recipient* r : recipients)
 	{
+		if (r->hidden) continue;
+
 		r->Update();
 		switch (r->GetType())
 		{
@@ -188,7 +190,8 @@ void EconomyScene::InternalSave(const char* path)
 		file->EditFile(path).
 			Write("name").String(r->GetName()).
 			Write("type").Number((int)r->GetType()).
-			Write("money").Number(r->GetMoney());
+			Write("money").Number(r->GetMoney()).
+			Write("hide").Bool(r->hidden);
 
 		switch (r->GetType())
 		{
@@ -214,6 +217,20 @@ void EconomyScene::InternalSave(const char* path)
 				file->EditFile(path)
 					.Write("name").String(fR->GetFutureName(i))
 					.Write("money").Number(fR->GetFutureMoney(i));
+			}
+		}
+		case RecipientType::ARREAR:
+		{
+			ArrearRecipient* aR = (ArrearRecipient*)r;
+			int size = aR->GetSize();
+			file->EditFile(path).
+				Write("size").Number(size);
+
+			for (int i = 0; i < size; ++i)
+			{
+				file->EditFile(path)
+					.Write("name").String(aR->GetArrearName(i))
+					.Write("money").Number(aR->GetArrearMoney(i));
 			}
 		}
 
@@ -286,31 +303,33 @@ void EconomyScene::Load()
 
 	for (unsigned int i = 0; i < size; ++i)
 	{//                               \/ Change it depending on how many variables readed on top
-		int positionToRead = (i * 3) + 6 + added;
+		int positionToRead = (i * 4) + 6 + added;
 		int type = -1;
 		float money = 0;
+		bool hidden = false;
 		std::string name;
 
 		file->ViewFile(path.c_str(), positionToRead).
 			Read("name").AsString(name).
 			Read("type").AsInt(type).
-			Read("money").AsFloat(money);
+			Read("money").AsFloat(money).
+			Read("hide").AsBool(hidden);
 
 		switch ((RecipientType)type)
 		{
 		case RecipientType::FILTER:
 		{
-			CreateRecipient((RecipientType)type, name.c_str(), money);
+			CreateRecipient((RecipientType)type, name.c_str(), money, 0.0f, hidden);
 			break;
 		}
 
 		case RecipientType::LIMIT:
 		{
 			float limit = 1;
-			file->ViewFile(path.c_str(), positionToRead + 3).
+			file->ViewFile(path.c_str(), positionToRead + 4).
 				Read("limit").AsFloat(limit);
 
-			CreateRecipient((RecipientType)type, name.c_str(), money, limit);
+			CreateRecipient((RecipientType)type, name.c_str(), money, limit, hidden);
 
 			added++;
 
@@ -319,12 +338,12 @@ void EconomyScene::Load()
 
 		case RecipientType::FUTURE:
 		{
-			CreateRecipient((RecipientType)type, name.c_str(), money);
+			CreateRecipient((RecipientType)type, name.c_str(), money, 0.0f, hidden);
 			FutureRecipient* fR = (FutureRecipient*)recipients.back();
 			fR->ClearFutures();
 			
 			int fSize = 0;
-			int futurePositionToRead = positionToRead + 3;
+			int futurePositionToRead = positionToRead + 4;
 
 			file->ViewFile(path.c_str(), futurePositionToRead).
 				Read("size").AsInt(fSize);
@@ -340,6 +359,36 @@ void EconomyScene::Load()
 					Read("money").AsFloat(fMoney);
 
 				fR->NewFuture(fName.c_str(), fMoney);
+
+				added += 2;
+			}
+
+			break;
+		}
+
+		case RecipientType::ARREAR:
+		{
+			CreateRecipient((RecipientType)type, name.c_str(), money, 0.0f, hidden);
+			ArrearRecipient* aR = (ArrearRecipient*)recipients.back();
+			aR->ClearArrears();
+
+			int fSize = 0;
+			int futurePositionToRead = positionToRead + 4;
+
+			file->ViewFile(path.c_str(), futurePositionToRead).
+				Read("size").AsInt(fSize);
+
+			added++;
+
+			for (suint i = 0; i < fSize; ++i)
+			{
+				std::string fName;
+				float fMoney;
+				file->ViewFile(path.c_str(), (futurePositionToRead + 1) + (i * 2)).
+					Read("name").AsString(fName).
+					Read("money").AsFloat(fMoney);
+
+				aR->NewArrear(fName.c_str(), fMoney);
 
 				added += 2;
 			}
@@ -518,23 +567,51 @@ bool EconomyScene::DrawMainWindow(bool* open)
 
 				ImGui::TableNextColumn();
 
-				ImGui::PushItemWidth(textFieldSize);
+				bool hidden = r->hidden;
+				if (hidden) ImGui::BeginDisabled();
 
-				if (ImGui::Button("X"))
-				{
-					DeleteRecipient(i);
-					ImGui::PopItemWidth();
-					ImGui::EndTable();
-					ImGui::PopID();
-					break;
-				}
-				ImGui::SameLine();
 				if (showRecipientType)
 				{ 
 					ImGui::Text(r->GetTypeString()); 
 					ImGui::SameLine();
 				}
+				ImGui::PushItemWidth(textFieldSize);
 				ImGui::InputText("##LabelName", r->GetString()); ImGui::PopItemWidth(); ImGui::SameLine();
+
+				if (hidden) ImGui::EndDisabled();
+
+				if (ImGui::Button(":"))
+					ImGui::OpenPopup("Options Popup");
+				if (ImGui::BeginPopup("Options Popup"))
+				{
+					if (ImGui::MenuItem("Delete"))
+					{
+						DeleteRecipient(i);
+						ImGui::EndPopup();
+						ImGui::EndTable();
+						ImGui::PopID();
+						break;
+					}
+					if (ImGui::MenuItem("Process"))
+					{
+						int dif = 1;
+						r->GetType() == RecipientType::FUTURE ? dif = 1 : dif = -1;
+						float totalResult = totalRecipient->GetMoney() + (r->GetMoney() * dif);
+						if (totalResult >= 0)
+						{
+							*totalRecipient->GetMoneyPtr() = totalResult;
+							DeleteRecipient(i);
+							ImGui::EndPopup();
+							ImGui::EndTable();
+							ImGui::PopID();
+							break;
+						}
+					}
+					ImGui::MenuItem("Hide", "", &r->hidden);
+					ImGui::EndPopup();
+				}
+				ImGui::SameLine();
+
 				if (ImGui::TreeNodeEx("[]", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding))
 				{
 					if (ImGui::BeginDragDropSource())
@@ -556,8 +633,9 @@ bool EconomyScene::DrawMainWindow(bool* open)
 					}
 
 					r->Draw();
+
+					ImGui::TreePop();
 				}
-				ImGui::TreePop();
 			}
 			ImGui::EndTable();
 			ImGui::PopID();
@@ -605,14 +683,14 @@ void EconomyScene::UpdateShortcuts()
 	n    = input->GetKey(SDL_SCANCODE_N) == KeyState::KEY_DOWN;
 }
 
-void EconomyScene::CreateRecipient(RecipientType recipient, const char* name, float money, float limit)
+void EconomyScene::CreateRecipient(RecipientType recipient, const char* name, float money, float limit, bool hidden)
 {
 	switch (recipient)
 	{
-	case RecipientType::FILTER: recipients.push_back((Recipient*)(new FilterRecipient(name, money))); break;
-	case RecipientType::LIMIT : recipients.push_back((Recipient*)(new  LimitRecipient(name, money, limit))); break;
-	case RecipientType::FUTURE: recipients.push_back((Recipient*)(new FutureRecipient(name, money, totalRecipient->GetMoneyPtr()))); break;
-	case RecipientType::ARREAR: recipients.push_back((Recipient*)(new ArrearRecipient(name, money, totalRecipient->GetMoneyPtr()))); break;
+	case RecipientType::FILTER: recipients.push_back((Recipient*)(new FilterRecipient(name, money, hidden))); break;
+	case RecipientType::LIMIT : recipients.push_back((Recipient*)(new  LimitRecipient(name, money, hidden, limit))); break;
+	case RecipientType::FUTURE: recipients.push_back((Recipient*)(new FutureRecipient(name, money, hidden, totalRecipient->GetMoneyPtr()))); break;
+	case RecipientType::ARREAR: recipients.push_back((Recipient*)(new ArrearRecipient(name, money, hidden, totalRecipient->GetMoneyPtr()))); break;
 	default: break;
 	}
 }

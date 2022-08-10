@@ -38,7 +38,7 @@ private: // Functions
 
 	void UpdateShortcuts();
 
-	void CreateRecipient(RecipientType recipient, const char* name = "New Recipient", float money = 0.0f, float limit = 1.0f);
+	void CreateRecipient(RecipientType recipient, const char* name = "New Recipient", float money = 0.0f, float limit = 1.0f, bool hidden = false);
 
 	// Input from 0 (smallest spacing) to whatever you need
 	void AddSpacing(unsigned int spaces = 1)
