@@ -218,6 +218,7 @@ void EconomyScene::InternalSave(const char* path)
 					.Write("name").String(fR->GetFutureName(i))
 					.Write("money").Number(fR->GetFutureMoney(i));
 			}
+			break;
 		}
 		case RecipientType::ARREAR:
 		{
@@ -232,6 +233,7 @@ void EconomyScene::InternalSave(const char* path)
 					.Write("name").String(aR->GetArrearName(i))
 					.Write("money").Number(aR->GetArrearMoney(i));
 			}
+			break;
 		}
 
 		default:
