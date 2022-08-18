@@ -31,6 +31,11 @@ public: // Functions
 		ClearFutures();
 	}
 
+	void Start(const char* currency) override
+	{
+		SetFormat("%.2f ", currency);
+	}
+
 	void Update() override 
 	{
 		money = 0;
@@ -62,7 +67,7 @@ public: // Functions
 			ImGui::PopItemWidth(); ImGui::SameLine();
 
 			ImGui::PushItemWidth(100.f);
-			ImGui::DragFloat("##Drag", &futures[i].money, 1.0f, 0.0f, 340282000000000000000000000000000000000.0f, "%.2f EUR"); 
+			ImGui::DragFloat("##Drag", &futures[i].money, 1.0f, 0.0f, 340282000000000000000000000000000000000.0f, format.c_str());
 			ImGui::PopItemWidth(); ImGui::SameLine();
 
 			if (size > 1 && ImGui::Button("X")) DeleteFuture(i);

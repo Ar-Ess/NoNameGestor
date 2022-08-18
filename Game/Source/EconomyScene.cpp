@@ -22,6 +22,9 @@ EconomyScene::~EconomyScene()
 bool EconomyScene::Start()
 {
 	totalRecipient->Start(comboCurrency[currency]);
+	unasignedRecipient->Start(comboCurrency[currency]);
+	for (Recipient* r : recipients) r->Start(comboCurrency[currency]);
+
 	return true;
 }
 
@@ -182,6 +185,7 @@ void EconomyScene::InternalSave(const char* path)
 		Write("cnfSFU").Bool(showFutureUnasigned).
 		Write("cnfAFC").Bool(allowFutureCovering).
 		Write("cnfTFS").Number(textFieldSize).
+		Write("currency").Number(currency).
 		// Generic File
 		Write("total").Number(total).
 		Write("size").Number((int)recipients.size());
@@ -298,6 +302,7 @@ void EconomyScene::Load()
 		Read("cnfSFU").AsBool(showFutureUnasigned).
 		Read("cnfAFC").AsBool(allowFutureCovering).
 		Read("cnfTFS").AsFloat(textFieldSize).
+		Read("currency").AsInt(currency).
 		// General Project
 		Read("total").AsFloat(total).
 		Read("size").AsInt(size);
@@ -306,7 +311,7 @@ void EconomyScene::Load()
 
 	for (unsigned int i = 0; i < size; ++i)
 	{//                               \/ Change it depending on how many variables readed on top
-		int positionToRead = (i * 4) + 6 + added;
+		int positionToRead = (i * 4) + 7 + added;
 		int type = -1;
 		float money = 0;
 		bool hidden = false;
@@ -535,7 +540,8 @@ bool EconomyScene::DrawPreferencesWindow(bool* open)
 		ImGui::DragFloat("Text Fiend Size", &textFieldSize, 0.1f, 1.0f, 1000.0f, "%f pts");
 		ImGui::PopItemWidth();
 
-		ImGui::Combo("Currency", &currency, comboCurrency, 2);
+		if (ImGui::Combo("Currency", &currency, comboCurrency, 5))
+			UpdateCurrency();
 
 	}
 	ImGui::End();
@@ -686,6 +692,13 @@ void EconomyScene::UpdateShortcuts()
 	s    = input->GetKey(SDL_SCANCODE_S) == KeyState::KEY_DOWN;
 	l    = input->GetKey(SDL_SCANCODE_L) == KeyState::KEY_DOWN;
 	n    = input->GetKey(SDL_SCANCODE_N) == KeyState::KEY_DOWN;
+}
+
+void EconomyScene::UpdateCurrency()
+{
+	totalRecipient->SetCurrency(comboCurrency[currency]);
+	unasignedRecipient->SetCurrency(comboCurrency[currency]);
+	for (Recipient* r : recipients) r->SetCurrency(comboCurrency[currency]);
 }
 
 void EconomyScene::CreateRecipient(RecipientType recipient, const char* name, float money, float limit, bool hidden)

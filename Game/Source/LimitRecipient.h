@@ -12,6 +12,11 @@ public: // Functions
 		this->tempLimit = limit;
 	}
 
+	void Start(const char* currency) override
+	{
+		SetFormat("%.2f ", currency);
+	}
+
 	void Draw() override
 	{
 		if (hidden) ImGui::BeginDisabled();
@@ -23,13 +28,14 @@ public: // Functions
 			ImGui::TableNextColumn();
 
 			ImGui::PushItemWidth(150.f);
-			ImGui::DragFloat("##Drag", &money, 1.0f, 0.0f, limit, "%.2f EUR");
+			ImGui::DragFloat("##Drag", &money, 1.0f, 0.0f, limit, format.c_str());
 			ImVec2 size = ImGui::GetItemRectSize();
 			size.y -= 15;
 			ImGui::PopItemWidth();
 
 			ImGui::SameLine();
-			ImGui::Text(" / %.2f EUR", limit); ImGui::SameLine();
+			ImGui::Text(" / "); ImGui::SameLine();
+			ImGui::Text(format.c_str(), limit); ImGui::SameLine();
 			if (ImGui::Button("Edit")) editLimit = true;
 
 			ImGui::TableNextColumn();
@@ -50,7 +56,7 @@ public: // Functions
 		ImGui::SetNextWindowSize(ImVec2(140, 100));
 		if (ImGui::BeginPopupModal("Edit limit", nullptr, ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
 		{
-			ImGui::DragFloat("##Drag1", &tempLimit, 1.0f, 0.0f, 340282000000000000000000000000000000000.0f, "%.2f EUR");
+			ImGui::DragFloat("##Drag1", &tempLimit, 1.0f, 0.0f, 340282000000000000000000000000000000000.0f, format.c_str());
 			if (ImGui::Button("Done"))
 			{
 				limit = tempLimit;

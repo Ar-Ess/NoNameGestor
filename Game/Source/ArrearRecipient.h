@@ -118,8 +118,6 @@ public: // Functions
 
 private:
 
-	// TODO: "Future Money not saving my actual money negativity"
-
 	void DeleteFuture(int index)
 	{
 		arrears[index].name.clear();

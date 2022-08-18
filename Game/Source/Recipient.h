@@ -26,6 +26,8 @@ public: // Functions
 		name.shrink_to_fit();
 	}
 
+	virtual void Start(const char* currency) {}
+
 	virtual void Update() {}
 
 	virtual void Draw() {}
@@ -77,6 +79,11 @@ public: // Functions
 		this->money = money;
 	}
 
+	virtual void SetCurrency(const char* currency)
+	{
+		SetFormat("%.2f ", currency);
+	}
+
 protected: // Functions
 
 	Recipient(const char* name, float money, bool hidden, RecipientType type) 
@@ -86,6 +93,14 @@ protected: // Functions
 		this->type = type;
 		this->hidden = hidden;
 		id = reinterpret_cast<int>(this);
+	}
+
+	void SetFormat(const char* form, const char* currency)
+	{
+		format.clear();
+		format.shrink_to_fit();
+		format += form;
+		format += currency;
 	}
 
 public: // Variables
@@ -98,5 +113,5 @@ protected: // Variables
 	std::string name;
 	std::intptr_t id = 0;
 	RecipientType type = RecipientType::NO_RECIPIENT;
-	const char* currency = nullptr;
+	std::string format;
 };

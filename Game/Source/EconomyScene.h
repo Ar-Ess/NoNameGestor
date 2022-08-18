@@ -36,6 +36,7 @@ private: // Functions
 	bool DrawToolbarWindow(bool* open);
 
 	void UpdateShortcuts();
+	void UpdateCurrency();
 
 	void CreateRecipient(RecipientType recipient, const char* name = "New Recipient", float money = 0.0f, float limit = 1.0f, bool hidden = false);
 
@@ -191,9 +192,8 @@ private: // Variables
 	bool showArrearUnasigned = false;
 	bool allowArrearsFill = false;
 
-	// TODO: Save & Load of currency
 	int currency = 0;
-	const char* comboCurrency[2] = { "EUR", "COP" };
+	const char* comboCurrency[5] = { "EUR", "USD", "COP", "ARS", "PEN"};
 
 	// Save & Load
 	bool saving = false, loading = false, savingAs = false;

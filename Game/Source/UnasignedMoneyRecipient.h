@@ -14,6 +14,11 @@ public: // Functions
 		this->allowArrearsFill = allowArrearsFill;
 	}
 
+	void Start(const char* currency) override
+	{
+		SetFormat("%.2f ", currency);
+	}
+
 	void Update() override
 	{
 		if (*showFutureMoney && *allowFutureCover && futureMoney > 0 && actualMoney < 0)
@@ -52,21 +57,25 @@ public: // Functions
 		if (!*showFutureMoney && !*showArrearMoney)
 		{
 			ImGui::Text(name.c_str()); ImGui::SameLine();
-			ImGui::Text(": %.2f EUR", money);
+			ImGui::Text(": "); ImGui::SameLine();
+			ImGui::Text(format.c_str(), money);
 		}
 		else
 		{
 			ImGui::Text("Unasigned Actual Money"); ImGui::SameLine();
-			ImGui::Text(": %.2f EUR", actualMoney);
+			ImGui::Text(": "); ImGui::SameLine();
+			ImGui::Text(format.c_str(), actualMoney);
 			if (*showFutureMoney)
 			{
 				ImGui::Text("Unasigned Future Money"); ImGui::SameLine();
-				ImGui::Text(": %.2f EUR", futureMoney);
+				ImGui::Text(": "); ImGui::SameLine();
+				ImGui::Text(format.c_str(), futureMoney);
 			}
 			if (*showArrearMoney)
 			{
 				ImGui::Text("Unasigned Arrear Money"); ImGui::SameLine();
-				ImGui::Text(": %.2f EUR", arrearMoney);
+				ImGui::Text(": "); ImGui::SameLine();
+				ImGui::Text(format.c_str(), arrearMoney);
 			}
 		}
 	}
