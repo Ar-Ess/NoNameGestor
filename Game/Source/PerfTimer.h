@@ -11,14 +11,19 @@ public:
 	PerfTimer();
 
 	void Start();
+
 	double ReadMs() const;
+
 	uint64 ReadTicks() const;
+
 	float ReadSec() const;
 
 private:
-	uint32	started_at;
 
-	uint64 startTime;
+	uint32	startedAt = 0;
+
+	uint64 startTime = 0;
+
 	static uint64 frequency;
 };
 

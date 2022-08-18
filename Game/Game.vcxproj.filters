@@ -24,6 +24,12 @@
     <ClCompile Include="Source\Scene.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
+    <ClCompile Include="Source\EconomyScene.cpp">
+      <Filter>Scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\External\ImGuiFileDialog\ImGuiFileDialog.cpp">
+      <Filter>External\ImGuiFileDialog</Filter>
+    </ClCompile>
     <ClCompile Include="Source\External\imgui\imgui.cpp">
       <Filter>External\ImGui</Filter>
     </ClCompile>
@@ -33,10 +39,10 @@
     <ClCompile Include="Source\External\imgui\imgui_draw.cpp">
       <Filter>External\ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="Source\External\imgui\imgui_impl_opengl3.cpp">
+    <ClCompile Include="Source\External\imgui\imgui_impl_sdl.cpp">
       <Filter>External\ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="Source\External\imgui\imgui_impl_sdl.cpp">
+    <ClCompile Include="Source\External\imgui\imgui_impl_sdlrenderer.cpp">
       <Filter>External\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="Source\External\imgui\imgui_stdlib.cpp">
@@ -47,12 +53,6 @@
     </ClCompile>
     <ClCompile Include="Source\External\imgui\imgui_widgets.cpp">
       <Filter>External\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\EconomyScene.cpp">
-      <Filter>Scenes</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\External\ImGuiFileDialog\ImGuiFileDialog.cpp">
-      <Filter>External\ImGuiFileDialog</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -89,36 +89,6 @@
     </ClInclude>
     <ClInclude Include="Source\Multibool.h">
       <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\External\imgui\imconfig.h">
-      <Filter>External\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\External\imgui\imgui.h">
-      <Filter>External\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\External\imgui\imgui_impl_opengl3.h">
-      <Filter>External\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\External\imgui\imgui_impl_sdl.h">
-      <Filter>External\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\External\imgui\imgui_internal.h">
-      <Filter>External\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\External\imgui\imgui_stdlib.h">
-      <Filter>External\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\External\imgui\imstb_rectpack.h">
-      <Filter>External\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\External\imgui\imstb_textedit.h">
-      <Filter>External\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\External\imgui\imstb_truetype.h">
-      <Filter>External\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\External\imgui\imgui_impl_opengl3_loader.h">
-      <Filter>External\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="Source\EconomyScene.h">
       <Filter>Scenes</Filter>
@@ -158,6 +128,33 @@
     </ClInclude>
     <ClInclude Include="Source\ArrearRecipient.h">
       <Filter>Recipients</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\External\imgui\imconfig.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\External\imgui\imgui.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\External\imgui\imgui_impl_sdl.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\External\imgui\imgui_impl_sdlrenderer.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\External\imgui\imgui_internal.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\External\imgui\imgui_stdlib.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\External\imgui\imstb_rectpack.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\External\imgui\imstb_textedit.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\External\imgui\imstb_truetype.h">
+      <Filter>External\ImGui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -2,7 +2,6 @@
 #define __WINDOW_H__
 
 #include "Module.h"
-
 #include "Point.h"
 
 struct SDL_Window;
@@ -20,8 +19,6 @@ public:
 
 	bool CleanUp();
 
-// Getters & Setters
-
 	void SetTitle(const char* title);
 
 	suint GetScale() const
@@ -37,16 +34,16 @@ public:
 
 public:
 
-	SDL_Window* window;
+	SDL_Window* window = nullptr;
 
-	SDL_Surface* screenSurface;
+	SDL_Surface* screenSurface = nullptr;
 
 	bool fullScreen = false;
 	bool dFullScreen = false;
 
 private:
 
-	Point size;
+	Point size = {};
 	suint scale = 1;
 };
 

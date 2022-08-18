@@ -2,6 +2,7 @@
 #define __MULTIBOOL_H__
 
 #include <math.h>
+#include <assert.h>
 
 class Multibool
 {

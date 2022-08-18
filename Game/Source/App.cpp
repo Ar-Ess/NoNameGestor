@@ -80,18 +80,11 @@ bool App::InitImGui()
 	// Setup SDL
 	// (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
 	// depending on whether SDL_INIT_GAMECONTROLLER is enabled or disabled.. updating to latest version of SDL is recommended!)
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0)
 	{
 		printf("Error: %s\n", SDL_GetError());
-		return bool(-1);
+		return -1;
 	}
-
-	// GL 3.0 + GLSL 130
-	const char* glsl_version = "#version 130";
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
 	PERF_PEEK(ptimer);
 
@@ -139,9 +132,7 @@ bool App::Update()
 
 void App::FinishUpdate()
 {
-	if (loadGameRequested == true) LoadGame();
-	if (saveGameRequested == true) SaveGame();
-    
+
 	if (lastSecFrameTime.Read() > 1000)
 	{
 		lastSecFrameTime.Start();
@@ -192,28 +183,4 @@ const char* App::GetArgv(int index) const
 		return args[index];
 	else
 		return NULL;
-}
-
-void App::LoadGameRequest()
-{
-	loadGameRequested = true;
-}
-
-void App::SaveGameRequest() const
-{
-	saveGameRequested = true;
-}
-
-bool App::LoadGame()
-{
-	bool ret = true;
-
-	return ret;
-}
-
-bool App::SaveGame() const
-{
-	bool ret = true;
-
-	return ret;
 }

@@ -34,5 +34,5 @@ uint64 PerfTimer::ReadTicks() const
 
 float PerfTimer::ReadSec() const
 {
-	return float(SDL_GetTicks() - started_at) / 1000.0f;
+	return float(SDL_GetTicks() - startedAt) / 1000.0f;
 }

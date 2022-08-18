@@ -2,7 +2,6 @@
 
 #include "Recipient.h"
 #include <vector>
-#include "imgui/imgui_stdlib.h"
 
 class ArrearRecipient : public Recipient
 {
@@ -16,7 +15,7 @@ private: //structs
 			this->money = money;
 		}
 
-		float money;
+		float money = 0;
 		std::string name;
 	};
 

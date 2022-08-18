@@ -21,6 +21,7 @@ EconomyScene::~EconomyScene()
 
 bool EconomyScene::Start()
 {
+	totalRecipient->Start(comboCurrency[currency]);
 	return true;
 }
 
@@ -533,6 +534,8 @@ bool EconomyScene::DrawPreferencesWindow(bool* open)
 		ImGui::PushItemWidth(textFieldSize);
 		ImGui::DragFloat("Text Fiend Size", &textFieldSize, 0.1f, 1.0f, 1000.0f, "%f pts");
 		ImGui::PopItemWidth();
+
+		ImGui::Combo("Currency", &currency, comboCurrency, 2);
 
 	}
 	ImGui::End();

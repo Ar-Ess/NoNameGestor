@@ -393,6 +393,7 @@ private:
 	private:
 
 		friend class Returns;
+
 		Editor() {}
 
 		bool InternalSameString(std::string a, std::string b)

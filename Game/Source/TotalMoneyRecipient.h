@@ -1,5 +1,4 @@
-#ifndef __TOTAL_MONEY_RECIPIENT_H__
-#define __TOTAL_MONEY_RECIPIENT_H__
+#pragma once
 
 #include "Recipient.h"
 
@@ -9,6 +8,11 @@ public: // Functions
 
 	TotalMoneyRecipient(const char* name, float money) : Recipient(name, money, false, RecipientType::TOTAL_MONEY)
 	{
+	}
+
+	void Start(const char* currency)
+	{
+
 	}
 
 	void Draw() override
@@ -21,8 +25,6 @@ public: // Functions
 
 private: // Functions
 
-protected: // Variables
+private: // Variables
 };
-
-#endif // !__TOTAL_MONEY_RECIPIENT_H__
 

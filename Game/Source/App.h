@@ -6,23 +6,13 @@
 #include "Timer.h"
 
 #include <vector>
-
-#define CONFIG_FILENAME		"config.xml"
-#define SAVE_STATE_FILENAME "save_game.xml"
-
-#include "External/glew/glew.h"
-#include <gl/GL.h>
-#include <gl/GLU.h>
 #include "External/imgui/imgui.h"
 
 // Modules
 class Window;
 class Input;
 class Render;
-class Textures;
-class Audio;
 class Scene;
-class AssetsManager;
 
 class App
 {
@@ -40,27 +30,24 @@ public:
 	void AddModule(Module* module);
 
 	int GetArgc() const;
+
 	const char* GetArgv(int index) const;
-	uint64 GetFrameCount() const
+
+	inline uint64 GetFrameCount() const
 	{
 		return frameCount;
 	}
-	float GetDeltaTime() const
+
+	inline float GetDeltaTime() const
 	{
 		return dt;
 	}
-
-	void LoadGameRequest();
-	void SaveGameRequest() const;
 
 private:
 
 	void PrepareUpdate();
 
 	void FinishUpdate();
-
-	bool LoadGame();
-	bool SaveGame() const;
 
 	bool InitImGui();
 
@@ -70,36 +57,34 @@ public:
 	Window* win = nullptr;
 	Input* input = nullptr;
 	Render* render = nullptr;
-	Textures* tex = nullptr;
-	Audio* audio = nullptr;
 	Scene* scene = nullptr;
-	AssetsManager* assetsManager = nullptr;
 
 private:
 
-	int argc;
-	char** args;
+	int argc = 0;
+
+	char** args = nullptr;
 
 	std::vector<Module*> modules;
 
-	mutable bool saveGameRequested;
-	bool loadGameRequested;
-
-	// L07: DONE 4: Calculate some timing measures
-	// required variables are provided:
 	PerfTimer ptimer;
+
 	uint64 frameCount = 0;
 
 	Timer startupTime;
 	Timer frameTime;
 	Timer lastSecFrameTime;
+
 	uint32 lastSecFrameCount = 0;
+
 	uint32 prevLastSecFrameCount = 0;
+
 	float dt = 0.0f;
 
 	const uint32 frameDelay = 1000 / 60;
 
 	int	cappedMs = -1;
+
 };
 
 #endif	// __APP_H__

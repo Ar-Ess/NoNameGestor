@@ -7,9 +7,6 @@
 #include "Render.h"
 #include "EconomyScene.h"
 
-class GuiControl;
-class GuiManager;
-
 enum class Scenes
 {
 	NO_SCENE = -1,
@@ -31,18 +28,14 @@ public:
 
 	bool CleanUp();
 
-	bool OnGuiMouseClickEvent(GuiControl* control, float value, bool check);
-
 // SCENE MANAGER
 
-	Scenes GetCurrScene() const
-	{
-		return currScene;
-	}
+	inline Scenes GetCurrScene() const { return currScene; }
 
 	bool SetScene(Scenes scene);
 
 private:
+
 	Scenes currScene = Scenes::NO_SCENE;
 	Scenes prevScene = Scenes::NO_SCENE;
 
@@ -68,8 +61,6 @@ private: // Variables
 
 	bool exit = false;
 	bool activeContinue = false;
-
-	suint lvl = 0;
 };
 
 #endif // __SCENE_H__

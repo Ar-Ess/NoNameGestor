@@ -1,5 +1,4 @@
-#ifndef __UNASIGNED_MONEY_RECIPIENT_H__
-#define __UNASIGNED_MONEY_RECIPIENT_H__
+#pragma once
 
 #include "Recipient.h"
 
@@ -91,5 +90,3 @@ private: // Variables
 	bool* showArrearMoney = nullptr;
 	bool* allowArrearsFill = nullptr;
 };
-
-#endif // !__UNASIGNED_MONEY_RECIPIENT_H__

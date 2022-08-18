@@ -1,7 +1,6 @@
 #ifndef __ECONOMY_SCENE_H__
 #define __ECONOMY_SCENE_H__
 
-#include "SDL/include/SDL.h"
 #include <vector>
 #include "imgui/imgui.h"
 #include "Input.h"
@@ -191,6 +190,10 @@ private: // Variables
 	bool allowFutureCovering = false;
 	bool showArrearUnasigned = false;
 	bool allowArrearsFill = false;
+
+	// TODO: Save & Load of currency
+	int currency = 0;
+	const char* comboCurrency[2] = { "EUR", "COP" };
 
 	// Save & Load
 	bool saving = false, loading = false, savingAs = false;

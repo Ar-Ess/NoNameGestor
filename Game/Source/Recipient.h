@@ -1,7 +1,7 @@
-#ifndef __RECIPIENT_H__
-#define __RECIPIENT_H__
+#pragma once
 
 #include "imgui/imgui.h"
+#include "imgui/imgui_stdlib.h"
 #include <string>
 static float textFieldSize = 150.0f;
 
@@ -27,6 +27,7 @@ public: // Functions
 	}
 
 	virtual void Update() {}
+
 	virtual void Draw() {}
 
 	const char* GetName() const
@@ -97,6 +98,5 @@ protected: // Variables
 	std::string name;
 	std::intptr_t id = 0;
 	RecipientType type = RecipientType::NO_RECIPIENT;
+	const char* currency = nullptr;
 };
-
-#endif // !__RECIPIENT_H__

@@ -39,7 +39,6 @@ public:
 	// Size Functions
 	suint GetScale() const { return scale; };
 	void SetScale(suint scale) { this->scale = scale; }
-	void OnResize(int width, int height);
 
 public:
 
@@ -55,6 +54,7 @@ private:
 
 	bool vSync = true;
 	suint scale = 1;
+
 };
 
 #endif // __RENDER_H__
