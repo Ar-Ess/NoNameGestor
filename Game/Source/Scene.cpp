@@ -19,14 +19,6 @@ bool Scene::Start()
 	//FIRST SCENE
 	if (!SetScene(Scenes::ECONOMY_SCENE)) return false;
 
-	//CONTINUE ACTIVITY
-	/*activeContinue = false;
-	if (FILE* file = fopen("save_game.xml", "r"))
-	{
-		fclose(file);
-		activeContinue = true;
-	}*/
-
 	render->SetScale(1); //Qui toqui aquesta linia de codi, i m'entero, no viu un dia més :) <3
 
 	return true;

@@ -5,19 +5,10 @@
 #include "Render.h"
 #include "Scene.h"
 
-#if defined(IMGUI_IMPL_OPENGL_ES2)
-#include <SDL_opengles2.h>
-#else
-#include "External/SDL/include/SDL_opengl.h"
-#endif
-
 #include <time.h>
 
 #include "Defs.h"
 #include "Log.h"
-
-#include <iostream>
-#include <sstream>
 
 App::App(int argc, char* args[]) : argc(argc), args(args)
 {
@@ -108,6 +99,7 @@ bool App::Update()
 
 	if (input->GetWindowEvent(EventWindow::WE_QUIT)) ret = false;
 
+	
 	size_t size = modules.size();
 	for (size_t i = 0; i < size; ++i)
 	{
@@ -126,6 +118,7 @@ bool App::Update()
 	}
 
 	FinishUpdate();
+	
 
 	return ret;
 }

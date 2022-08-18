@@ -73,7 +73,7 @@ private:
 
 	Window* window = nullptr;
 
-	bool windowEvents[(int)EventWindow::WE_COUNT];
+	bool windowEvents[(int)EventWindow::WE_COUNT] = {false, false, true};
 
 	KeyState* keyboard = nullptr;	
 	KeyState* mouseButtons = nullptr;
