@@ -409,6 +409,7 @@ void EconomyScene::Load()
 	}
 
 	totalRecipient->SetMoney(total);
+	UpdateCurrency();
 
 }
 
