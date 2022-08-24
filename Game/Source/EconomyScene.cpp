@@ -403,8 +403,8 @@ void EconomyScene::Load()
 			FutureRecipient* fR = (FutureRecipient*)recipients.back();
 			fR->ClearFutures();
 			
-			int fSize = 0;
-			int futurePositionToRead = positionToRead + 4;
+			int fSize = 0; //                           \/ Change depending on below aspects amount
+			int futurePositionToRead = positionToRead + 5;
 
 			file->ViewFile(path.c_str(), futurePositionToRead).
 				Read("size").AsInt(fSize);
@@ -433,8 +433,8 @@ void EconomyScene::Load()
 			ArrearRecipient* aR = (ArrearRecipient*)recipients.back();
 			aR->ClearArrears();
 
-			int fSize = 0;
-			int futurePositionToRead = positionToRead + 4;
+			int fSize = 0; //                           \/ Change depending on below aspects amount
+			int futurePositionToRead = positionToRead + 5;
 
 			file->ViewFile(path.c_str(), futurePositionToRead).
 				Read("size").AsInt(fSize);
