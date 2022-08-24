@@ -196,7 +196,8 @@ void EconomyScene::InternalSave(const char* path)
 			Write("name").String(r->GetName()).
 			Write("type").Number((int)r->GetType()).
 			Write("money").Number(r->GetMoney()).
-			Write("hide").Bool(r->hidden);
+			Write("hide").Bool(r->hidden).
+			Write("open").Bool(r->open);
 
 		switch (r->GetType())
 		{
@@ -296,6 +297,7 @@ void EconomyScene::Load()
 
 	for (Recipient* r : recipients) DeleteAllRecipients();
 
+	// Top aspects
 	file->ViewFile(path.c_str()).
 		// Preferences
 		Read("cnfSRT").AsBool(showRecipientType).
@@ -310,24 +312,26 @@ void EconomyScene::Load()
 	int added = 0;
 
 	for (unsigned int i = 0; i < size; ++i)
-	{//                               \/ Change it depending on how many variables readed on top
-		int positionToRead = (i * 4) + 7 + added;
+	{//  Change depending on how many below aspects \/     \/ Change it depending on how many top aspects
+		int positionToRead =                   (i * 5)  +  7 + added;
 		int type = -1;
 		float money = 0;
-		bool hidden = false;
+		bool hidden = false, open = false;
 		std::string name;
 
+		// Below aspects
 		file->ViewFile(path.c_str(), positionToRead).
 			Read("name").AsString(name).
 			Read("type").AsInt(type).
 			Read("money").AsFloat(money).
-			Read("hide").AsBool(hidden);
+			Read("hide").AsBool(hidden).
+			Read("open").AsBool(open);
 
 		switch ((RecipientType)type)
 		{
 		case RecipientType::FILTER:
 		{
-			CreateRecipient((RecipientType)type, name.c_str(), money, 0.0f, hidden);
+			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
 			break;
 		}
 
@@ -337,8 +341,9 @@ void EconomyScene::Load()
 			file->ViewFile(path.c_str(), positionToRead + 4).
 				Read("limit").AsFloat(limit);
 
-			CreateRecipient((RecipientType)type, name.c_str(), money, limit, hidden);
+			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
 
+			((LimitRecipient*)recipients.back())->SetLimit(limit);
 			added++;
 
 			break;
@@ -346,7 +351,7 @@ void EconomyScene::Load()
 
 		case RecipientType::FUTURE:
 		{
-			CreateRecipient((RecipientType)type, name.c_str(), money, 0.0f, hidden);
+			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
 			FutureRecipient* fR = (FutureRecipient*)recipients.back();
 			fR->ClearFutures();
 			
@@ -376,7 +381,7 @@ void EconomyScene::Load()
 
 		case RecipientType::ARREAR:
 		{
-			CreateRecipient((RecipientType)type, name.c_str(), money, 0.0f, hidden);
+			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
 			ArrearRecipient* aR = (ArrearRecipient*)recipients.back();
 			aR->ClearArrears();
 
@@ -406,6 +411,8 @@ void EconomyScene::Load()
 
 		default: break;
 		}
+
+		recipients.back()->loadOpen = true;
 	}
 
 	totalRecipient->SetMoney(total);
@@ -623,8 +630,13 @@ bool EconomyScene::DrawMainWindow(bool* open)
 					ImGui::EndPopup();
 				}
 				ImGui::SameLine();
-
-				if (ImGui::TreeNodeEx("[]", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding))
+				
+				if (r->loadOpen)
+				{
+					ImGui::SetNextItemOpen(r->open);
+					r->loadOpen = false;
+				}
+				if (r->open = ImGui::TreeNodeEx("[]", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding))
 				{
 					if (ImGui::BeginDragDropSource())
 					{
@@ -702,14 +714,14 @@ void EconomyScene::UpdateCurrency()
 	for (Recipient* r : recipients) r->SetCurrency(comboCurrency[currency]);
 }
 
-void EconomyScene::CreateRecipient(RecipientType recipient, const char* name, float money, float limit, bool hidden)
+void EconomyScene::CreateRecipient(RecipientType recipient, const char* name, float money, bool hidden, bool open)
 {
 	switch (recipient)
 	{
-	case RecipientType::FILTER: recipients.push_back((Recipient*)(new FilterRecipient(name, money, hidden))); break;
-	case RecipientType::LIMIT : recipients.push_back((Recipient*)(new  LimitRecipient(name, money, hidden, limit))); break;
-	case RecipientType::FUTURE: recipients.push_back((Recipient*)(new FutureRecipient(name, money, hidden, totalRecipient->GetMoneyPtr()))); break;
-	case RecipientType::ARREAR: recipients.push_back((Recipient*)(new ArrearRecipient(name, money, hidden, totalRecipient->GetMoneyPtr()))); break;
+	case RecipientType::FILTER: recipients.push_back((Recipient*)(new FilterRecipient(name, money, hidden, open))); break;
+	case RecipientType::LIMIT : recipients.push_back((Recipient*)(new  LimitRecipient(name, money, hidden, open))); break;
+	case RecipientType::FUTURE: recipients.push_back((Recipient*)(new FutureRecipient(name, money, hidden, open, totalRecipient->GetMoneyPtr()))); break;
+	case RecipientType::ARREAR: recipients.push_back((Recipient*)(new ArrearRecipient(name, money, hidden, open, totalRecipient->GetMoneyPtr()))); break;
 	default: break;
 	}
 }

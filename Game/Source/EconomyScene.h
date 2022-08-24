@@ -33,12 +33,14 @@ private: // Functions
 
 	bool DrawPreferencesWindow(bool* open);
 	bool DrawMainWindow(bool* open);
+		bool DrawRecipient(Recipient* recipient, size_t size, suint i);
+
 	bool DrawToolbarWindow(bool* open);
 
 	void UpdateShortcuts();
 	void UpdateCurrency();
 
-	void CreateRecipient(RecipientType recipient, const char* name = "New Recipient", float money = 0.0f, float limit = 1.0f, bool hidden = false);
+	void CreateRecipient(RecipientType recipient, const char* name = "New Recipient", float money = 0.0f, bool hidden = false, bool open = false);
 
 	// Input from 0 (smallest spacing) to whatever you need
 	void AddSpacing(unsigned int spaces = 1)

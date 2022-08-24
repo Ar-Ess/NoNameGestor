@@ -21,7 +21,7 @@ private: //structs
 
 public: // Functions
 
-	ArrearRecipient(const char* name, float money, bool hidden, float* totalMoneyPtr) : Recipient(name, money, hidden, RecipientType::ARREAR)
+	ArrearRecipient(const char* name, float money, bool hidden, bool open, float* totalMoneyPtr) : Recipient(name, money, hidden, open, RecipientType::ARREAR)
 	{
 		this->totalMoneyPtr = totalMoneyPtr;
 		NewArrear();

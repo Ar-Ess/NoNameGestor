@@ -6,7 +6,7 @@ class TotalMoneyRecipient : public Recipient
 {
 public: // Functions
 
-	TotalMoneyRecipient(const char* name, float money) : Recipient(name, money, false, RecipientType::TOTAL_MONEY)
+	TotalMoneyRecipient(const char* name, float money) : Recipient(name, money, false, true, RecipientType::TOTAL_MONEY)
 	{
 	}
 

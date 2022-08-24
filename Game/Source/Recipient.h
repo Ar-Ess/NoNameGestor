@@ -86,12 +86,13 @@ public: // Functions
 
 protected: // Functions
 
-	Recipient(const char* name, float money, bool hidden, RecipientType type) 
+	Recipient(const char* name, float money, bool hidden, bool open, RecipientType type) 
 	{
 		this->money = money;
 		this->name = name;
 		this->type = type;
 		this->hidden = hidden;
+		this->open = open;
 		id = reinterpret_cast<int>(this);
 	}
 
@@ -106,6 +107,8 @@ protected: // Functions
 public: // Variables
 
 	bool hidden = false;
+	bool open = false;
+	bool loadOpen = false;
 
 protected: // Variables
 

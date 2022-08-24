@@ -20,7 +20,7 @@ private: //structs
 
 public: // Functions
 
-	FutureRecipient(const char* name, float money, bool hidden, float* totalMoneyPtr) : Recipient(name, money, hidden, RecipientType::FUTURE)
+	FutureRecipient(const char* name, float money, bool hidden, bool open, float* totalMoneyPtr) : Recipient(name, money, hidden, open, RecipientType::FUTURE)
 	{
 		this->totalMoneyPtr = totalMoneyPtr;
 		NewFuture();

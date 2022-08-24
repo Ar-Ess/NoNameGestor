@@ -6,7 +6,7 @@ class UnasignedMoneyRecipient : public Recipient
 {
 public: // Functions
 
-	UnasignedMoneyRecipient(const char* name, float money, bool* showFutureMoney, bool* allowFutureCover, bool* showArrearMoney, bool* allowArrearsFill) : Recipient(name, money, false, RecipientType::UNASIGNED_MONEY)
+	UnasignedMoneyRecipient(const char* name, float money, bool* showFutureMoney, bool* allowFutureCover, bool* showArrearMoney, bool* allowArrearsFill) : Recipient(name, money, false, true, RecipientType::UNASIGNED_MONEY)
 	{
 		this->showFutureMoney = showFutureMoney;
 		this->allowFutureCover = allowFutureCover;
