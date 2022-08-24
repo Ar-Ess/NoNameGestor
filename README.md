@@ -5,12 +5,12 @@ Its main focus is to categorize your total economic amount into small sections t
 
 This project uses SDL loop application system and ImGui as a Graphic library in charge of the UI. It is only built for Windows devices.
 
-No Name Gestor is a high scalable project single-developed, which its main focus is features and usage. Nowadays it lacks the UX and
+No Name Gestor is a high scalable project single-developed, who's main focus is features and usage. Nowadays it lacks the UX and
 for sure it will be redesigned.
 
 ## Into the gestor
 --------------------------------------
-The first step is to look at your bank account you want to manage and type your total amount in the **Total Money** field by double clicking it or by draging.
+The first step is to look at the bank account you want to manage and type your total amount in the **Total Money** field by double clicking it or by draging.
 Here is where you'll be updating your money each time you have some movements in your bank account.
 Once that is typed, you'll see below a text saying **Unasigned Money**, and the same quantity you've typed in the **Total Money** field.
 **Unasigned Money** shows you how many money, from the **Total Money**, you have asigned inside your **Recipients**.
@@ -43,9 +43,14 @@ The "maximum amount" inputted by clicking the **Edit** button does not discount 
 Utility: If you want to achieve certain amount of money in a future to buy new shoes, create a "Limit", insert the amount by clicking the **Edit** button and keep adding money inside whenever you can. Name it "I want new Shoes".
 
 ### Future
-Future allows to input money that you do not have, but it will be given to you anytime. To sum up, future income. The main feature of futures is that they sum to the **Unasigned Money** field, rather than substracting.
+Future allows to input money that you do not have, but it will be given to you anytime. To sum up, future income. The main feature of futures is that they sum to the **Unasigned Money** field, rather than substracting. It can be analized apart from the **Unasigned Money**. *Check Preferences Section*
 
 Utility: If someone owns you money, create a "Future" called "Extra Income", label the first one as "Friend Money" and asign the amount they own you.
+
+### Arrear
+Arrear allows to input money that you might have or not, but it will have to be paid eventually. To sum up, future expenses. The main feature of arrears is that they substract directly to the **Unasigned Money** field, and can be analized apart from it. *Check Preferences Section*
+
+Utility: If you own money to someone, create an "Arrear" called "Extra Expenses", label the first one as "Someone debt" and asign the amount that you own.
 
 ## Save & Load
 --------------------------------------
