@@ -22,13 +22,28 @@ we have asigned certain money somewhere. This allows the user to keep track of w
 You can create a **Recipient** by clicking the "Create" menu on the top left corner and choosing which one or simply by going to the left toolbar and clicking 
 on the recipient type you need. // Future explanation of single & plural
 
-Each **Recipient** has a text field to write the category name, a dropdown menu that can be opened with the button labeled ":", an arrow \/ to minimize or maximize it, and a drag & drop symbol "[]" where you can click, drag, and reorder your filters.
+Each **Recipient** has a text field to write the category name, a dropdown menu that can be opened with the button labeled ":", an arrow \/ to minimize or maximize it, and a drag & drop symbol "[]" where you can click, drag, and reorder your filters. Inside the dropdown menu ":", there is 3 options available: Delete, Process & Hide.
+ - The Delete option erases completely the recipient, returning the asigned money to the **Unasigned Money** label.
+ - The Process option erases completely the recipient, but it discounts the asigned money to the **Total Money** label, as if the **Recipient** was processed.
+ - The Hide option ocults the recipient making it transparent, returning the asigned money to **Unasigned Money** label. You can unhide it by clicking again the dropdown menu ":" and unchecking the "Hide" option. This way, the recipien will get functional again an the **Unasigned Money** label will decrease again. 
+
 
 Next, what is inside each **Recipient** changes depending of which type you selected. The recipient type can be shown at the left side of the label text.
 
 ### Filters
 This are the simplest ones. In the **Recipient**, there is a rectangular field showing 0.0, by double clicking or by dragging, you will change its value
 to insert money inside that **Recipient**.
+
+Utility: If you want to save certain amount of money to buy new shoes, create a "Filter", insert the amount inside and name it "New Shoes".
+
+### Limits
+Limits allow the user to input a maximum amount of money to acquire in the future. By clicking the **Edit** button, type the amount of money to reach and click **Done**. Then, depending on the money inputed to the rectangular field, you'll see a yellou bar below showing how many of your objective have you achieved.
+The "maximum amount" inputted by clicking the **Edit** button does not discount money from the **Unasigned Money** label, just the money asigned to the blue rectangle field.
+
+Utility: If you want to achieve certain amount of money in a future to buy new shoes, create a "Limit", insert the amount by clicking the **Edit** button and keep adding money inside whenever you can. Name it "I want new Shoes".
+
+### Future
+Future allows to input money that you do not have, but it will be given to you anytime. To sum up, future income.
 
 ## Save & Load
 --------------------------------------
