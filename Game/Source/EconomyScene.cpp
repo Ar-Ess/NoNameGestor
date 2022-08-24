@@ -296,7 +296,7 @@ void EconomyScene::Load()
 		if (!versionError) return;
 	}
 
-	// Check if the version file is the same as the program version
+	// Version Error Popup
 	if (versionError)
 	{
 		ImGui::OpenPopup("Version Error");
@@ -494,7 +494,7 @@ bool EconomyScene::DrawMenuBar()
 
 			ImGui::EndMenu();
 		}
-		if (ImGui::BeginMenu("Edit"))
+		/*if (ImGui::BeginMenu("Edit"))
 		{
 			ImGui::Text("Undo/Redo Future Implementation");
 			//ImGui::MenuItem("Undo", "Ctrl + Z");
@@ -506,7 +506,7 @@ bool EconomyScene::DrawMenuBar()
 			//ImGui::MenuItem("Cut", "Ctrl + X");
 			//ImGui::MenuItem("Duplicate", "Ctrl + D");
 			ImGui::EndMenu();
-		}
+		}*/
 		if (ImGui::BeginMenu("Create"))
 		{
 			if (ImGui::MenuItem("Filter"))
@@ -521,6 +521,18 @@ bool EconomyScene::DrawMenuBar()
 			if (ImGui::MenuItem("Arrear"))
 				CreateRecipient(RecipientType::ARREAR);
 
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("About"))
+		{
+			ImGui::Text("No Name Gestor %s", VERSION);
+			if (ImGui::BeginMenu("Third Parties"))
+			{
+				ImGui::Text("SDL - App Loop");
+				ImGui::Text("ImGui - Graphic UI");
+				ImGui::Text("ImGuiFileDialog - FileDialog");
+				ImGui::EndMenu();
+			}
 			ImGui::EndMenu();
 		}
 		//if (ImGui::BeginMenu("Window"))
