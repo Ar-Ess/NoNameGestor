@@ -784,4 +784,6 @@ void EconomyScene::CreateRecipient(RecipientType recipient, const char* name, fl
 	case RecipientType::ARREAR: recipients.push_back((Recipient*)(new ArrearRecipient(name, money, hidden, open, totalRecipient->GetMoneyPtr()))); break;
 	default: break;
 	}
+
+	recipients.back()->SetCurrency(comboCurrency[currency]);
 }
