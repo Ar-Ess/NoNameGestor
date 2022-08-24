@@ -1,5 +1,7 @@
 #include "EconomyScene.h"
+#include <windows.h>
 
+#define VERSION "v1.0"
 #define EXTENSION ".nng"
 #include "External/ImGuiFileDialog/ImGuiFileDialog.h"
 
@@ -181,6 +183,7 @@ void EconomyScene::InternalSave(const char* path)
 
 	file->OpenFile(path).
 		// Preferences
+		Write("version").String(VERSION).
 		Write("cnfSRT").Bool(showRecipientType).
 		Write("cnfSFU").Bool(showFutureUnasigned).
 		Write("cnfAFC").Bool(allowFutureCovering).
@@ -257,12 +260,13 @@ void EconomyScene::Load()
 	}
 
 	// open Dialog Simple
-	ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose a path", ".nng", ".");
+	if (!versionError) ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose a path", ".nng", ".");
 	std::string path;
 	std::string name;
+	std::string version;
 	size_t format = 0;
 	//display
-	if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
+	if (!versionError && ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
 	{
 		// action if OK
 		if (ImGuiFileDialog::Instance()->IsOk() == true && file->Exists(ImGuiFileDialog::Instance()->GetFilePathName().c_str(), false))
@@ -271,6 +275,14 @@ void EconomyScene::Load()
 			name = ImGuiFileDialog::Instance()->GetCurrentFileName();
 			format = ImGuiFileDialog::Instance()->GetCurrentFilter().size();
 			ImGuiFileDialog::Instance()->Close();
+
+			// Check if the version file is the same as the program version
+			std::string checkPath = path;
+			checkPath += name;
+			checkPath.erase(checkPath.end() - format, checkPath.end());
+			file->ViewFile(checkPath.c_str()).
+				Read("version").AsString(version);
+			versionError = !SameString(VERSION, version);
 		}
 		else
 		{
@@ -281,6 +293,42 @@ void EconomyScene::Load()
 	}
 	else
 	{
+		if (!versionError) return;
+	}
+
+	// Check if the version file is the same as the program version
+	if (versionError)
+	{
+		ImGui::OpenPopup("Version Error");
+		ImGui::SetNextWindowPos(ImVec2((1280 / 2) - 180, (720 / 2) - 90));
+		ImGui::SetNextWindowSize(ImVec2(360, 180));
+		if (ImGui::BeginPopupModal("Version Error", nullptr, ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+		{
+			ImGui::Text("File version different from program's version");
+			AddSpacing();
+			AddSeparator(2);
+			AddSpacing(1);
+			ImGui::Text("SOLUTION:");
+			ImGui::Text("Read the 'ReadMe.md' about how to load\nolder/newer files (Save & Load section).");
+			AddSpacing(2);
+			if (ImGui::Button("Go To 'ReadMe'"))
+			{
+				ShellExecute(NULL, NULL, "https://github.com/Ar-Ess/NoNameGestor/blob/main/README.md", NULL, NULL, SW_SHOWNORMAL);
+				ImGui::EndPopup();
+				loading = false;
+				return;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Okey"))
+			{
+				ImGui::EndPopup();
+				loading = false;
+				return;
+			}
+		}
+		ImGui::EndPopup();
+		//assert(false && "ERROR: The loaded file version is different from the program's one. SOLUTION: Read the 'ReadMe.md' about how to load older/newer files (Save & Load section). Find the info here: https://github.com/Ar-Ess/NoNameGestor");
+		
 		return;
 	}
 
@@ -295,10 +343,10 @@ void EconomyScene::Load()
 	float total = 0;
 	int size = 0;
 
-	for (Recipient* r : recipients) DeleteAllRecipients();
+	DeleteAllRecipients();
 
 	// Top aspects
-	file->ViewFile(path.c_str()).
+	file->ViewFile(path.c_str(), 1).
 		// Preferences
 		Read("cnfSRT").AsBool(showRecipientType).
 		Read("cnfSFU").AsBool(showFutureUnasigned).
@@ -313,7 +361,7 @@ void EconomyScene::Load()
 
 	for (unsigned int i = 0; i < size; ++i)
 	{//  Change depending on how many below aspects \/     \/ Change it depending on how many top aspects
-		int positionToRead =                   (i * 5)  +  7 + added;
+		int positionToRead =                   (i * 5)  +  8 + added;
 		int type = -1;
 		float money = 0;
 		bool hidden = false, open = false;

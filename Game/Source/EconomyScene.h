@@ -199,6 +199,7 @@ private: // Variables
 
 	// Save & Load
 	bool saving = false, loading = false, savingAs = false;
+	bool versionError = false;
 	std::string openFileName;
 	std::string openFilePath;
 
