@@ -156,6 +156,9 @@
     <ClInclude Include="Source\External\imgui\imstb_truetype.h">
       <Filter>External\ImGui</Filter>
     </ClInclude>
+    <ClInclude Include="Source\MethodsEnum.h">
+      <Filter>Enums</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="External">
@@ -181,6 +184,9 @@
     </Filter>
     <Filter Include="Resources">
       <UniqueIdentifier>{63ac2d9c-ef6c-494e-859e-482e550faffb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Enums">
+      <UniqueIdentifier>{59aa71da-c797-4a88-9608-392729e3d4d6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

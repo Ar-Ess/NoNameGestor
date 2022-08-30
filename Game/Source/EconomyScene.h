@@ -6,6 +6,7 @@
 #include "Input.h"
 #include "RecipientHeader.h"
 #include "FileManager.h"
+#include "MethodsEnum.h"
 
 class EconomyScene
 {
@@ -33,7 +34,6 @@ private: // Functions
 
 	bool DrawPreferencesWindow(bool* open);
 	bool DrawMainWindow(bool* open);
-		bool DrawRecipient(Recipient* recipient, size_t size, suint i);
 
 	bool DrawToolbarWindow(bool* open);
 
@@ -116,6 +116,8 @@ private: // Functions
 
 		return i;
 	}
+
+	void SetMethod();
 
 	//// Given an Image enum type, width and height, draw an image
 	//void AddImage(Image img, unsigned int w = 0, unsigned int h = 0)
@@ -202,6 +204,8 @@ private: // Variables
 	bool versionError = false;
 	std::string openFileName;
 	std::string openFilePath;
+
+	Method method = Method::MTHD_NO;
 
 };
 

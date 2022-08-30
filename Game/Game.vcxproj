@@ -129,6 +129,7 @@
     <ClInclude Include="Source\LimitRecipient.h" />
     <ClInclude Include="Source\Multibool.h" />
     <ClInclude Include="Source\RecipientHeader.h" />
+    <ClInclude Include="Source\MethodsEnum.h" />
     <ClInclude Include="Source\UnasignedMoneyRecipient.h" />
     <ClInclude Include="Source\PerfTimer.h" />
     <ClInclude Include="Source\Point.h" />

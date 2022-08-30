@@ -32,6 +32,8 @@ bool EconomyScene::Start()
 
 bool EconomyScene::Update()
 {
+	if ((int)method > 0) SetMethod();
+
 	UpdateShortcuts();
 
 	if (ctrl &&  shft && d) demoWindow = !demoWindow;
@@ -523,16 +525,89 @@ bool EconomyScene::DrawMenuBar()
 
 			ImGui::EndMenu();
 		}
+		if (ImGui::BeginMenu("Methods"))
+		{
+			if (ImGui::MenuItem("Harv Eker"))
+				method = Method::MTHD_HARV_EKER;
+
+			if (ImGui::MenuItem("50/30/20 Rule"))
+				method = Method::MTHD_50_30_20;
+
+			if (ImGui::MenuItem("Pareto"))
+				method = Method::MTHD_PARETO;
+
+			if (ImGui::MenuItem("50/15/5 Rule"))
+				method = Method::MTHD_50_15_5;
+
+			ImGui::EndMenu();
+		}
 		if (ImGui::BeginMenu("About"))
 		{
-			ImGui::Text("No Name Gestor %s", VERSION);
+			ImGui::Text("No Name Gestor %s", VERSION); ImGui::SameLine();
+
+			if (ImGui::Selectable(">")) 
+				ShellExecute(NULL, NULL, "https://github.com/Ar-Ess/NoNameGestor", NULL, NULL, SW_SHOWNORMAL);
+
 			if (ImGui::BeginMenu("Third Parties"))
 			{
-				ImGui::Text("SDL - App Loop");
-				ImGui::Text("ImGui - Graphic UI");
-				ImGui::Text("ImGuiFileDialog - FileDialog");
+				if (ImGui::MenuItem("SDL - App Loop"))
+					ShellExecute(NULL, NULL, "https://www.libsdl.org/", NULL, NULL, SW_SHOWNORMAL);
+
+				if (ImGui::MenuItem("ImGui - Graphic UI"))
+					ShellExecute(NULL, NULL, "https://github.com/ocornut/imgui", NULL, NULL, SW_SHOWNORMAL);
+
+				if (ImGui::MenuItem("ImGuiFileDialog - FileDialog"))
+					ShellExecute(NULL, NULL, "https://github.com/aiekick/ImGuiFileDialog", NULL, NULL, SW_SHOWNORMAL);
+
 				ImGui::EndMenu();
 			}
+
+			if (ImGui::BeginMenu("Methods Sources"))
+			{
+				if (ImGui::BeginMenu("Harv Eker"))
+				{
+					if(ImGui::MenuItem("Official Source"))
+						ShellExecute(NULL, NULL, "https://www.harveker.com/blog/6-step-money-managing-system/", NULL, NULL, SW_SHOWNORMAL);
+					
+					if (ImGui::MenuItem("Method Book"))
+						ShellExecute(NULL, NULL, "https://www.amazon.com/Secrets-Millionaire-Mind-Mastering-Wealth/dp/0060763280", NULL, NULL, SW_SHOWNORMAL);
+
+					ImGui::EndMenu();
+				}
+
+				if (ImGui::BeginMenu("50/30/20 Rule"))
+				{
+					if (ImGui::MenuItem("Non-Official Source"))
+						ShellExecute(NULL, NULL, "https://n26.com/en-eu/blog/50-30-20-rule#:~:text=The%2050%2F30%2F20%20rule%20originates%20from%20the%202005%20book,her%20daughter%2C%20Amelia%20Warren%20Tyagi.", NULL, NULL, SW_SHOWNORMAL);
+
+					if (ImGui::MenuItem("Method Book"))
+						ShellExecute(NULL, NULL, "https://www.amazon.es/All-Your-Worth-Ultimate-Lifetime/dp/0743269888", NULL, NULL, SW_SHOWNORMAL);
+
+					ImGui::EndMenu();
+				}
+
+				if (ImGui::BeginMenu("Pareto"))
+				{
+					if (ImGui::MenuItem("Non-Official Source"))
+						ShellExecute(NULL, NULL, "https://asana.com/resources/pareto-principle-80-20-rule", NULL, NULL, SW_SHOWNORMAL);
+
+					if (ImGui::MenuItem("Method Book"))
+						ShellExecute(NULL, NULL, "https://www.amazon.com/80-20-Principle-Secret-Achieving/dp/0385491743", NULL, NULL, SW_SHOWNORMAL);
+
+					ImGui::EndMenu();
+				}
+
+				if (ImGui::BeginMenu("50/15/5 Rule"))
+				{
+					if (ImGui::MenuItem("Non-Official Source"))
+						ShellExecute(NULL, NULL, "https://blog.avadiancu.com/explaining-the-50/15/5-savings-and-budgeting-rule", NULL, NULL, SW_SHOWNORMAL);
+
+					ImGui::EndMenu();
+				}
+
+				ImGui::EndMenu();
+			}
+
 			ImGui::EndMenu();
 		}
 		//if (ImGui::BeginMenu("Window"))
@@ -786,4 +861,47 @@ void EconomyScene::CreateRecipient(RecipientType recipient, const char* name, fl
 	}
 
 	recipients.back()->SetCurrency(comboCurrency[currency]);
+}
+
+void EconomyScene::SetMethod()
+{
+	float money = totalRecipient->GetMoney();
+
+	NewFile();
+
+	totalRecipient->SetMoney(money);
+
+	switch (method)
+	{
+	case Method::MTHD_PARETO:
+		CreateRecipient(RecipientType::FILTER, "Available", money * 0.8f, false, false);
+		CreateRecipient(RecipientType::FILTER, "Savings", money * 0.2f, false, false);
+		break;
+
+	case Method::MTHD_50_15_5:
+		CreateRecipient(RecipientType::FILTER, "Essential", money * 0.5f, false, false);
+		CreateRecipient(RecipientType::FILTER, "Future", money * 0.15f, false, false);
+		CreateRecipient(RecipientType::FILTER, "Unexpected", money * 0.05f, false, false);
+		break;
+
+	case Method::MTHD_50_30_20:
+		CreateRecipient(RecipientType::FILTER, "Primary", money * 0.5f, false, false);
+		CreateRecipient(RecipientType::FILTER, "Leisure", money * 0.3f, false, false);
+		CreateRecipient(RecipientType::FILTER, "Savings", money * 0.2f, false, false);
+		break;
+
+	case Method::MTHD_HARV_EKER:
+		CreateRecipient(RecipientType::FILTER, "Primary", money * 0.55f, false, false);
+		CreateRecipient(RecipientType::FILTER, "Education", money * 0.1f, false, false);
+		CreateRecipient(RecipientType::FILTER, "Leisure", money * 0.1f, false, false);
+		CreateRecipient(RecipientType::FILTER, "Donations", money * 0.06f, false, false);
+		CreateRecipient(RecipientType::FILTER, "Invest", money * 0.1f, false, false);
+		CreateRecipient(RecipientType::FILTER, "Savings", money * 0.1f, false, false);
+		break;
+
+	default:
+		break;
+	}
+
+	method = Method::MTHD_NO;
 }
