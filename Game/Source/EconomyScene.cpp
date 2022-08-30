@@ -1,7 +1,7 @@
 #include "EconomyScene.h"
 #include <windows.h>
 
-#define VERSION "v1.0"
+#define VERSION "v1.1"
 #define EXTENSION ".nng"
 #include "External/ImGuiFileDialog/ImGuiFileDialog.h"
 
@@ -55,17 +55,16 @@ bool EconomyScene::Update()
 		r->Update();
 		switch (r->GetType())
 		{
-		case RecipientType::FUTURE: futureMoney += r->GetMoney(); break;
-		case RecipientType::ARREAR: arrearMoney -= r->GetMoney(); break;
-		case RecipientType::FILTER:
-		case RecipientType::LIMIT:
+		case RecipientType::FUTURE_PLURAL: futureMoney += r->GetMoney(); break;
+		case RecipientType::ARREAR_PLURAL: arrearMoney -= r->GetMoney(); break;
+		case RecipientType::FILTER_SINGULAR:
+		case RecipientType::LIMIT_SINGULAR:
 		default: totalMoney -= r->GetMoney(); break;
 		}
 	}
 
 	unasignedRecipient->SetMoney(totalMoney + futureMoney + arrearMoney, totalMoney, futureMoney, arrearMoney);
 	unasignedRecipient->Update();
-
 
 	return true;
 }
@@ -85,6 +84,7 @@ bool EconomyScene::Draw()
 
 	if (saving) Save();
 	if (loading) Load();
+	if (loadingV1_0) Loadv1_0();
 	if (savingAs) SaveAs();
 
 	return ret;
@@ -206,19 +206,19 @@ void EconomyScene::InternalSave(const char* path)
 
 		switch (r->GetType())
 		{
-		case RecipientType::FILTER:
+		case RecipientType::FILTER_SINGULAR:
 			break;
 
-		case RecipientType::LIMIT:
+		case RecipientType::LIMIT_SINGULAR:
 		{
 			LimitRecipient* lR = (LimitRecipient*)r;
 			file->EditFile(path).
 				Write("limit").Number(lR->GetLimit());
 			break;
 		}
-		case RecipientType::FUTURE:
+		case RecipientType::FUTURE_PLURAL:
 		{
-			FutureRecipient* fR = (FutureRecipient*)r;
+			FuturePlrRecipient* fR = (FuturePlrRecipient*)r;
 			int size = fR->GetSize();
 			file->EditFile(path).
 				Write("size").Number(size);
@@ -231,9 +231,9 @@ void EconomyScene::InternalSave(const char* path)
 			}
 			break;
 		}
-		case RecipientType::ARREAR:
+		case RecipientType::ARREAR_PLURAL:
 		{
-			ArrearRecipient* aR = (ArrearRecipient*)r;
+			ArrearPlrRecipient* aR = (ArrearPlrRecipient*)r;
 			int size = aR->GetSize();
 			file->EditFile(path).
 				Write("size").Number(size);
@@ -318,6 +318,7 @@ void EconomyScene::Load()
 				ShellExecute(NULL, NULL, "https://github.com/Ar-Ess/NoNameGestor/blob/main/README.md", NULL, NULL, SW_SHOWNORMAL);
 				ImGui::EndPopup();
 				loading = false;
+				versionError = false;
 				return;
 			}
 			ImGui::SameLine();
@@ -325,6 +326,7 @@ void EconomyScene::Load()
 			{
 				ImGui::EndPopup();
 				loading = false;
+				versionError = false;
 				return;
 			}
 		}
@@ -379,13 +381,13 @@ void EconomyScene::Load()
 
 		switch ((RecipientType)type)
 		{
-		case RecipientType::FILTER:
+		case RecipientType::FILTER_SINGULAR:
 		{
 			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
 			break;
 		}
 
-		case RecipientType::LIMIT:
+		case RecipientType::LIMIT_SINGULAR:
 		{
 			float limit = 1;
 			file->ViewFile(path.c_str(), positionToRead + 4).
@@ -399,10 +401,10 @@ void EconomyScene::Load()
 			break;
 		}
 
-		case RecipientType::FUTURE:
+		case RecipientType::FUTURE_PLURAL:
 		{
 			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
-			FutureRecipient* fR = (FutureRecipient*)recipients.back();
+			FuturePlrRecipient* fR = (FuturePlrRecipient*)recipients.back();
 			fR->ClearFutures();
 			
 			int fSize = 0; //                           \/ Change depending on below aspects amount
@@ -429,10 +431,235 @@ void EconomyScene::Load()
 			break;
 		}
 
-		case RecipientType::ARREAR:
+		case RecipientType::ARREAR_PLURAL:
 		{
 			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
-			ArrearRecipient* aR = (ArrearRecipient*)recipients.back();
+			ArrearPlrRecipient* aR = (ArrearPlrRecipient*)recipients.back();
+			aR->ClearArrears();
+
+			int fSize = 0; //                           \/ Change depending on below aspects amount
+			int futurePositionToRead = positionToRead + 5;
+
+			file->ViewFile(path.c_str(), futurePositionToRead).
+				Read("size").AsInt(fSize);
+
+			added++;
+
+			for (suint i = 0; i < fSize; ++i)
+			{
+				std::string fName;
+				float fMoney;
+				file->ViewFile(path.c_str(), (futurePositionToRead + 1) + (i * 2)).
+					Read("name").AsString(fName).
+					Read("money").AsFloat(fMoney);
+
+				aR->NewArrear(fName.c_str(), fMoney);
+
+				added += 2;
+			}
+
+			break;
+		}
+
+		default: break;
+		}
+
+		recipients.back()->loadOpen = true;
+	}
+
+	totalRecipient->SetMoney(total);
+	UpdateCurrency();
+
+}
+
+void EconomyScene::Loadv1_0()
+{
+	if (!loadingV1_0)
+	{
+		loadingV1_0 = true;
+		return;
+	}
+
+	// open Dialog Simple
+	if (!versionError) ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose a path", ".nng", ".");
+	std::string path;
+	std::string name;
+	std::string version;
+	size_t format = 0;
+	//display
+	if (!versionError && ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
+	{
+		// action if OK
+		if (ImGuiFileDialog::Instance()->IsOk() == true && file->Exists(ImGuiFileDialog::Instance()->GetFilePathName().c_str(), false))
+		{
+			path = ImGuiFileDialog::Instance()->GetCurrentPath() + "\\";
+			name = ImGuiFileDialog::Instance()->GetCurrentFileName();
+			format = ImGuiFileDialog::Instance()->GetCurrentFilter().size();
+			ImGuiFileDialog::Instance()->Close();
+
+			// Check if the version file is the same as the program version
+			std::string checkPath = path;
+			checkPath += name;
+			checkPath.erase(checkPath.end() - format, checkPath.end());
+			file->ViewFile(checkPath.c_str()).
+				Read("version").AsString(version);
+			versionError = !SameString("v1.0", version);
+		}
+		else
+		{
+			ImGuiFileDialog::Instance()->Close();
+			loadingV1_0 = false;
+			return;
+		}
+	}
+	else
+	{
+		if (!versionError) return;
+	}
+
+	// Version Error Popup
+	// -TODO: Check if this error still has sense (Loadv1.0())
+	if (versionError)
+	{
+		ImGui::OpenPopup("Version Error");
+		ImGui::SetNextWindowPos(ImVec2((1280 / 2) - 180, (720 / 2) - 90));
+		ImGui::SetNextWindowSize(ImVec2(360, 180));
+		if (ImGui::BeginPopupModal("Version Error", nullptr, ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+		{
+			ImGui::Text("File version different from program's version");
+			AddSpacing();
+			AddSeparator(2);
+			AddSpacing(1);
+			ImGui::Text("SOLUTION:");
+			ImGui::Text("Read the 'ReadMe.md' about how to load\nolder/newer files (Save & Load section).");
+			AddSpacing(2);
+			if (ImGui::Button("Go To 'ReadMe'"))
+			{
+				ShellExecute(NULL, NULL, "https://github.com/Ar-Ess/NoNameGestor/blob/main/README.md", NULL, NULL, SW_SHOWNORMAL);
+				ImGui::EndPopup();
+				loadingV1_0 = false;
+				versionError = false;
+				return;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Okey"))
+			{
+				ImGui::EndPopup();
+				loadingV1_0 = false;
+				versionError = false;
+				return;
+			}
+		}
+		ImGui::EndPopup();
+		//assert(false && "ERROR: The loaded file version is different from the program's one. SOLUTION: Read the 'ReadMe.md' about how to load older/newer files (Save & Load section). Find the info here: https://github.com/Ar-Ess/NoNameGestor");
+
+		return;
+	}
+
+	loadingV1_0 = false;
+
+	openFileName = name;
+	openFilePath = path;
+
+	path += name;
+	path.erase(path.end() - format, path.end());
+
+	float total = 0;
+	int size = 0;
+
+	DeleteAllRecipients();
+
+	// Top aspects
+	file->ViewFile(path.c_str(), 1).
+		// Preferences
+		Read("cnfSRT").AsBool(showRecipientType).
+		Read("cnfSFU").AsBool(showFutureUnasigned).
+		Read("cnfAFC").AsBool(allowFutureCovering).
+		Read("cnfTFS").AsFloat(textFieldSize).
+		Read("currency").AsInt(currency).
+		// General Project
+		Read("total").AsFloat(total).
+		Read("size").AsInt(size);
+
+	int added = 0;
+
+	for (unsigned int i = 0; i < size; ++i)
+	{//  Change depending on how many below aspects \/     \/ Change it depending on how many top aspects
+		int positionToRead = (i * 5) + 8 + added;
+		int type = -1;
+		float money = 0;
+		bool hidden = false, open = false;
+		std::string name;
+
+		// Below aspects
+		file->ViewFile(path.c_str(), positionToRead).
+			Read("name").AsString(name).
+			Read("type").AsInt(type).
+			Read("money").AsFloat(money).
+			Read("hide").AsBool(hidden).
+			Read("open").AsBool(open);
+
+		// Change: v1.1 -> v1.0
+		if (type == 4) type = 5;
+		else if (type == 5) type = 8;
+		else if (type == 6) type = 10;
+
+		switch ((RecipientType)type)
+		{
+		case RecipientType::FILTER_SINGULAR:
+		{
+			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
+			break;
+		}
+
+		case RecipientType::LIMIT_SINGULAR:
+		{
+			float limit = 1;
+			file->ViewFile(path.c_str(), positionToRead + 4).
+				Read("limit").AsFloat(limit);
+
+			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
+
+			((LimitRecipient*)recipients.back())->SetLimit(limit);
+			added++;
+
+			break;
+		}
+
+		case RecipientType::FUTURE_PLURAL:
+		{
+			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
+			FuturePlrRecipient* fR = (FuturePlrRecipient*)recipients.back();
+			fR->ClearFutures();
+
+			int fSize = 0; //                           \/ Change depending on below aspects amount
+			int futurePositionToRead = positionToRead + 5;
+
+			file->ViewFile(path.c_str(), futurePositionToRead).
+				Read("size").AsInt(fSize);
+
+			added++;
+
+			for (suint i = 0; i < fSize; ++i)
+			{
+				std::string fName;
+				float fMoney;
+				file->ViewFile(path.c_str(), (futurePositionToRead + 1) + (i * 2)).
+					Read("name").AsString(fName).
+					Read("money").AsFloat(fMoney);
+
+				fR->NewFuture(fName.c_str(), fMoney);
+
+				added += 2;
+			}
+
+			break;
+		}
+
+		case RecipientType::ARREAR_PLURAL:
+		{
+			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
+			ArrearPlrRecipient* aR = (ArrearPlrRecipient*)recipients.back();
 			aR->ClearArrears();
 
 			int fSize = 0; //                           \/ Change depending on below aspects amount
@@ -492,6 +719,16 @@ bool EconomyScene::DrawMenuBar()
 
 			ImGui::Separator();
 
+			if (ImGui::BeginMenu("Old Loads"))
+			{
+				if (ImGui::MenuItem("Load v1.0"))
+					Loadv1_0();
+
+				ImGui::EndMenu();
+			}
+
+			ImGui::Separator();
+
 			ImGui::MenuItem("Preferences", "Ctrl + Shft + P", &preferencesWindow);
 
 			ImGui::EndMenu();
@@ -511,17 +748,49 @@ bool EconomyScene::DrawMenuBar()
 		}*/
 		if (ImGui::BeginMenu("Create"))
 		{
-			if (ImGui::MenuItem("Filter"))
-				CreateRecipient(RecipientType::FILTER);
+			if (ImGui::BeginMenu("Filter"))
+			{
+				if (ImGui::MenuItem("Singular"))
+					CreateRecipient(RecipientType::FILTER_SINGULAR);
 
-			if (ImGui::MenuItem("Limit "))
-				CreateRecipient(RecipientType::LIMIT);
+				if (ImGui::MenuItem("Plural"))
+					CreateRecipient(RecipientType::FILTER_PLURAL);
 
-			if (ImGui::MenuItem("Future"))
-				CreateRecipient(RecipientType::FUTURE);
+				ImGui::EndMenu();
+			}
 
-			if (ImGui::MenuItem("Arrear"))
-				CreateRecipient(RecipientType::ARREAR);
+			if (ImGui::BeginMenu("Limit "))
+			{
+				if (ImGui::MenuItem("Singular"))
+					CreateRecipient(RecipientType::LIMIT_SINGULAR);
+
+				if (ImGui::MenuItem("Plural"))
+					CreateRecipient(RecipientType::LIMIT_PLURAL);
+
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Future"))
+			{
+				if (ImGui::MenuItem("Singular"))
+					CreateRecipient(RecipientType::FUTURE_SINGULAR);
+
+				if (ImGui::MenuItem("Plural"))
+					CreateRecipient(RecipientType::FUTURE_PLURAL);
+
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Arrear"))
+			{
+				if (ImGui::MenuItem("Singular"))
+					CreateRecipient(RecipientType::ARREAR_SINGULAR);
+
+				if (ImGui::MenuItem("Plural"))
+					CreateRecipient(RecipientType::ARREAR_PLURAL);
+
+				ImGui::EndMenu();
+			}
 
 			ImGui::EndMenu();
 		}
@@ -749,7 +1018,7 @@ bool EconomyScene::DrawMainWindow(bool* open)
 					if (ImGui::MenuItem("Process"))
 					{
 						int dif = 1;
-						r->GetType() == RecipientType::FUTURE ? dif = 1 : dif = -1;
+						r->GetType() == RecipientType::FUTURE_PLURAL ? dif = 1 : dif = -1;
 						float totalResult = totalRecipient->GetMoney() + (r->GetMoney() * dif);
 						if (totalResult >= 0)
 						{
@@ -820,10 +1089,55 @@ bool EconomyScene::DrawToolbarWindow(bool* open)
 
 	if (ImGui::Begin("Toolbar", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar))
 	{
-		if (ImGui::Button("FILTER")) CreateRecipient(RecipientType::FILTER);
-		if (ImGui::Button("LIMIT ")) CreateRecipient(RecipientType::LIMIT );
-		if (ImGui::Button("FUTURE")) CreateRecipient(RecipientType::FUTURE);
-		if (ImGui::Button("ARREAR")) CreateRecipient(RecipientType::ARREAR);
+
+		if (ImGui::Button("FILTER"))
+			ImGui::OpenPopup("Filter Popup");
+		if (ImGui::BeginPopup("Filter Popup"))
+		{
+			if (ImGui::MenuItem("Singular"))
+				CreateRecipient(RecipientType::FILTER_SINGULAR);
+
+			if (ImGui::MenuItem("Plural"))
+				CreateRecipient(RecipientType::FILTER_PLURAL);
+			ImGui::EndPopup();
+		}
+
+		if (ImGui::Button("LIMIT "))
+			ImGui::OpenPopup("Limit Popup");
+		if (ImGui::BeginPopup("Limit Popup"))
+		{
+			if (ImGui::MenuItem("Singular"))
+				CreateRecipient(RecipientType::LIMIT_SINGULAR);
+
+			if (ImGui::MenuItem("Plural"))
+				CreateRecipient(RecipientType::LIMIT_PLURAL);
+			ImGui::EndPopup();
+		}
+
+		if (ImGui::Button("FUTURE"))
+			ImGui::OpenPopup("Future Popup");
+		if (ImGui::BeginPopup("Future Popup"))
+		{
+			if (ImGui::MenuItem("Singular"))
+				CreateRecipient(RecipientType::FUTURE_SINGULAR);
+
+			if (ImGui::MenuItem("Plural"))
+				CreateRecipient(RecipientType::FUTURE_PLURAL);
+			ImGui::EndPopup();
+		}
+
+		if (ImGui::Button("ARREAR"))
+			ImGui::OpenPopup("Arrear Popup");
+		if (ImGui::BeginPopup("Arrear Popup"))
+		{
+			if (ImGui::MenuItem("Singular"))
+				CreateRecipient(RecipientType::ARREAR_SINGULAR);
+
+			if (ImGui::MenuItem("Plural"))
+				CreateRecipient(RecipientType::ARREAR_PLURAL);
+			ImGui::EndPopup();
+		}
+		
 	}
 	ImGui::End();
 
@@ -853,10 +1167,14 @@ void EconomyScene::CreateRecipient(RecipientType recipient, const char* name, fl
 {
 	switch (recipient)
 	{
-	case RecipientType::FILTER: recipients.push_back((Recipient*)(new FilterRecipient(name, money, hidden, open))); break;
-	case RecipientType::LIMIT : recipients.push_back((Recipient*)(new  LimitRecipient(name, money, hidden, open))); break;
-	case RecipientType::FUTURE: recipients.push_back((Recipient*)(new FutureRecipient(name, money, hidden, open, totalRecipient->GetMoneyPtr()))); break;
-	case RecipientType::ARREAR: recipients.push_back((Recipient*)(new ArrearRecipient(name, money, hidden, open, totalRecipient->GetMoneyPtr()))); break;
+	case RecipientType::FILTER_SINGULAR: recipients.push_back((Recipient*)(new  FilterRecipient(name, money, hidden, open))); break;
+	case RecipientType::FILTER_PLURAL: break;
+	case RecipientType::LIMIT_SINGULAR: recipients.push_back((Recipient*)(new   LimitRecipient(name, money, hidden, open))); break;
+	case RecipientType::LIMIT_PLURAL: break;
+	case RecipientType::FUTURE_SINGULAR: break;
+	case RecipientType::FUTURE_PLURAL: recipients.push_back((Recipient*)(new FuturePlrRecipient(name, money, hidden, open, totalRecipient->GetMoneyPtr()))); break;
+	case RecipientType::ARREAR_SINGULAR: break;
+	case RecipientType::ARREAR_PLURAL: recipients.push_back((Recipient*)(new ArrearPlrRecipient(name, money, hidden, open, totalRecipient->GetMoneyPtr()))); break;
 	default: break;
 	}
 
@@ -874,29 +1192,29 @@ void EconomyScene::SetMethod()
 	switch (method)
 	{
 	case Method::MTHD_PARETO:
-		CreateRecipient(RecipientType::FILTER, "Available", money * 0.8f, false, false);
-		CreateRecipient(RecipientType::FILTER, "Savings", money * 0.2f, false, false);
+		CreateRecipient(RecipientType::FILTER_SINGULAR, "Available", money * 0.8f, false, false);
+		CreateRecipient(RecipientType::FILTER_SINGULAR, "Savings", money * 0.2f, false, false);
 		break;
 
 	case Method::MTHD_50_15_5:
-		CreateRecipient(RecipientType::FILTER, "Essential", money * 0.5f, false, false);
-		CreateRecipient(RecipientType::FILTER, "Future", money * 0.15f, false, false);
-		CreateRecipient(RecipientType::FILTER, "Unexpected", money * 0.05f, false, false);
+		CreateRecipient(RecipientType::FILTER_SINGULAR, "Essential", money * 0.5f, false, false);
+		CreateRecipient(RecipientType::FILTER_SINGULAR, "Future", money * 0.15f, false, false);
+		CreateRecipient(RecipientType::FILTER_SINGULAR, "Unexpected", money * 0.05f, false, false);
 		break;
 
 	case Method::MTHD_50_30_20:
-		CreateRecipient(RecipientType::FILTER, "Primary", money * 0.5f, false, false);
-		CreateRecipient(RecipientType::FILTER, "Leisure", money * 0.3f, false, false);
-		CreateRecipient(RecipientType::FILTER, "Savings", money * 0.2f, false, false);
+		CreateRecipient(RecipientType::FILTER_SINGULAR, "Primary", money * 0.5f, false, false);
+		CreateRecipient(RecipientType::FILTER_SINGULAR, "Leisure", money * 0.3f, false, false);
+		CreateRecipient(RecipientType::FILTER_SINGULAR, "Savings", money * 0.2f, false, false);
 		break;
 
 	case Method::MTHD_HARV_EKER:
-		CreateRecipient(RecipientType::FILTER, "Primary", money * 0.55f, false, false);
-		CreateRecipient(RecipientType::FILTER, "Education", money * 0.1f, false, false);
-		CreateRecipient(RecipientType::FILTER, "Leisure", money * 0.1f, false, false);
-		CreateRecipient(RecipientType::FILTER, "Donations", money * 0.06f, false, false);
-		CreateRecipient(RecipientType::FILTER, "Invest", money * 0.1f, false, false);
-		CreateRecipient(RecipientType::FILTER, "Savings", money * 0.1f, false, false);
+		CreateRecipient(RecipientType::FILTER_SINGULAR, "Primary", money * 0.55f, false, false);
+		CreateRecipient(RecipientType::FILTER_SINGULAR, "Education", money * 0.1f, false, false);
+		CreateRecipient(RecipientType::FILTER_SINGULAR, "Leisure", money * 0.1f, false, false);
+		CreateRecipient(RecipientType::FILTER_SINGULAR, "Donations", money * 0.06f, false, false);
+		CreateRecipient(RecipientType::FILTER_SINGULAR, "Invest", money * 0.1f, false, false);
+		CreateRecipient(RecipientType::FILTER_SINGULAR, "Savings", money * 0.1f, false, false);
 		break;
 
 	default:

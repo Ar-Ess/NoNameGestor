@@ -6,7 +6,7 @@ class LimitRecipient : public Recipient
 {
 public: // Functions
 
-	LimitRecipient(const char* name, float money, bool hidden, bool open) : Recipient(name, money, hidden, open, RecipientType::LIMIT)
+	LimitRecipient(const char* name, float money, bool hidden, bool open) : Recipient(name, money, hidden, open, RecipientType::LIMIT_SINGULAR)
 	{
 		this->limit = limit;
 		this->tempLimit = limit;

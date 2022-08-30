@@ -3,7 +3,7 @@
 #include "Recipient.h"
 #include <vector>
 
-class ArrearRecipient : public Recipient
+class ArrearPlrRecipient : public Recipient
 {
 private: //structs
 
@@ -21,13 +21,13 @@ private: //structs
 
 public: // Functions
 
-	ArrearRecipient(const char* name, float money, bool hidden, bool open, float* totalMoneyPtr) : Recipient(name, money, hidden, open, RecipientType::ARREAR)
+	ArrearPlrRecipient(const char* name, float money, bool hidden, bool open, float* totalMoneyPtr) : Recipient(name, money, hidden, open, RecipientType::ARREAR_PLURAL)
 	{
 		this->totalMoneyPtr = totalMoneyPtr;
 		NewArrear();
 	}
 
-	~ArrearRecipient() override
+	~ArrearPlrRecipient() override
 	{
 		ClearArrears();
 	}

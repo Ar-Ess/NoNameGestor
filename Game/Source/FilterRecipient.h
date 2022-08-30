@@ -6,7 +6,7 @@ class FilterRecipient : public Recipient
 {
 public: // Functions
 
-	FilterRecipient(const char* name, float money, bool hidden, bool open) : Recipient(name, money, hidden, open, RecipientType::FILTER)
+	FilterRecipient(const char* name, float money, bool hidden, bool open) : Recipient(name, money, hidden, open, RecipientType::FILTER_SINGULAR)
 	{
 	}
 

@@ -2,7 +2,7 @@
 
 #include "Recipient.h"
 
-class FutureRecipient : public Recipient
+class FuturePlrRecipient : public Recipient
 {
 private: //structs
 
@@ -20,13 +20,13 @@ private: //structs
 
 public: // Functions
 
-	FutureRecipient(const char* name, float money, bool hidden, bool open, float* totalMoneyPtr) : Recipient(name, money, hidden, open, RecipientType::FUTURE)
+	FuturePlrRecipient(const char* name, float money, bool hidden, bool open, float* totalMoneyPtr) : Recipient(name, money, hidden, open, RecipientType::FUTURE_PLURAL)
 	{
 		this->totalMoneyPtr = totalMoneyPtr;
 		NewFuture();
 	}
 
-	~FutureRecipient() override
+	~FuturePlrRecipient() override
 	{
 		ClearFutures();
 	}

@@ -28,6 +28,7 @@ private: // Functions
 	void Save();
 	void InternalSave(const char* path);
 	void Load();
+	void Loadv1_0();
 
 	bool DrawMenuBar();
 	bool DrawDocking();
@@ -201,7 +202,9 @@ private: // Variables
 
 	// Save & Load
 	bool saving = false, loading = false, savingAs = false;
+	bool loadingV1_0 = false;
 	bool versionError = false;
+
 	std::string openFileName;
 	std::string openFilePath;
 
