@@ -240,7 +240,7 @@ void EconomyScene::InternalSave(const char* path)
 
 		case RecipientType::LIMIT_PLURAL:
 		{
-			/*LimitPlrRecipient* lPR = (LimitPlrRecipient*)r;
+			LimitPlrRecipient* lPR = (LimitPlrRecipient*)r;
 			int size = lPR->GetSize();
 			file->EditFile(path).
 				Write("size").Number(size);
@@ -248,10 +248,10 @@ void EconomyScene::InternalSave(const char* path)
 			for (int i = 0; i < size; ++i)
 			{
 				file->EditFile(path)
-					.Write("limit").Number(lPR->GetLabelLimit(i));
-					.Write("name").String(lPR->GetLabelName(i))
+					.Write("name ").String(lPR->GetLabelName (i))
+					.Write("limit").Number(lPR->GetLabelLimit(i))
 					.Write("money").Number(lPR->GetLabelMoney(i));
-			}*/
+			}
 			break;
 		}
 
@@ -468,6 +468,36 @@ void EconomyScene::Load()
 			((LimitRecipient*)recipients.back())->SetLimit(limit);
 			added++;
 
+			break;
+		}
+
+		case RecipientType::LIMIT_PLURAL:
+		{
+			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
+			LimitPlrRecipient* lPR = (LimitPlrRecipient*)recipients.back();
+			lPR->ClearLabels();
+
+			int lSize = 0; //                           \/ Change depending on below aspects amount
+			int futurePositionToRead = positionToRead + 5;
+
+			file->ViewFile(path.c_str(), futurePositionToRead).
+				Read("size").AsInt(lSize);
+
+			added++;
+
+			for (suint i = 0; i < lSize; ++i)
+			{
+				std::string lName;
+				float lMoney, lLimit; //     Change depending on "vars on top" \/
+				file->ViewFile(path.c_str(), (futurePositionToRead + 1) + (i * 3)).
+					Read("name").AsString(lName). // "Vars on top"
+					Read("limit").AsFloat(lLimit).
+					Read("money").AsFloat(lMoney);
+
+				lPR->NewLabel(lName.c_str(), lMoney, lLimit);
+
+				added += 3; // Change depending on how many "vars on top"
+			}
 			break;
 		}
 

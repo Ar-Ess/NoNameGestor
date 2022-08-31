@@ -36,7 +36,7 @@ public: // Functions
 			ImGui::PopItemWidth();
 
 			ImGui::SameLine();
-			ImGui::Text(" / "); ImGui::SameLine();
+			ImGui::Text("/"); ImGui::SameLine();
 			ImGui::Text(format.c_str(), limit); ImGui::SameLine();
 			if (ImGui::Button("Edit")) editLimit = true;
 

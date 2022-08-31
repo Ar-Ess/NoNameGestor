@@ -50,19 +50,22 @@ public: // Functions
 			}
 			ImGui::SameLine();
 
+			ImGui::PushItemWidth(textFieldSize);
+			ImGui::InputText("##LimitName", &labels[i]->name);
+			ImGui::PopItemWidth(); ImGui::SameLine();
+
 			if (ImGui::BeginTable(name.c_str(), 1))
 			{
 				ImGui::TableNextRow();
 				ImGui::TableNextColumn();
 
-				ImGui::PushItemWidth(150.f);
+				ImGui::PushItemWidth(100.f);
 				ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, labels[i]->limit, format.c_str());
-				ImVec2 size = ImGui::GetItemRectSize();
-				size.y -= 15;
-				ImGui::PopItemWidth();
+				ImVec2 itemSize = ImGui::GetItemRectSize();
+				itemSize.y -= 15;
+				ImGui::PopItemWidth();ImGui::SameLine();
 
-				ImGui::SameLine();
-				ImGui::Text(" / "); ImGui::SameLine();
+				ImGui::Text("/"); ImGui::SameLine();
 				ImGui::Text(format.c_str(), labels[i]->limit); ImGui::SameLine();
 				if (ImGui::Button("Edit"))
 				{
@@ -70,24 +73,26 @@ public: // Functions
 					editLimitIndex = i;
 				}
 
+				ImGui::SameLine();
+
+				if (size > 1 && ImGui::Button("X")) DeleteLabel(i);
+
+				if (i == 0)
+				{
+					if (size == 1)
+					{
+						ImGui::SameLine();
+						ImGui::Dummy(ImVec2{ 15, 0 });
+					}
+					ImGui::SameLine();
+					if (ImGui::Button("+")) NewLabel();
+				}
+
 				ImGui::TableNextColumn();
 
-				ImGui::ProgressBar(labels[i]->money / labels[i]->limit, size, "");
+				ImGui::ProgressBar(labels[i]->money / labels[i]->limit, itemSize, "");
 			}
 			ImGui::EndTable();
-
-			if (size > 1 && ImGui::Button("X")) DeleteLabel(i);
-
-			if (i == 0)
-			{
-				if (size == 1)
-				{
-					ImGui::SameLine();
-					ImGui::Dummy(ImVec2{15, 0});
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("+")) NewLabel();
-			}
 
 			ImGui::PopID();
 		}
@@ -117,9 +122,9 @@ public: // Functions
 		ImGui::PopID();
 	}
 
-	void NewLabel(const char* name = "New Limit", float money = 0.0f)
+	void NewLabel(const char* name = "New Limit", float money = 0.0f, float limit = 1.0f)
 	{
-		labels.push_back(new Label(name, money));
+		labels.push_back(new Label(name, money, limit));
 	}
 
 	void ClearLabels()
@@ -142,6 +147,11 @@ public: // Functions
 	const char* GetLabelName(int i) const
 	{
 		return labels[i]->name.c_str();
+	}
+
+	float GetLabelLimit(int i) const
+	{
+		return labels[i]->limit;
 	}
 
 private:
