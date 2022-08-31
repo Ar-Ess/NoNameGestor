@@ -117,17 +117,11 @@
     <ClInclude Include="Source\External\ImGuiFileDialog\ImGuiFileDialogConfig.h">
       <Filter>External\ImGuiFileDialog</Filter>
     </ClInclude>
-    <ClInclude Include="Source\FutureRecipient.h">
-      <Filter>Recipients</Filter>
-    </ClInclude>
     <ClInclude Include="Source\LimitRecipient.h">
       <Filter>Recipients</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Resources</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ArrearRecipient.h">
-      <Filter>Recipients</Filter>
     </ClInclude>
     <ClInclude Include="Source\External\imgui\imconfig.h">
       <Filter>External\ImGui</Filter>
@@ -158,6 +152,21 @@
     </ClInclude>
     <ClInclude Include="Source\MethodsEnum.h">
       <Filter>Enums</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\FilterPlrRecipient.h">
+      <Filter>Recipients</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\FuturePlrRecipient.h">
+      <Filter>Recipients</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ArrearPlrRecipient.h">
+      <Filter>Recipients</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Label.h">
+      <Filter>Recipients</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\LimitPlrRecipient.h">
+      <Filter>Recipients</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

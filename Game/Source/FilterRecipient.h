@@ -10,6 +10,11 @@ public: // Functions
 	{
 	}
 
+	~FilterRecipient()
+	{
+
+	}
+
 	void Start(const char* currency) override
 	{
 		SetFormat("%.2f ", currency);

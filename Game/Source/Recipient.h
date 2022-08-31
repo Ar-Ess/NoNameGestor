@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Defs.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_stdlib.h"
 #include <string>
@@ -50,9 +51,13 @@ public: // Functions
 	{
 		switch (type)
 		{
-		case RecipientType::FILTER_SINGULAR: return "FILTER";
-		case RecipientType::LIMIT_SINGULAR: return "LIMIT ";
+		case RecipientType::FILTER_SINGULAR: 
+		case RecipientType::FILTER_PLURAL: return "FILTER";
+		case RecipientType::LIMIT_SINGULAR: 
+		case RecipientType::LIMIT_PLURAL: return "LIMIT ";
+		case RecipientType::FUTURE_SINGULAR:
 		case RecipientType::FUTURE_PLURAL: return "FUTURE";
+		case RecipientType::ARREAR_SINGULAR:
 		case RecipientType::ARREAR_PLURAL: return "ARREAR";
 		}
 		return "NO RECIPIENT";

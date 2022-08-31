@@ -53,12 +53,17 @@ bool EconomyScene::Update()
 		if (r->hidden) continue;
 
 		r->Update();
+
 		switch (r->GetType())
 		{
+		case RecipientType::FUTURE_SINGULAR:
 		case RecipientType::FUTURE_PLURAL: futureMoney += r->GetMoney(); break;
+		case RecipientType::ARREAR_SINGULAR:
 		case RecipientType::ARREAR_PLURAL: arrearMoney -= r->GetMoney(); break;
 		case RecipientType::FILTER_SINGULAR:
+		case RecipientType::FILTER_PLURAL:
 		case RecipientType::LIMIT_SINGULAR:
+		case RecipientType::LIMIT_PLURAL:
 		default: totalMoney -= r->GetMoney(); break;
 		}
 	}
@@ -209,6 +214,22 @@ void EconomyScene::InternalSave(const char* path)
 		case RecipientType::FILTER_SINGULAR:
 			break;
 
+		case RecipientType::FILTER_PLURAL:
+		{
+			FilterPlrRecipient* fPR = (FilterPlrRecipient*)r;
+			int size = fPR->GetSize();
+			file->EditFile(path).
+				Write("size").Number(size);
+
+			for (int i = 0; i < size; ++i)
+			{
+				file->EditFile(path)
+					.Write("name").String(fPR->GetLabelName(i))
+					.Write("money").Number(fPR->GetLabelMoney(i));
+			}
+			break;
+		}
+
 		case RecipientType::LIMIT_SINGULAR:
 		{
 			LimitRecipient* lR = (LimitRecipient*)r;
@@ -216,33 +237,52 @@ void EconomyScene::InternalSave(const char* path)
 				Write("limit").Number(lR->GetLimit());
 			break;
 		}
-		case RecipientType::FUTURE_PLURAL:
+
+		case RecipientType::LIMIT_PLURAL:
 		{
-			FuturePlrRecipient* fR = (FuturePlrRecipient*)r;
-			int size = fR->GetSize();
+			/*LimitPlrRecipient* lPR = (LimitPlrRecipient*)r;
+			int size = lPR->GetSize();
 			file->EditFile(path).
 				Write("size").Number(size);
 
 			for (int i = 0; i < size; ++i)
 			{
 				file->EditFile(path)
-					.Write("name").String(fR->GetFutureName(i))
-					.Write("money").Number(fR->GetFutureMoney(i));
+					.Write("limit").Number(lPR->GetLabelLimit(i));
+					.Write("name").String(lPR->GetLabelName(i))
+					.Write("money").Number(lPR->GetLabelMoney(i));
+			}*/
+			break;
+		}
+
+		case RecipientType::FUTURE_PLURAL:
+		{
+			FuturePlrRecipient* fPR = (FuturePlrRecipient*)r;
+			int size = fPR->GetSize();
+			file->EditFile(path).
+				Write("size").Number(size);
+
+			for (int i = 0; i < size; ++i)
+			{
+				file->EditFile(path)
+					.Write("name").String(fPR->GetLabelName(i))
+					.Write("money").Number(fPR->GetLabelMoney(i));
 			}
 			break;
 		}
+
 		case RecipientType::ARREAR_PLURAL:
 		{
-			ArrearPlrRecipient* aR = (ArrearPlrRecipient*)r;
-			int size = aR->GetSize();
+			ArrearPlrRecipient* aPR = (ArrearPlrRecipient*)r;
+			int size = aPR->GetSize();
 			file->EditFile(path).
 				Write("size").Number(size);
 
 			for (int i = 0; i < size; ++i)
 			{
 				file->EditFile(path)
-					.Write("name").String(aR->GetArrearName(i))
-					.Write("money").Number(aR->GetArrearMoney(i));
+					.Write("name").String(aPR->GetLabelName(i))
+					.Write("money").Number(aPR->GetLabelMoney(i));
 			}
 			break;
 		}
@@ -387,6 +427,36 @@ void EconomyScene::Load()
 			break;
 		}
 
+		case RecipientType::FILTER_PLURAL:
+		{
+			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
+			FilterPlrRecipient* fR = (FilterPlrRecipient*)recipients.back();
+			fR->ClearLabels();
+
+			int fSize = 0; //                           \/ Change depending on below aspects amount
+			int futurePositionToRead = positionToRead + 5;
+
+			file->ViewFile(path.c_str(), futurePositionToRead).
+				Read("size").AsInt(fSize);
+
+			added++;
+
+			for (suint i = 0; i < fSize; ++i)
+			{
+				std::string fName;
+				float fMoney;
+				file->ViewFile(path.c_str(), (futurePositionToRead + 1) + (i * 2)).
+					Read("name").AsString(fName). // Variables on top
+					Read("money").AsFloat(fMoney);
+
+				fR->NewLabel(fName.c_str(), fMoney);
+
+				added += 2; // Change depending on how many variables on top
+			}
+
+			break;
+		}
+
 		case RecipientType::LIMIT_SINGULAR:
 		{
 			float limit = 1;
@@ -405,7 +475,7 @@ void EconomyScene::Load()
 		{
 			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
 			FuturePlrRecipient* fR = (FuturePlrRecipient*)recipients.back();
-			fR->ClearFutures();
+			fR->ClearLabels();
 			
 			int fSize = 0; //                           \/ Change depending on below aspects amount
 			int futurePositionToRead = positionToRead + 5;
@@ -420,12 +490,12 @@ void EconomyScene::Load()
 				std::string fName;
 				float fMoney;
 				file->ViewFile(path.c_str(), (futurePositionToRead + 1) + (i * 2)).
-					Read("name").AsString(fName).
+					Read("name").AsString(fName). // Variables on top
 					Read("money").AsFloat(fMoney);
 
-				fR->NewFuture(fName.c_str(), fMoney);
+				fR->NewLabel(fName.c_str(), fMoney);
 
-				added += 2;
+				added += 2; // Change depending on how many variables on top
 			}
 
 			break;
@@ -435,7 +505,7 @@ void EconomyScene::Load()
 		{
 			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
 			ArrearPlrRecipient* aR = (ArrearPlrRecipient*)recipients.back();
-			aR->ClearArrears();
+			aR->ClearLabels();
 
 			int fSize = 0; //                           \/ Change depending on below aspects amount
 			int futurePositionToRead = positionToRead + 5;
@@ -450,12 +520,12 @@ void EconomyScene::Load()
 				std::string fName;
 				float fMoney;
 				file->ViewFile(path.c_str(), (futurePositionToRead + 1) + (i * 2)).
-					Read("name").AsString(fName).
+					Read("name").AsString(fName). // Variables on top
 					Read("money").AsFloat(fMoney);
 
-				aR->NewArrear(fName.c_str(), fMoney);
+				aR->NewLabel(fName.c_str(), fMoney);
 
-				added += 2;
+				added += 2; // Change depending on how many variables on top
 			}
 
 			break;
@@ -630,7 +700,7 @@ void EconomyScene::Loadv1_0()
 		{
 			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
 			FuturePlrRecipient* fR = (FuturePlrRecipient*)recipients.back();
-			fR->ClearFutures();
+			fR->ClearLabels();
 
 			int fSize = 0; //                           \/ Change depending on below aspects amount
 			int futurePositionToRead = positionToRead + 5;
@@ -648,7 +718,7 @@ void EconomyScene::Loadv1_0()
 					Read("name").AsString(fName).
 					Read("money").AsFloat(fMoney);
 
-				fR->NewFuture(fName.c_str(), fMoney);
+				fR->NewLabel(fName.c_str(), fMoney);
 
 				added += 2;
 			}
@@ -660,7 +730,7 @@ void EconomyScene::Loadv1_0()
 		{
 			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
 			ArrearPlrRecipient* aR = (ArrearPlrRecipient*)recipients.back();
-			aR->ClearArrears();
+			aR->ClearLabels();
 
 			int fSize = 0; //                           \/ Change depending on below aspects amount
 			int futurePositionToRead = positionToRead + 5;
@@ -678,7 +748,7 @@ void EconomyScene::Loadv1_0()
 					Read("name").AsString(fName).
 					Read("money").AsFloat(fMoney);
 
-				aR->NewArrear(fName.c_str(), fMoney);
+				aR->NewLabel(fName.c_str(), fMoney);
 
 				added += 2;
 			}
@@ -1168,9 +1238,9 @@ void EconomyScene::CreateRecipient(RecipientType recipient, const char* name, fl
 	switch (recipient)
 	{
 	case RecipientType::FILTER_SINGULAR: recipients.push_back((Recipient*)(new  FilterRecipient(name, money, hidden, open))); break;
-	case RecipientType::FILTER_PLURAL: break;
-	case RecipientType::LIMIT_SINGULAR: recipients.push_back((Recipient*)(new   LimitRecipient(name, money, hidden, open))); break;
-	case RecipientType::LIMIT_PLURAL: break;
+	case RecipientType::FILTER_PLURAL: recipients.push_back((Recipient*)(new FilterPlrRecipient(name, money, hidden, open, totalRecipient->GetMoneyPtr()))); break;
+	case RecipientType::LIMIT_SINGULAR: recipients.push_back((Recipient*)(new    LimitRecipient(name, money, hidden, open))); break;
+	case RecipientType::LIMIT_PLURAL: recipients.push_back((Recipient*)(new   LimitPlrRecipient(name, money, hidden, open, totalRecipient->GetMoneyPtr()))); break;
 	case RecipientType::FUTURE_SINGULAR: break;
 	case RecipientType::FUTURE_PLURAL: recipients.push_back((Recipient*)(new FuturePlrRecipient(name, money, hidden, open, totalRecipient->GetMoneyPtr()))); break;
 	case RecipientType::ARREAR_SINGULAR: break;
