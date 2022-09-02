@@ -91,6 +91,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Chrono.cpp" />
     <ClCompile Include="Source\EconomyScene.cpp" />
     <ClCompile Include="Source\External\ImGuiFileDialog\ImGuiFileDialog.cpp" />
     <ClCompile Include="Source\External\imgui\imgui.cpp" />
@@ -111,6 +112,8 @@
     <ClCompile Include="Source\Window.cpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Source\ArrearPlrRecipient.h" />
+    <ClInclude Include="Source\ArrearRecipient.h" />
+    <ClInclude Include="Source\Chrono.h" />
     <ClInclude Include="Source\EconomyScene.h" />
     <ClInclude Include="Source\External\ImGuiFileDialog\ImGuiFileDialog.h" />
     <ClInclude Include="Source\External\ImGuiFileDialog\ImGuiFileDialogConfig.h" />
@@ -127,6 +130,7 @@
     <ClInclude Include="Source\FilterPlrRecipient.h" />
     <ClInclude Include="Source\FilterRecipient.h" />
     <ClInclude Include="Source\FuturePlrRecipient.h" />
+    <ClInclude Include="Source\FutureRecipient.h" />
     <ClInclude Include="Source\Label.h" />
     <ClInclude Include="Source\LimitPlrRecipient.h" />
     <ClInclude Include="Source\LimitRecipient.h" />

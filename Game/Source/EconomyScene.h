@@ -7,6 +7,7 @@
 #include "RecipientHeader.h"
 #include "FileManager.h"
 #include "MethodsEnum.h"
+#include "Chrono.h"
 
 class EconomyScene
 {
@@ -209,6 +210,9 @@ private: // Variables
 	std::string openFilePath;
 
 	Method method = Method::MTHD_NO;
+
+	Chrono chrono;
+	bool openToolbarPopup = false;
 
 };
 

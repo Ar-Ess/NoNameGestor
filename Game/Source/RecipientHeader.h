@@ -5,5 +5,7 @@
 #include "FilterPlrRecipient.h"
 #include "LimitRecipient.h"
 #include "LimitPlrRecipient.h"
+#include "FutureRecipient.h"
 #include "FuturePlrRecipient.h"
+#include "ArrearRecipient.h"
 #include "ArrearPlrRecipient.h"

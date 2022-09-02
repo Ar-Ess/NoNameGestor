@@ -64,7 +64,12 @@ public: // Functions
 		{
 			ImGui::Text("Unasigned Actual Money"); ImGui::SameLine();
 			ImGui::Text(": "); ImGui::SameLine();
-			ImGui::Text(format.c_str(), actualMoney);
+
+			float add = 0;
+			if (*showFutureMoney && !*showArrearMoney) add = arrearMoney;
+			if (!*showFutureMoney && *showArrearMoney) add = futureMoney;
+
+			ImGui::Text(format.c_str(), double(actualMoney) + add);
 			if (*showFutureMoney)
 			{
 				ImGui::Text("Unasigned Future Money"); ImGui::SameLine();
@@ -91,6 +96,7 @@ public: // Functions
 private: // Functions
 
 private: // Variables
+
 	float futureMoney = 0.0f;
 	float actualMoney = 0.0f;
 	float arrearMoney = 0.0f;

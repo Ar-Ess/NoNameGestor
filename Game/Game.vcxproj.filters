@@ -54,6 +54,9 @@
     <ClCompile Include="Source\External\imgui\imgui_widgets.cpp">
       <Filter>External\ImGui</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Chrono.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\App.h" />
@@ -93,19 +96,10 @@
     <ClInclude Include="Source\EconomyScene.h">
       <Filter>Scenes</Filter>
     </ClInclude>
-    <ClInclude Include="Source\TotalMoneyRecipient.h">
-      <Filter>Recipients</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Recipient.h">
       <Filter>Recipients</Filter>
     </ClInclude>
-    <ClInclude Include="Source\UnasignedMoneyRecipient.h">
-      <Filter>Recipients</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RecipientHeader.h">
-      <Filter>Recipients</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\FilterRecipient.h">
       <Filter>Recipients</Filter>
     </ClInclude>
     <ClInclude Include="Source\FileManager.h">
@@ -116,9 +110,6 @@
     </ClInclude>
     <ClInclude Include="Source\External\ImGuiFileDialog\ImGuiFileDialogConfig.h">
       <Filter>External\ImGuiFileDialog</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\LimitRecipient.h">
-      <Filter>Recipients</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Resources</Filter>
@@ -153,20 +144,41 @@
     <ClInclude Include="Source\MethodsEnum.h">
       <Filter>Enums</Filter>
     </ClInclude>
+    <ClInclude Include="Source\ArrearPlrRecipient.h">
+      <Filter>Recipients\Plural</Filter>
+    </ClInclude>
     <ClInclude Include="Source\FilterPlrRecipient.h">
-      <Filter>Recipients</Filter>
+      <Filter>Recipients\Plural</Filter>
     </ClInclude>
     <ClInclude Include="Source\FuturePlrRecipient.h">
-      <Filter>Recipients</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ArrearPlrRecipient.h">
-      <Filter>Recipients</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Label.h">
-      <Filter>Recipients</Filter>
+      <Filter>Recipients\Plural</Filter>
     </ClInclude>
     <ClInclude Include="Source\LimitPlrRecipient.h">
-      <Filter>Recipients</Filter>
+      <Filter>Recipients\Plural</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ArrearRecipient.h">
+      <Filter>Recipients\Singular</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\FilterRecipient.h">
+      <Filter>Recipients\Singular</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\FutureRecipient.h">
+      <Filter>Recipients\Singular</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\LimitRecipient.h">
+      <Filter>Recipients\Singular</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Label.h">
+      <Filter>Recipients\Plural</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UnasignedMoneyRecipient.h">
+      <Filter>Recipients\Constant</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TotalMoneyRecipient.h">
+      <Filter>Recipients\Constant</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Chrono.h">
+      <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -196,6 +208,15 @@
     </Filter>
     <Filter Include="Enums">
       <UniqueIdentifier>{59aa71da-c797-4a88-9608-392729e3d4d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Recipients\Plural">
+      <UniqueIdentifier>{94b32f97-c41f-46ee-ba41-9f19f773e979}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Recipients\Singular">
+      <UniqueIdentifier>{30e844ad-6715-41b0-a726-59893fe9ae86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Recipients\Constant">
+      <UniqueIdentifier>{7185b72b-3ea1-4c81-97a7-299824278e03}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

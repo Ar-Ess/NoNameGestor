@@ -255,6 +255,9 @@ void EconomyScene::InternalSave(const char* path)
 			break;
 		}
 
+		case RecipientType::FUTURE_SINGULAR:
+			break;
+
 		case RecipientType::FUTURE_PLURAL:
 		{
 			FuturePlrRecipient* fPR = (FuturePlrRecipient*)r;
@@ -270,6 +273,9 @@ void EconomyScene::InternalSave(const char* path)
 			}
 			break;
 		}
+
+		case RecipientType::ARREAR_SINGULAR:
+			break;
 
 		case RecipientType::ARREAR_PLURAL:
 		{
@@ -501,6 +507,12 @@ void EconomyScene::Load()
 			break;
 		}
 
+		case RecipientType::FUTURE_SINGULAR:
+		{
+			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
+			break;
+		}
+
 		case RecipientType::FUTURE_PLURAL:
 		{
 			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
@@ -528,6 +540,12 @@ void EconomyScene::Load()
 				added += 2; // Change depending on how many variables on top
 			}
 
+			break;
+		}
+
+		case RecipientType::ARREAR_SINGULAR:
+		{
+			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
 			break;
 		}
 
@@ -1189,8 +1207,33 @@ bool EconomyScene::DrawToolbarWindow(bool* open)
 
 	if (ImGui::Begin("Toolbar", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar))
 	{
+		// Filter button timer
+		ImGui::Button("FILTER T");
+		if (ImGui::IsItemActive())
+		{
+			if (chrono.ChronoStart(1.0f))
+			{
+				ImGui::OpenPopup("Filter Popup T");
+				chrono.ChronoStop();
+			}
+		}
+		if (ImGui::IsItemDeactivated())
+		{
+			CreateRecipient(RecipientType::FILTER_SINGULAR);
+			chrono.ChronoStop();
+		}
+		if (ImGui::BeginPopup("Filter Popup T"))
+		{
+			if (ImGui::MenuItem("Singular"))
+				CreateRecipient(RecipientType::FILTER_SINGULAR);
 
-		if (ImGui::Button("FILTER"))
+			if (ImGui::MenuItem("Plural"))
+				CreateRecipient(RecipientType::FILTER_PLURAL);
+			ImGui::EndPopup();
+		}
+
+		// Filter button normal
+		if (ImGui::Button("FILTER N"))
 			ImGui::OpenPopup("Filter Popup");
 		if (ImGui::BeginPopup("Filter Popup"))
 		{
@@ -1271,9 +1314,9 @@ void EconomyScene::CreateRecipient(RecipientType recipient, const char* name, fl
 	case RecipientType::FILTER_PLURAL: recipients.push_back((Recipient*)(new FilterPlrRecipient(name, money, hidden, open, totalRecipient->GetMoneyPtr()))); break;
 	case RecipientType::LIMIT_SINGULAR: recipients.push_back((Recipient*)(new    LimitRecipient(name, money, hidden, open))); break;
 	case RecipientType::LIMIT_PLURAL: recipients.push_back((Recipient*)(new   LimitPlrRecipient(name, money, hidden, open, totalRecipient->GetMoneyPtr()))); break;
-	case RecipientType::FUTURE_SINGULAR: break;
+	case RecipientType::FUTURE_SINGULAR: recipients.push_back((Recipient*)(new  FutureRecipient(name, money, hidden, open))); break;
 	case RecipientType::FUTURE_PLURAL: recipients.push_back((Recipient*)(new FuturePlrRecipient(name, money, hidden, open, totalRecipient->GetMoneyPtr()))); break;
-	case RecipientType::ARREAR_SINGULAR: break;
+	case RecipientType::ARREAR_SINGULAR: recipients.push_back((Recipient*)(new  ArrearRecipient(name, money, hidden, open))); break;
 	case RecipientType::ARREAR_PLURAL: recipients.push_back((Recipient*)(new ArrearPlrRecipient(name, money, hidden, open, totalRecipient->GetMoneyPtr()))); break;
 	default: break;
 	}
