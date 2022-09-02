@@ -1100,7 +1100,7 @@ bool EconomyScene::DrawMainWindow(bool* open)
 			Recipient* r = recipients[i];
 			ImGui::PushID((i / size) * size / r->GetId());
 			bool reordered = false;
-			if (ImGui::BeginTable("##table", 2, ImGuiTableFlags_SizingStretchProp))
+			if (ImGui::BeginTable("##table", 2/*, ImGuiTableFlags_SizingStretchProp*/))
 			{
 				ImGui::TableNextRow();
 				ImGui::TableNextColumn();

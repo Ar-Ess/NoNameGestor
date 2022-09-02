@@ -35,7 +35,17 @@ public: // Functions
 		{
 			ImGui::PushID(id * -1 * i);
 
-			if (ImGui::Button(" -> "))
+			if (i == 0) { if (ImGui::Button("+")) NewLabel(); }
+			else ImGui::Dummy({ 15, 0 });
+
+			ImGui::SameLine();
+
+			if (size > 1) { if (ImGui::Button("X")) DeleteLabel(i); }
+			else ImGui::Dummy({ 15, 0 });
+
+			ImGui::SameLine();
+
+			if (ImGui::Button(" > "))
 			{
 				*totalMoneyPtr -= GetLabelMoney(i);
 				DeleteLabel(i);
@@ -51,20 +61,7 @@ public: // Functions
 
 			ImGui::PushItemWidth(100.f);
 			ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, 340282000000000000000000000000000000000.0f, "%.2f EUR");
-			ImGui::PopItemWidth(); ImGui::SameLine();
-
-			if (size > 1 && ImGui::Button("X")) DeleteLabel(i);
-
-			if (i == 0)
-			{
-				if (size == 1)
-				{
-					ImGui::SameLine();
-					ImGui::Dummy(ImVec2{ 15, 0 });
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("+")) NewLabel();
-			}
+			ImGui::PopItemWidth();
 
 			ImGui::PopID();
 		}

@@ -40,7 +40,17 @@ public: // Functions
 		{
 			ImGui::PushID(id * -1 * i);
 
-			if (ImGui::Button(" -> "))
+			if (i == 0) { if (ImGui::Button("+")) NewLabel(); }
+			else ImGui::Dummy({ 15, 0 });
+
+			ImGui::SameLine();
+
+			if (size > 1) { if (ImGui::Button("X")) DeleteLabel(i); }
+			else ImGui::Dummy({ 15, 0 });
+
+			ImGui::SameLine();
+
+			if (ImGui::Button(" > "))
 			{
 				*totalMoneyPtr += GetLabelMoney(i);
 				DeleteLabel(i);
@@ -71,21 +81,6 @@ public: // Functions
 				{
 					editLimit = true;
 					editLimitIndex = i;
-				}
-
-				ImGui::SameLine();
-
-				if (size > 1 && ImGui::Button("X")) DeleteLabel(i);
-
-				if (i == 0)
-				{
-					if (size == 1)
-					{
-						ImGui::SameLine();
-						ImGui::Dummy(ImVec2{ 15, 0 });
-					}
-					ImGui::SameLine();
-					if (ImGui::Button("+")) NewLabel();
 				}
 
 				ImGui::TableNextColumn();
