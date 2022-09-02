@@ -1100,90 +1100,86 @@ bool EconomyScene::DrawMainWindow(bool* open)
 			Recipient* r = recipients[i];
 			ImGui::PushID((i / size) * size / r->GetId());
 			bool reordered = false;
-			if (ImGui::BeginTable("##table", 2/*, ImGuiTableFlags_SizingStretchProp*/))
+
+			bool hidden = r->hidden;
+			if (hidden) ImGui::BeginDisabled();
+
+			ImGui::Dummy({ 20, 0 }); ImGui::SameLine();
+
+			if (showRecipientType)
 			{
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-				ImGui::Text("|");
+				ImGui::Text(r->GetTypeString());
+				ImGui::SameLine();
+			}
+			ImGui::PushItemWidth(textFieldSize);
+			ImGui::InputText("##LabelName", r->GetString()); ImGui::PopItemWidth(); ImGui::SameLine();
 
-				ImGui::TableNextColumn();
+			if (hidden) ImGui::EndDisabled();
 
-				bool hidden = r->hidden;
-				if (hidden) ImGui::BeginDisabled();
-
-				if (showRecipientType)
-				{ 
-					ImGui::Text(r->GetTypeString()); 
-					ImGui::SameLine();
-				}
-				ImGui::PushItemWidth(textFieldSize);
-				ImGui::InputText("##LabelName", r->GetString()); ImGui::PopItemWidth(); ImGui::SameLine();
-
-				if (hidden) ImGui::EndDisabled();
-
-				if (ImGui::Button(":"))
-					ImGui::OpenPopup("Options Popup");
-				if (ImGui::BeginPopup("Options Popup"))
+			if (ImGui::Button(":"))
+				ImGui::OpenPopup("Options Popup");
+			if (ImGui::BeginPopup("Options Popup"))
+			{
+				if (ImGui::MenuItem("Delete"))
 				{
-					if (ImGui::MenuItem("Delete"))
+					DeleteRecipient(i);
+					ImGui::EndPopup();
+					ImGui::EndTable();
+					ImGui::PopID();
+					break;
+				}
+				if (ImGui::MenuItem("Process"))
+				{
+					int dif = 1;
+					r->GetType() == RecipientType::FUTURE_PLURAL ? dif = 1 : dif = -1;
+					float totalResult = totalRecipient->GetMoney() + (r->GetMoney() * dif);
+					if (totalResult >= 0)
 					{
+						*totalRecipient->GetMoneyPtr() = totalResult;
 						DeleteRecipient(i);
 						ImGui::EndPopup();
 						ImGui::EndTable();
 						ImGui::PopID();
 						break;
 					}
-					if (ImGui::MenuItem("Process"))
-					{
-						int dif = 1;
-						r->GetType() == RecipientType::FUTURE_PLURAL ? dif = 1 : dif = -1;
-						float totalResult = totalRecipient->GetMoney() + (r->GetMoney() * dif);
-						if (totalResult >= 0)
-						{
-							*totalRecipient->GetMoneyPtr() = totalResult;
-							DeleteRecipient(i);
-							ImGui::EndPopup();
-							ImGui::EndTable();
-							ImGui::PopID();
-							break;
-						}
-					}
-					ImGui::MenuItem("Hide", "", &r->hidden);
-					ImGui::EndPopup();
 				}
-				ImGui::SameLine();
-				
-				if (r->loadOpen)
-				{
-					ImGui::SetNextItemOpen(r->open);
-					r->loadOpen = false;
-				}
-				if (r->open = ImGui::TreeNodeEx("[]", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding))
-				{
-					if (ImGui::BeginDragDropSource())
-					{
-						intptr_t id = r->GetId();
-						ImGui::SetDragDropPayload("Recipient", &id, sizeof(intptr_t));
-						ImGui::Text(r->GetName());
-						ImGui::EndDragDropSource();
-					}
-					if (ImGui::BeginDragDropTarget())
-					{
-						const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Recipient");
-						if (payload)
-						{
-							MoveRecipient(ReturnRecipientIndex(*((intptr_t*)payload->Data)), i);
-							reordered = true;
-						}
-						ImGui::EndDragDropTarget();
-					}
-
-					r->Draw();
-
-					ImGui::TreePop();
-				}
+				ImGui::MenuItem("Hide", "", &r->hidden);
+				ImGui::EndPopup();
 			}
-			ImGui::EndTable();
+			ImGui::SameLine();
+
+			if (r->loadOpen)
+			{
+				ImGui::SetNextItemOpen(r->open);
+				r->loadOpen = false;
+			}
+			ImGui::PushID(r->GetId() * 0.73 * i);
+			if (r->open = ImGui::TreeNodeEx("[]", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding))
+			{
+				if (ImGui::BeginDragDropSource())
+				{
+					intptr_t id = r->GetId();
+					ImGui::SetDragDropPayload("Recipient", &id, sizeof(intptr_t));
+					ImGui::Text(r->GetName());
+					ImGui::EndDragDropSource();
+				}
+				if (ImGui::BeginDragDropTarget())
+				{
+					const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Recipient");
+					if (payload)
+					{
+						MoveRecipient(ReturnRecipientIndex(*((intptr_t*)payload->Data)), i);
+						reordered = true;
+					}
+					ImGui::EndDragDropTarget();
+				}
+
+				ImGui::Dummy({ 15, 0 }); ImGui::SameLine();
+				r->Draw();
+
+				ImGui::TreePop();
+			}
+			ImGui::PopID();
 			ImGui::PopID();
 
 			AddSpacing(0);
