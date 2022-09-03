@@ -8,17 +8,13 @@ static float textFieldSize = 150.0f;
 
 enum class RecipientType
 {
-	NO_RECIPIENT,    //0
-	TOTAL_MONEY,     //1
-	UNASIGNED_MONEY, //2
-	FILTER_SINGULAR, //3
-	FILTER_PLURAL,   //4
-	LIMIT_SINGULAR,  //5
-	LIMIT_PLURAL,    //6
-	FUTURE_SINGULAR, //7
-	FUTURE_PLURAL,   //8
-	ARREAR_SINGULAR, //9
-	ARREAR_PLURAL,   //10
+	NO_RECIPIENT,
+	TOTAL_MONEY,
+	UNASIGNED_MONEY,
+	FILTER,
+	LIMIT,
+	FUTURE,
+	ARREAR,
 };
 
 class Recipient
@@ -51,14 +47,10 @@ public: // Functions
 	{
 		switch (type)
 		{
-		case RecipientType::FILTER_SINGULAR: 
-		case RecipientType::FILTER_PLURAL: return "FILTER";
-		case RecipientType::LIMIT_SINGULAR: 
-		case RecipientType::LIMIT_PLURAL: return "LIMIT ";
-		case RecipientType::FUTURE_SINGULAR:
-		case RecipientType::FUTURE_PLURAL: return "FUTURE";
-		case RecipientType::ARREAR_SINGULAR:
-		case RecipientType::ARREAR_PLURAL: return "ARREAR";
+		case RecipientType::FILTER: return "FILTER";
+		case RecipientType::LIMIT : return "LIMIT ";
+		case RecipientType::FUTURE: return "FUTURE";
+		case RecipientType::ARREAR: return "ARREAR";
 		}
 		return "NO RECIPIENT";
 	}

@@ -111,7 +111,6 @@
     <ClCompile Include="Source\Timer.cpp" />
     <ClCompile Include="Source\Window.cpp" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="Source\ArrearPlrRecipient.h" />
     <ClInclude Include="Source\ArrearRecipient.h" />
     <ClInclude Include="Source\Chrono.h" />
     <ClInclude Include="Source\EconomyScene.h" />
@@ -127,12 +126,9 @@
     <ClInclude Include="Source\External\imgui\imstb_textedit.h" />
     <ClInclude Include="Source\External\imgui\imstb_truetype.h" />
     <ClInclude Include="Source\FileManager.h" />
-    <ClInclude Include="Source\FilterPlrRecipient.h" />
     <ClInclude Include="Source\FilterRecipient.h" />
-    <ClInclude Include="Source\FuturePlrRecipient.h" />
     <ClInclude Include="Source\FutureRecipient.h" />
     <ClInclude Include="Source\Label.h" />
-    <ClInclude Include="Source\LimitPlrRecipient.h" />
     <ClInclude Include="Source\LimitRecipient.h" />
     <ClInclude Include="Source\Multibool.h" />
     <ClInclude Include="Source\RecipientHeader.h" />
