@@ -6,7 +6,7 @@ class TotalContainer : public Container
 {
 public: // Functions
 
-	TotalContainer(const char* name, float money) : Container(name, money, false, true, ContainerType::TOTAL_MONEY)
+	TotalContainer(const char* name) : Container(name, false, true, false, nullptr, ContainerType::TOTAL_MONEY)
 	{
 	}
 

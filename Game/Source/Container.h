@@ -1,9 +1,12 @@
 #pragma once
 
 #include "Defs.h"
+#include "Label.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_stdlib.h"
 #include <string>
+#include <vector>
+
 static float textFieldSize = 150.0f;
 
 enum class ContainerType
@@ -75,6 +78,38 @@ public: // Functions
 		return &money;
 	}
 
+	unsigned int GetSize() const
+	{
+		return labels.size();
+	}
+
+	void NewLabel(const char* name = "New Container", float money = 0.0f, float limit = 1.0f)
+	{
+		if (!labels.empty() && !loadOpen)
+		{
+			unified = false;
+			SwapNames();
+		}
+		labels.push_back(new Label(name, money, limit));
+	}
+
+	void ClearLabels()
+	{
+		for (Label* l : labels) RELEASE(l);
+		labels.clear();
+		labels.shrink_to_fit();
+	}
+
+	float GetLabelMoney(int i) const
+	{
+		return labels[i]->money;
+	}
+
+	const char* GetLabelName(int i) const
+	{
+		return labels[i]->name.c_str();
+	}
+
 	void SetMoney(float money)
 	{
 		this->money = money;
@@ -85,15 +120,25 @@ public: // Functions
 		SetFormat("%.2f ", currency);
 	}
 
+	void SwapNames()
+	{
+		name.clear();
+		name.shrink_to_fit();
+
+		unified ? name = labels[0]->name.c_str() : name = "New Container";
+	}
+
 protected: // Functions
 
-	Container(const char* name, float money, bool hidden, bool open, ContainerType type) 
+	Container(const char* name, bool hidden, bool open, bool unified, float* totalMoneyPtr, ContainerType type) 
 	{
-		this->money = money;
+		this->money = 0;
 		this->name = name;
 		this->type = type;
 		this->hidden = hidden;
 		this->open = open;
+		this->unified = unified;
+		this->totalMoneyPtr = totalMoneyPtr;
 		id = reinterpret_cast<int>(this);
 	}
 
@@ -105,17 +150,30 @@ protected: // Functions
 		format += currency;
 	}
 
+	void DeleteLabel(int index)
+	{
+		labels[index]->name.clear();
+		labels[index]->name.shrink_to_fit();
+		labels.erase(labels.begin() + index);
+	}
+
 public: // Variables
 
 	bool hidden = false;
+	bool unified = true;
 	bool open = false;
 	bool loadOpen = false;
 
 protected: // Variables
 
+	float* totalMoneyPtr = nullptr;
+	std::vector<Label*> labels;
 	float money = 0.0f;
 	std::string name;
 	std::intptr_t id = 0;
 	ContainerType type = ContainerType::NO_CONTAINER;
 	std::string format;
+
+	//-Todo: Instead of GetSize returning labels->size(), keep track of a unsigned int size variable that updates
+	// whenever a label is created or deleted. Performance optimitzation
 };

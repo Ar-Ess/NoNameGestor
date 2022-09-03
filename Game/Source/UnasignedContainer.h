@@ -6,7 +6,7 @@ class UnasignedContainer : public Container
 {
 public: // Functions
 
-	UnasignedContainer(const char* name, float money, bool* showFutureMoney, bool* allowFutureCover, bool* showArrearMoney, bool* allowArrearsFill) : Container(name, money, false, true, ContainerType::UNASIGNED_MONEY)
+	UnasignedContainer(const char* name, bool* showFutureMoney, bool* allowFutureCover, bool* showArrearMoney, bool* allowArrearsFill) : Container(name, false, true, false, nullptr, ContainerType::UNASIGNED_MONEY)
 	{
 		this->showFutureMoney = showFutureMoney;
 		this->allowFutureCover = allowFutureCover;
@@ -92,8 +92,6 @@ public: // Functions
 		this->futureMoney = futureMoney;
 		this->arrearMoney = arrearMoney;
 	}
-
-private: // Functions
 
 private: // Variables
 

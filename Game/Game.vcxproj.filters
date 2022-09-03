@@ -139,34 +139,34 @@
       <Filter>Enums</Filter>
     </ClInclude>
     <ClInclude Include="Source\Label.h">
-      <Filter>Recipients\Containers</Filter>
+      <Filter>Container\Containers</Filter>
     </ClInclude>
     <ClInclude Include="Source\Chrono.h">
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="Source\Container.h">
-      <Filter>Recipients</Filter>
+      <Filter>Container</Filter>
     </ClInclude>
     <ClInclude Include="Source\ContainerHeader.h">
-      <Filter>Recipients</Filter>
+      <Filter>Container</Filter>
     </ClInclude>
     <ClInclude Include="Source\ArrearContainer.h">
-      <Filter>Recipients\Containers</Filter>
+      <Filter>Container\Containers</Filter>
     </ClInclude>
     <ClInclude Include="Source\FilterContainer.h">
-      <Filter>Recipients\Containers</Filter>
+      <Filter>Container\Containers</Filter>
     </ClInclude>
     <ClInclude Include="Source\FutureContainer.h">
-      <Filter>Recipients\Containers</Filter>
+      <Filter>Container\Containers</Filter>
     </ClInclude>
     <ClInclude Include="Source\LimitContainer.h">
-      <Filter>Recipients\Containers</Filter>
+      <Filter>Container\Containers</Filter>
     </ClInclude>
     <ClInclude Include="Source\TotalContainer.h">
-      <Filter>Recipients\Constant</Filter>
+      <Filter>Container\Constant</Filter>
     </ClInclude>
     <ClInclude Include="Source\UnasignedContainer.h">
-      <Filter>Recipients\Constant</Filter>
+      <Filter>Container\Constant</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -185,9 +185,6 @@
     <Filter Include="Scenes">
       <UniqueIdentifier>{80c91c30-006b-4948-afb7-cbc7a9b10d1b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Recipients">
-      <UniqueIdentifier>{c1522c6d-9e4e-459a-a5cc-2e1c63a70239}</UniqueIdentifier>
-    </Filter>
     <Filter Include="External\ImGuiFileDialog">
       <UniqueIdentifier>{5a7b1ef6-d384-4db9-9159-328f44c61348}</UniqueIdentifier>
     </Filter>
@@ -197,11 +194,14 @@
     <Filter Include="Enums">
       <UniqueIdentifier>{59aa71da-c797-4a88-9608-392729e3d4d6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Recipients\Constant">
-      <UniqueIdentifier>{7185b72b-3ea1-4c81-97a7-299824278e03}</UniqueIdentifier>
+    <Filter Include="Container">
+      <UniqueIdentifier>{c1522c6d-9e4e-459a-a5cc-2e1c63a70239}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Recipients\Containers">
+    <Filter Include="Container\Containers">
       <UniqueIdentifier>{94b32f97-c41f-46ee-ba41-9f19f773e979}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Container\Constant">
+      <UniqueIdentifier>{7185b72b-3ea1-4c81-97a7-299824278e03}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

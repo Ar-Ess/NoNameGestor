@@ -1,17 +1,14 @@
 #pragma once
 
 #include "Container.h"
-#include "Label.h"
-#include <vector>
 
 class FilterContainer : public Container
 {
 public: // Functions
 
-	FilterContainer(const char* name, float money, bool hidden, bool open, float* totalMoneyPtr) : Container(name, money, hidden, open, ContainerType::FILTER)
+	FilterContainer(const char* name, bool hidden, bool open, bool unified, float* totalMoneyPtr) : Container(name, hidden, open, unified, totalMoneyPtr, ContainerType::FILTER)
 	{
-		this->totalMoneyPtr = totalMoneyPtr;
-		NewLabel();
+		NewLabel("New Filter");
 	}
 
 	~FilterContainer() override
@@ -40,31 +37,37 @@ public: // Functions
 		{
 			ImGui::PushID(-id / ( i + 1 ));
 
-			if (i == 0) { if (ImGui::Button("+")) NewLabel(); }
+			if (i == 0) { if (ImGui::Button("+")) NewLabel("New Filter"); }
 			else ImGui::Dummy({ 38, 0 });
 
 			ImGui::SameLine();
 
-			if (size > 1) { if (ImGui::Button("X")) DeleteLabel(i); }
-			else ImGui::Dummy({ 15, 0 });
-
-			ImGui::SameLine();
-
-			if (ImGui::Button(" > "))
+			float width = 100.0f;
+			if (!unified)
 			{
-				*totalMoneyPtr += GetLabelMoney(i);
-				DeleteLabel(i);
-				if (labels.empty()) NewLabel();
-				ImGui::PopID();
-				break;
+				if (size > 1) { if (ImGui::Button("X")) DeleteLabel(i); }
+				else ImGui::Dummy({ 15, 0 });
+
+				ImGui::SameLine();
+
+				if (ImGui::Button(" > "))
+				{
+					*totalMoneyPtr += GetLabelMoney(i);
+					DeleteLabel(i);
+					if (labels.empty()) NewLabel("New Filter");
+					ImGui::PopID();
+					break;
+				}
+				ImGui::SameLine();
+
+				ImGui::PushItemWidth(textFieldSize);
+				ImGui::InputText("##FilterName", &labels[i]->name);
+				ImGui::PopItemWidth(); ImGui::SameLine();
 			}
-			ImGui::SameLine();
+			else width += 50;
 
-			ImGui::PushItemWidth(textFieldSize);
-			ImGui::InputText("##FutureName", &labels[i]->name);
-			ImGui::PopItemWidth(); ImGui::SameLine();
 
-			ImGui::PushItemWidth(100.f);
+			ImGui::PushItemWidth(width);
 			ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, 340282000000000000000000000000000000000.0f, format.c_str());
 			ImGui::PopItemWidth();
 
@@ -74,44 +77,6 @@ public: // Functions
 		if (hidden) ImGui::EndDisabled();
 	}
 
-	void NewLabel(const char* name = "New Filter", float money = 0.0f)
-	{
-		labels.push_back(new Label(name, money));
-	}
-
-	void ClearLabels()
-	{
-		for (Label* l : labels) RELEASE(l);
-		labels.clear();
-		labels.shrink_to_fit();
-	}
-
-	int GetSize() const
-	{
-		return labels.size();
-	}
-
-	float GetLabelMoney(int i) const
-	{
-		return labels[i]->money;
-	}
-	
-	const char* GetLabelName(int i) const
-	{
-		return labels[i]->name.c_str();
-	}
-
 private:
 
-	void DeleteLabel(int index)
-	{
-		labels[index]->name.clear();
-		labels[index]->name.shrink_to_fit();
-		labels.erase(labels.begin() + index);
-	}
-
-private:
-
-	std::vector<Label*> labels;
-	float* totalMoneyPtr = nullptr;
 };

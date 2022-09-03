@@ -1,17 +1,14 @@
 #pragma once
 
 #include "Container.h"
-#include "Label.h"
-#include <vector>
 
 class LimitContainer : public Container
 {
 public: // Functions
 
-	LimitContainer(const char* name, float money, bool hidden, bool open, float* totalMoneyPtr) : Container(name, money, hidden, open, ContainerType::LIMIT)
+	LimitContainer(const char* name, bool hidden, bool open, bool unified, float* totalMoneyPtr) : Container(name, hidden, open, unified, totalMoneyPtr,  ContainerType::LIMIT)
 	{
-		this->totalMoneyPtr = totalMoneyPtr;
-		NewLabel();
+		NewLabel("New Limit");
 	}
 
 	~LimitContainer() override
@@ -40,36 +37,41 @@ public: // Functions
 		{
 			ImGui::PushID(id * -1 * i);
 
-			if (i == 0) { if (ImGui::Button("+")) NewLabel(); }
+			if (i == 0) { if (ImGui::Button("+")) NewLabel("New Limit"); }
 			else ImGui::Dummy({ 38, 0 });
 
 			ImGui::SameLine();
 
-			if (size > 1) { if (ImGui::Button("X")) DeleteLabel(i); }
-			else ImGui::Dummy({ 15, 0 });
-
-			ImGui::SameLine();
-
-			if (ImGui::Button(" > "))
+			float width = 100.0f;
+			if (!unified)
 			{
-				*totalMoneyPtr += GetLabelMoney(i);
-				DeleteLabel(i);
-				if (labels.empty()) NewLabel();
-				ImGui::PopID();
-				break;
-			}
-			ImGui::SameLine();
+				if (size > 1) { if (ImGui::Button("X")) DeleteLabel(i); }
+				else ImGui::Dummy({ 15, 0 });
 
-			ImGui::PushItemWidth(textFieldSize);
-			ImGui::InputText("##LimitName", &labels[i]->name);
-			ImGui::PopItemWidth(); ImGui::SameLine();
+				ImGui::SameLine();
+
+				if (ImGui::Button(" > "))
+				{
+					*totalMoneyPtr += GetLabelMoney(i);
+					DeleteLabel(i);
+					if (labels.empty()) NewLabel("New Limit");
+					ImGui::PopID();
+					break;
+				}
+				ImGui::SameLine();
+
+				ImGui::PushItemWidth(textFieldSize);
+				ImGui::InputText("##LimitName", &labels[i]->name);
+				ImGui::PopItemWidth(); ImGui::SameLine();
+			}
+			else width += 50;
 
 			if (ImGui::BeginTable(name.c_str(), 1))
 			{
 				ImGui::TableNextRow();
 				ImGui::TableNextColumn();
 
-				ImGui::PushItemWidth(100.f);
+				ImGui::PushItemWidth(width);
 				ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, labels[i]->limit, format.c_str());
 				ImVec2 itemSize = ImGui::GetItemRectSize();
 				itemSize.y -= 15;
@@ -117,33 +119,6 @@ public: // Functions
 		ImGui::PopID();
 	}
 
-	void NewLabel(const char* name = "New Limit", float money = 0.0f, float limit = 1.0f)
-	{
-		labels.push_back(new Label(name, money, limit));
-	}
-
-	void ClearLabels()
-	{
-		for (Label* l : labels) RELEASE(l);
-		labels.clear();
-		labels.shrink_to_fit();
-	}
-
-	int GetSize() const
-	{
-		return labels.size();
-	}
-
-	float GetLabelMoney(int i) const
-	{
-		return labels[i]->money;
-	}
-	
-	const char* GetLabelName(int i) const
-	{
-		return labels[i]->name.c_str();
-	}
-
 	float GetLabelLimit(int i) const
 	{
 		return labels[i]->limit;
@@ -151,17 +126,6 @@ public: // Functions
 
 private:
 
-	void DeleteLabel(int index)
-	{
-		labels[index]->name.clear();
-		labels[index]->name.shrink_to_fit();
-		labels.erase(labels.begin() + index);
-	}
-
-private:
-
-	std::vector<Label*> labels;
-	float* totalMoneyPtr = nullptr;
 	bool editLimit = false;
 	int editLimitIndex = 0;
 };

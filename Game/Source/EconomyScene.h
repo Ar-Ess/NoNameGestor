@@ -42,7 +42,7 @@ private: // Functions
 	void UpdateShortcuts();
 	void UpdateCurrency();
 
-	void CreateContainer(ContainerType container, const char* name = "New Container", float money = 0.0f, bool hidden = false, bool open = false);
+	void CreateContainer(ContainerType container, const char* name = "New Container", bool hidden = false, bool open = false);
 
 	// Input from 0 (smallest spacing) to whatever you need
 	void AddSpacing(unsigned int spaces = 1)
@@ -197,6 +197,7 @@ private: // Variables
 	bool allowFutureCovering = false;
 	bool showArrearUnasigned = false;
 	bool allowArrearsFill = false;
+	bool createContainerUnified = true;
 
 	int currency = 0;
 	const char* comboCurrency[5] = { "EUR", "USD", "COP", "ARS", "PEN"};

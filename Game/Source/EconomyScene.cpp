@@ -10,8 +10,8 @@ EconomyScene::EconomyScene(Input* input)
 	this->input = input;
 	this->file = new FileManager(EXTENSION);
 
-	totalContainer = new TotalContainer("Total Money", 0.0f);
-	unasignedContainer = new UnasignedContainer("Unasigned Money", 0.0f, &showFutureUnasigned, &allowFutureCovering, &showArrearUnasigned, &allowArrearsFill);
+	totalContainer = new TotalContainer("Total Money");
+	unasignedContainer = new UnasignedContainer("Unasigned Money", &showFutureUnasigned, &allowFutureCovering, &showArrearUnasigned, &allowArrearsFill);
 
 	openFileName = "New_File";
 	openFilePath.clear();
@@ -190,6 +190,7 @@ void EconomyScene::InternalSave(const char* path)
 		Write("cnfSRT").Bool(showContainerType).
 		Write("cnfSFU").Bool(showFutureUnasigned).
 		Write("cnfAFC").Bool(allowFutureCovering).
+		Write("cnfCCU").Bool(createContainerUnified).
 		Write("cnfTFS").Number(textFieldSize).
 		Write("currency").Number(currency).
 		// Generic File
@@ -203,7 +204,8 @@ void EconomyScene::InternalSave(const char* path)
 			Write("type").Number((int)r->GetType()).
 			Write("money").Number(r->GetMoney()).
 			Write("hide").Bool(r->hidden).
-			Write("open").Bool(r->open);
+			Write("open").Bool(r->open).
+			Write("unfd").Bool(r->unified);
 
 		switch (r->GetType())
 		{
@@ -374,12 +376,14 @@ void EconomyScene::Load()
 
 	DeleteAllContainer();
 
-	// Top aspects
+	// Y aspects
 	file->ViewFile(path.c_str(), 1).
 		// Preferences
+	  //Read("version")
 		Read("cnfSRT").AsBool(showContainerType).
 		Read("cnfSFU").AsBool(showFutureUnasigned).
 		Read("cnfAFC").AsBool(allowFutureCovering).
+		Read("cnfCCU").AsBool(createContainerUnified).
 		Read("cnfTFS").AsFloat(textFieldSize).
 		Read("currency").AsInt(currency).
 		// General Project
@@ -389,31 +393,34 @@ void EconomyScene::Load()
 	int added = 0;
 
 	for (unsigned int i = 0; i < size; ++i)
-	{//  Change depending on how many below aspects \/     \/ Change it depending on how many top aspects
-		int positionToRead =                   (i * 5)  +  8 + added;
+	{//      Change depending on how many X aspects \/     \/ Change it depending on how many Y aspects (count version as one)
+		int positionToRead =                   (i * 6)  +  9 + added;
 		int type = -1;
 		float money = 0;
-		bool hidden = false, open = false;
+		bool hidden = false, open = false, unified = true;
 		std::string name;
 
-		// Below aspects
+		// X aspects
 		file->ViewFile(path.c_str(), positionToRead).
 			Read("name").AsString(name).
 			Read("type").AsInt(type).
 			Read("money").AsFloat(money).
 			Read("hide").AsBool(hidden).
-			Read("open").AsBool(open);
+			Read("open").AsBool(open).
+			Read("unfd").AsBool(unified);
 
 		switch ((ContainerType)type)
 		{
 		case ContainerType::FILTER:
 		{
-			CreateContainer((ContainerType)type, name.c_str(), money, hidden, open);
-			FilterContainer* fR = (FilterContainer*)containers.back();
-			fR->ClearLabels();
+			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
+			FilterContainer* fC = (FilterContainer*)containers.back();
+			fC->ClearLabels();
+			fC->unified = unified;
+			fC->loadOpen = true;
 
-			int fSize = 0; //                           \/ Change depending on below aspects amount
-			int futurePositionToRead = positionToRead + 5;
+			int fSize = 0; //                           \/ Change depending on X aspects amount
+			int futurePositionToRead = positionToRead + 6;
 
 			file->ViewFile(path.c_str(), futurePositionToRead).
 				Read("size").AsInt(fSize);
@@ -428,7 +435,7 @@ void EconomyScene::Load()
 					Read("name").AsString(fName). // Variables on top
 					Read("money").AsFloat(fMoney);
 
-				fR->NewLabel(fName.c_str(), fMoney);
+				fC->NewLabel(fName.c_str(), fMoney);
 
 				added += 2; // Change depending on how many variables on top
 			}
@@ -438,12 +445,14 @@ void EconomyScene::Load()
 
 		case ContainerType::LIMIT:
 		{
-			CreateContainer((ContainerType)type, name.c_str(), money, hidden, open);
-			LimitContainer* lPR = (LimitContainer*)containers.back();
-			lPR->ClearLabels();
+			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
+			LimitContainer* lC = (LimitContainer*)containers.back();
+			lC->ClearLabels();
+			lC->unified = unified;
+			lC->loadOpen = true;
 
-			int lSize = 0; //                           \/ Change depending on below aspects amount
-			int futurePositionToRead = positionToRead + 5;
+			int lSize = 0; //                           \/ Change depending on X aspects amount
+			int futurePositionToRead = positionToRead + 6;
 
 			file->ViewFile(path.c_str(), futurePositionToRead).
 				Read("size").AsInt(lSize);
@@ -459,7 +468,7 @@ void EconomyScene::Load()
 					Read("limit").AsFloat(lLimit).
 					Read("money").AsFloat(lMoney);
 
-				lPR->NewLabel(lName.c_str(), lMoney, lLimit);
+				lC->NewLabel(lName.c_str(), lMoney, lLimit);
 
 				added += 3; // Change depending on how many "vars on top"
 			}
@@ -468,12 +477,14 @@ void EconomyScene::Load()
 
 		case ContainerType::FUTURE:
 		{
-			CreateContainer((ContainerType)type, name.c_str(), money, hidden, open);
-			FutureContainer* fR = (FutureContainer*)containers.back();
-			fR->ClearLabels();
+			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
+			FutureContainer* fC = (FutureContainer*)containers.back();
+			fC->ClearLabels();
+			fC->unified = unified;
+			fC->loadOpen = true;
 			
-			int fSize = 0; //                           \/ Change depending on below aspects amount
-			int futurePositionToRead = positionToRead + 5;
+			int fSize = 0; //                           \/ Change depending on X aspects amount
+			int futurePositionToRead = positionToRead + 6;
 
 			file->ViewFile(path.c_str(), futurePositionToRead).
 				Read("size").AsInt(fSize);
@@ -488,7 +499,7 @@ void EconomyScene::Load()
 					Read("name").AsString(fName). // Variables on top
 					Read("money").AsFloat(fMoney);
 
-				fR->NewLabel(fName.c_str(), fMoney);
+				fC->NewLabel(fName.c_str(), fMoney);
 
 				added += 2; // Change depending on how many variables on top
 			}
@@ -498,11 +509,13 @@ void EconomyScene::Load()
 
 		case ContainerType::ARREAR:
 		{
-			CreateContainer((ContainerType)type, name.c_str(), money, hidden, open);
-			ArrearContainer* aR = (ArrearContainer*)containers.back();
-			aR->ClearLabels();
+			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
+			ArrearContainer* aC = (ArrearContainer*)containers.back();
+			aC->ClearLabels();
+			aC->unified = unified;
+			aC->loadOpen = true;
 
-			int fSize = 0; //                           \/ Change depending on below aspects amount
+			int fSize = 0; //                           \/ Change depending on X aspects amount
 			int futurePositionToRead = positionToRead + 5;
 
 			file->ViewFile(path.c_str(), futurePositionToRead).
@@ -518,7 +531,7 @@ void EconomyScene::Load()
 					Read("name").AsString(fName). // Variables on top
 					Read("money").AsFloat(fMoney);
 
-				aR->NewLabel(fName.c_str(), fMoney);
+				aC->NewLabel(fName.c_str(), fMoney);
 
 				added += 2; // Change depending on how many variables on top
 			}
@@ -529,7 +542,6 @@ void EconomyScene::Load()
 		default: break;
 		}
 
-		containers.back()->loadOpen = true;
 	}
 
 	totalContainer->SetMoney(total);
@@ -634,7 +646,7 @@ void EconomyScene::Loadv1_0()
 
 	DeleteAllContainer();
 
-	// Top aspects
+	// Y aspects
 	file->ViewFile(path.c_str(), 1).
 		// Preferences
 		Read("cnfSRT").AsBool(showContainerType).
@@ -649,7 +661,7 @@ void EconomyScene::Loadv1_0()
 	int added = 0;
 
 	for (unsigned int i = 0; i < size; ++i)
-	{ //Change depednig X aspects \/   \/ Change it depending on how many top aspects
+	{ //Change depednig X aspects \/   \/ Change it depending on how many Y aspects
 		int positionToRead = (i * 5) + 8 + added;
 		int type = -1;
 		float money = 0;
@@ -669,7 +681,7 @@ void EconomyScene::Loadv1_0()
 		{
 		case ContainerType::FILTER:
 		{
-			CreateContainer((ContainerType)type, "Filter Name", money, hidden, open);
+			CreateContainer((ContainerType)type, "Filter Name", hidden, open);
 			// Change: v1.1 -> v1.0 (Filters are plural forever)
 			FilterContainer* fR = (FilterContainer*)containers.back();
 			fR->ClearLabels();
@@ -685,7 +697,8 @@ void EconomyScene::Loadv1_0()
 			file->ViewFile(path.c_str(), positionToRead + 4).
 				Read("limit").AsFloat(limit);
 
-			CreateContainer((ContainerType)type, "Limit Name", money, hidden, open);
+			CreateContainer((ContainerType)type, "Limit Name", hidden, open);
+			// Change: v1.1 -> v1.0 (Limits are plural forever)
 			LimitContainer* lR = (LimitContainer*)containers.back();
 			lR->ClearLabels();
 
@@ -697,11 +710,11 @@ void EconomyScene::Loadv1_0()
 
 		case ContainerType::FUTURE:
 		{
-			CreateContainer((ContainerType)type, name.c_str(), money, hidden, open);
+			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
 			FutureContainer* fR = (FutureContainer*)containers.back();
 			fR->ClearLabels();
 
-			int fSize = 0; //                           \/ Change depending on below aspects amount
+			int fSize = 0; //                           \/ Change depending on X aspects amount
 			int futurePositionToRead = positionToRead + 5;
 
 			file->ViewFile(path.c_str(), futurePositionToRead).
@@ -727,11 +740,11 @@ void EconomyScene::Loadv1_0()
 
 		case ContainerType::ARREAR:
 		{
-			CreateContainer((ContainerType)type, name.c_str(), money, hidden, open);
+			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
 			ArrearContainer* aR = (ArrearContainer*)containers.back();
 			aR->ClearLabels();
 
-			int fSize = 0; //                           \/ Change depending on below aspects amount
+			int fSize = 0; //                           \/ Change depending on X aspects amount
 			int futurePositionToRead = positionToRead + 5;
 
 			file->ViewFile(path.c_str(), futurePositionToRead).
@@ -984,13 +997,16 @@ bool EconomyScene::DrawPreferencesWindow(bool* open)
 			ImGui::Checkbox("Allow Arrears Money Filling", &allowArrearsFill);
 		}
 
-		AddHelper("Enlarges the size of the text\nlabels of each ontainer.", "?"); ImGui::SameLine();
+		AddHelper("Enlarges the size of the text\nlabels of each container.", "?"); ImGui::SameLine();
 		ImGui::PushItemWidth(textFieldSize);
 		ImGui::DragFloat("Text Fiend Size", &textFieldSize, 0.1f, 1.0f, 1000.0f, "%f pts");
 		ImGui::PopItemWidth();
 
 		if (ImGui::Combo("Currency", &currency, comboCurrency, 5))
 			UpdateCurrency();
+
+		AddHelper("Creates all containers unified by default", "?"); ImGui::SameLine();
+		ImGui::Checkbox("Create Container Unified Default", &createContainerUnified);
 
 	}
 	ImGui::End();
@@ -1060,6 +1076,7 @@ bool EconomyScene::DrawMainWindow(bool* open)
 						break;
 					}
 				}
+				if (r->GetSize() <= 1 && ImGui::MenuItem("Unify", "", &r->unified)) r->SwapNames();
 				ImGui::MenuItem("Hide", "", &r->hidden);
 				ImGui::EndPopup();
 			}
@@ -1180,14 +1197,16 @@ void EconomyScene::UpdateCurrency()
 	for (Container* r : containers) r->SetCurrency(comboCurrency[currency]);
 }
 
-void EconomyScene::CreateContainer(ContainerType container, const char* name, float money, bool hidden, bool open)
+void EconomyScene::CreateContainer(ContainerType container, const char* name, bool hidden, bool open)
 {
+	bool unified = createContainerUnified;
+
 	switch (container)
 	{
-	case ContainerType::FILTER: containers.push_back((Container*)(new FilterContainer(name, money, hidden, open, totalContainer->GetMoneyPtr()))); break;
-	case ContainerType::LIMIT : containers.push_back((Container*)(new  LimitContainer(name, money, hidden, open, totalContainer->GetMoneyPtr()))); break;
-	case ContainerType::FUTURE: containers.push_back((Container*)(new FutureContainer(name, money, hidden, open, totalContainer->GetMoneyPtr()))); break;
-	case ContainerType::ARREAR: containers.push_back((Container*)(new ArrearContainer(name, money, hidden, open, totalContainer->GetMoneyPtr()))); break;
+	case ContainerType::FILTER: containers.push_back((Container*)(new FilterContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
+	case ContainerType::LIMIT : containers.push_back((Container*)(new  LimitContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
+	case ContainerType::FUTURE: containers.push_back((Container*)(new FutureContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
+	case ContainerType::ARREAR: containers.push_back((Container*)(new ArrearContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
 	default: break;
 	}
 
@@ -1198,37 +1217,54 @@ void EconomyScene::SetMethod()
 {
 	float money = totalContainer->GetMoney();
 
-	NewFile();
-
-	totalContainer->SetMoney(money);
-
 	switch (method)
 	{
 	case Method::MTHD_PARETO:
-		CreateContainer(ContainerType::FILTER, "Available", money * 0.8f, false, false);
-		CreateContainer(ContainerType::FILTER, "Savings", money * 0.2f, false, false);
+	{
+		CreateContainer(ContainerType::FILTER, "Pareto", false, false);
+		FilterContainer* fC = (FilterContainer*)containers.back();
+		fC->ClearLabels();
+		fC->NewLabel("Available 80%", money * 0.8f);
+		fC->NewLabel("Savings 20%", money * 0.2f);
 		break;
+	}
 
 	case Method::MTHD_50_15_5:
-		CreateContainer(ContainerType::FILTER, "Essential", money * 0.5f, false, false);
-		CreateContainer(ContainerType::FILTER, "Future", money * 0.15f, false, false);
-		CreateContainer(ContainerType::FILTER, "Unexpected", money * 0.05f, false, false);
+	{
+		CreateContainer(ContainerType::FILTER, "50 / 15 / 5", false, false);
+		FilterContainer* fC = (FilterContainer*)containers.back();
+		fC->ClearLabels();
+		fC->NewLabel("Essential 50%", money * 0.5f);
+		fC->NewLabel("Future 15%", money * 0.15f);
+		fC->NewLabel("Unexpected 5%", money * 0.05f);
+		fC->NewLabel("Free Assign 30%", money * 0.3f);
 		break;
+	}
 
 	case Method::MTHD_50_30_20:
-		CreateContainer(ContainerType::FILTER, "Primary", money * 0.5f, false, false);
-		CreateContainer(ContainerType::FILTER, "Leisure", money * 0.3f, false, false);
-		CreateContainer(ContainerType::FILTER, "Savings", money * 0.2f, false, false);
+	{
+		CreateContainer(ContainerType::FILTER, "50 / 30 / 20", false, false);
+		FilterContainer* fC = (FilterContainer*)containers.back();
+		fC->ClearLabels();
+		fC->NewLabel("Primary 50%", money * 0.5f);
+		fC->NewLabel("Leisure 30%", money * 0.3f);
+		fC->NewLabel("Savings 20%", money * 0.2f);
 		break;
+	}
 
 	case Method::MTHD_HARV_EKER:
-		CreateContainer(ContainerType::FILTER, "Primary", money * 0.55f, false, false);
-		CreateContainer(ContainerType::FILTER, "Education", money * 0.1f, false, false);
-		CreateContainer(ContainerType::FILTER, "Leisure", money * 0.1f, false, false);
-		CreateContainer(ContainerType::FILTER, "Donations", money * 0.06f, false, false);
-		CreateContainer(ContainerType::FILTER, "Invest", money * 0.1f, false, false);
-		CreateContainer(ContainerType::FILTER, "Savings", money * 0.1f, false, false);
+	{
+		CreateContainer(ContainerType::FILTER, "HARV EKER", false, false);
+		FilterContainer* fC = (FilterContainer*)containers.back();
+		fC->ClearLabels();
+		fC->NewLabel("Primary 55%", money * 0.55f);
+		fC->NewLabel("Education 10%", money * 0.1f);
+		fC->NewLabel("Leisure 10%", money * 0.1f);
+		fC->NewLabel("Donations 5%", money * 0.05f);
+		fC->NewLabel("Invest 10%", money * 0.1f);
+		fC->NewLabel("Savings 10%", money * 0.1f);
 		break;
+	}
 
 	default:
 		break;
