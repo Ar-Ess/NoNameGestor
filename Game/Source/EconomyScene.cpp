@@ -1098,7 +1098,7 @@ bool EconomyScene::DrawMainWindow(bool* open)
 		for (suint i = 0; i < size; ++i)
 		{
 			Recipient* r = recipients[i];
-			ImGui::PushID((i / size) * size / r->GetId());
+			ImGui::PushID(r->GetId() / ((i * size) + size * size));
 			bool reordered = false;
 
 			bool hidden = r->hidden;
@@ -1153,7 +1153,6 @@ bool EconomyScene::DrawMainWindow(bool* open)
 				ImGui::SetNextItemOpen(r->open);
 				r->loadOpen = false;
 			}
-			ImGui::PushID(r->GetId() * 0.73 * i);
 			if (r->open = ImGui::TreeNodeEx("[]", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding))
 			{
 				if (ImGui::BeginDragDropSource())
@@ -1180,7 +1179,6 @@ bool EconomyScene::DrawMainWindow(bool* open)
 				ImGui::TreePop();
 			}
 			ImGui::PopID();
-			ImGui::PopID();
 
 			AddSpacing(0);
 
@@ -1204,32 +1202,31 @@ bool EconomyScene::DrawToolbarWindow(bool* open)
 	if (ImGui::Begin("Toolbar", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar))
 	{
 		// Filter button timer
-		ImGui::Button("FILTER T");
-		if (ImGui::IsItemActive())
-		{
-			if (chrono.ChronoStart(1.0f))
-			{
-				ImGui::OpenPopup("Filter Popup T");
-				chrono.ChronoStop();
-			}
-		}
-		if (ImGui::IsItemDeactivated())
-		{
-			CreateRecipient(RecipientType::FILTER_SINGULAR);
-			chrono.ChronoStop();
-		}
-		if (ImGui::BeginPopup("Filter Popup T"))
-		{
-			if (ImGui::MenuItem("Singular"))
-				CreateRecipient(RecipientType::FILTER_SINGULAR);
+		/*ImGui::Button("FILTER T");
+		//if (ImGui::IsItemActive())
+		//{
+		//	if (chrono.ChronoStart(1.0f))
+		//	{
+		//		ImGui::OpenPopup("Filter Popup T");
+		//		chrono.ChronoStop();
+		//	}
+		//}
+		//if (ImGui::IsItemDeactivated())
+		//{
+		//	CreateRecipient(RecipientType::FILTER_SINGULAR);
+		//	chrono.ChronoStop();
+		//}
+		//if (ImGui::BeginPopup("Filter Popup T"))
+		//{
+		//	if (ImGui::MenuItem("Singular"))
+		//		CreateRecipient(RecipientType::FILTER_SINGULAR);
 
-			if (ImGui::MenuItem("Plural"))
-				CreateRecipient(RecipientType::FILTER_PLURAL);
-			ImGui::EndPopup();
-		}
+		//	if (ImGui::MenuItem("Plural"))
+		//		CreateRecipient(RecipientType::FILTER_PLURAL);
+		//	ImGui::EndPopup();
+		//}*/
 
-		// Filter button normal
-		if (ImGui::Button("FILTER N"))
+		if (ImGui::Button("FILTER"))
 			ImGui::OpenPopup("Filter Popup");
 		if (ImGui::BeginPopup("Filter Popup"))
 		{
