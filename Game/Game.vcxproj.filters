@@ -96,12 +96,6 @@
     <ClInclude Include="Source\EconomyScene.h">
       <Filter>Scenes</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Recipient.h">
-      <Filter>Recipients</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\RecipientHeader.h">
-      <Filter>Recipients</Filter>
-    </ClInclude>
     <ClInclude Include="Source\FileManager.h">
       <Filter>Utils</Filter>
     </ClInclude>
@@ -145,28 +139,34 @@
       <Filter>Enums</Filter>
     </ClInclude>
     <ClInclude Include="Source\Label.h">
-      <Filter>Recipients\Recipients</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\UnasignedMoneyRecipient.h">
-      <Filter>Recipients\Constant</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\TotalMoneyRecipient.h">
-      <Filter>Recipients\Constant</Filter>
+      <Filter>Recipients\Containers</Filter>
     </ClInclude>
     <ClInclude Include="Source\Chrono.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ArrearRecipient.h">
-      <Filter>Recipients\Recipients</Filter>
+    <ClInclude Include="Source\Container.h">
+      <Filter>Recipients</Filter>
     </ClInclude>
-    <ClInclude Include="Source\FilterRecipient.h">
-      <Filter>Recipients\Recipients</Filter>
+    <ClInclude Include="Source\ContainerHeader.h">
+      <Filter>Recipients</Filter>
     </ClInclude>
-    <ClInclude Include="Source\LimitRecipient.h">
-      <Filter>Recipients\Recipients</Filter>
+    <ClInclude Include="Source\ArrearContainer.h">
+      <Filter>Recipients\Containers</Filter>
     </ClInclude>
-    <ClInclude Include="Source\FutureRecipient.h">
-      <Filter>Recipients\Recipients</Filter>
+    <ClInclude Include="Source\FilterContainer.h">
+      <Filter>Recipients\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\FutureContainer.h">
+      <Filter>Recipients\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\LimitContainer.h">
+      <Filter>Recipients\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TotalContainer.h">
+      <Filter>Recipients\Constant</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UnasignedContainer.h">
+      <Filter>Recipients\Constant</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -200,7 +200,7 @@
     <Filter Include="Recipients\Constant">
       <UniqueIdentifier>{7185b72b-3ea1-4c81-97a7-299824278e03}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Recipients\Recipients">
+    <Filter Include="Recipients\Containers">
       <UniqueIdentifier>{94b32f97-c41f-46ee-ba41-9f19f773e979}</UniqueIdentifier>
     </Filter>
   </ItemGroup>

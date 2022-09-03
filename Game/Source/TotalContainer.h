@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Recipient.h"
+#include "Container.h"
 
-class TotalMoneyRecipient : public Recipient
+class TotalContainer : public Container
 {
 public: // Functions
 
-	TotalMoneyRecipient(const char* name, float money) : Recipient(name, money, false, true, RecipientType::TOTAL_MONEY)
+	TotalContainer(const char* name, float money) : Container(name, money, false, true, ContainerType::TOTAL_MONEY)
 	{
 	}
 

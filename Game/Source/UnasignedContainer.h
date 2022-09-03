@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Recipient.h"
+#include "Container.h"
 
-class UnasignedMoneyRecipient : public Recipient
+class UnasignedContainer : public Container
 {
 public: // Functions
 
-	UnasignedMoneyRecipient(const char* name, float money, bool* showFutureMoney, bool* allowFutureCover, bool* showArrearMoney, bool* allowArrearsFill) : Recipient(name, money, false, true, RecipientType::UNASIGNED_MONEY)
+	UnasignedContainer(const char* name, float money, bool* showFutureMoney, bool* allowFutureCover, bool* showArrearMoney, bool* allowArrearsFill) : Container(name, money, false, true, ContainerType::UNASIGNED_MONEY)
 	{
 		this->showFutureMoney = showFutureMoney;
 		this->allowFutureCover = allowFutureCover;

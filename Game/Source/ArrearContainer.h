@@ -1,32 +1,28 @@
 #pragma once
 
-#include "Recipient.h"
+#include "Container.h"
 #include "Label.h"
+#include <vector>
 
-class FutureRecipient : public Recipient
+class ArrearContainer : public Container
 {
 public: // Functions
 
-	FutureRecipient(const char* name, float money, bool hidden, bool open, float* totalMoneyPtr) : Recipient(name, money, hidden, open, RecipientType::FUTURE)
+	ArrearContainer(const char* name, float money, bool hidden, bool open, float* totalMoneyPtr) : Container(name, money, hidden, open, ContainerType::ARREAR)
 	{
 		this->totalMoneyPtr = totalMoneyPtr;
 		NewLabel();
 	}
 
-	~FutureRecipient() override
+	~ArrearContainer() override
 	{
 		ClearLabels();
 	}
 
-	void Start(const char* currency) override
-	{
-		SetFormat("%.2f ", currency);
-	}
-
-	void Update() override 
+	void Update() override
 	{
 		money = 0;
-		for (Label* f : labels) money += f->money;
+		for (Label* l : labels) money += l->money;
 	}
 
 	void Draw() override
@@ -35,7 +31,7 @@ public: // Functions
 
 		size_t size = labels.size();
 
-		for (suint i = 0; i < size; ++i)
+		for (unsigned short int i = 0; i < size; ++i)
 		{
 			ImGui::PushID(id * -1 * i);
 
@@ -51,7 +47,7 @@ public: // Functions
 
 			if (ImGui::Button(" > "))
 			{
-				*totalMoneyPtr += GetLabelMoney(i);
+				*totalMoneyPtr -= GetLabelMoney(i);
 				DeleteLabel(i);
 				if (labels.empty()) NewLabel();
 				ImGui::PopID();
@@ -64,7 +60,7 @@ public: // Functions
 			ImGui::PopItemWidth(); ImGui::SameLine();
 
 			ImGui::PushItemWidth(100.f);
-			ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, 340282000000000000000000000000000000000.0f, format.c_str());
+			ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, 340282000000000000000000000000000000000.0f, "%.2f EUR");
 			ImGui::PopItemWidth();
 
 			ImGui::PopID();
@@ -73,7 +69,7 @@ public: // Functions
 		if (hidden) ImGui::EndDisabled();
 	}
 
-	void NewLabel(const char* name = "New Future", float money = 0.0f)
+	void NewLabel(const char* name = "New Arrear", float money = 0.0f)
 	{
 		labels.push_back(new Label(name, money));
 	}

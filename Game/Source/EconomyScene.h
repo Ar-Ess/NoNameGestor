@@ -4,7 +4,7 @@
 #include <vector>
 #include "imgui/imgui.h"
 #include "Input.h"
-#include "RecipientHeader.h"
+#include "ContainerHeader.h"
 #include "FileManager.h"
 #include "MethodsEnum.h"
 #include "Chrono.h"
@@ -42,7 +42,7 @@ private: // Functions
 	void UpdateShortcuts();
 	void UpdateCurrency();
 
-	void CreateRecipient(RecipientType recipient, const char* name = "New Recipient", float money = 0.0f, bool hidden = false, bool open = false);
+	void CreateContainer(ContainerType container, const char* name = "New Container", float money = 0.0f, bool hidden = false, bool open = false);
 
 	// Input from 0 (smallest spacing) to whatever you need
 	void AddSpacing(unsigned int spaces = 1)
@@ -73,48 +73,48 @@ private: // Functions
 		}
 	}
 
-	void DeleteRecipient(suint index)
+	void DeleteContainer(suint index)
 	{
-		assert(index >= 0 && index < recipients.size());
+		assert(index >= 0 && index < containers.size());
 
-		Recipient* r = recipients[index];
-		recipients.erase(recipients.begin() + index);
+		Container* r = containers[index];
+		containers.erase(containers.begin() + index);
 		RELEASE(r);
 	}
 
-	void DeleteAllRecipients()
+	void DeleteAllContainer()
 	{
-		for (Recipient* r : recipients) RELEASE(r);
-		recipients.clear();
-		recipients.shrink_to_fit();
+		for (Container* r : containers) RELEASE(r);
+		containers.clear();
+		containers.shrink_to_fit();
 	}
 
-	void MoveRecipient(suint index, suint position)
+	void MoveContainer(suint index, suint position)
 	{
 		if (index == position) return;
-		suint size = recipients.size();
+		suint size = containers.size();
 		assert(index >= 0 && index < size);
 		assert(position >= 0 && position < size);
 
-		Recipient* r = recipients[index];
-		recipients.erase(recipients.begin() + index);
+		Container* r = containers[index];
+		containers.erase(containers.begin() + index);
 
-		recipients.insert(recipients.begin() + position, r);
+		containers.insert(containers.begin() + position, r);
 	}
 
-	int ReturnRecipientIndex(intptr_t id)
+	int ReturnContainerIndex(intptr_t id)
 	{
-		size_t size = recipients.size();
+		size_t size = containers.size();
 		int i = 0;
-		for (std::vector<Recipient*>::const_iterator it = recipients.begin(); it != recipients.end(); ++it)
+		for (std::vector<Container*>::const_iterator it = containers.begin(); it != containers.end(); ++it)
 		{
-			Recipient* rTarget = (*it);
+			Container* rTarget = (*it);
 			if (id == rTarget->GetId()) return i;
 			++i;
 		}
 
 		i = -1;
-		assert(i != -1); // There is not a recipient like "r"
+		assert(i != -1); // There is not a container like "r"
 
 		return i;
 	}
@@ -176,9 +176,9 @@ public: // Variables
 
 private: // Variables
 
-	TotalMoneyRecipient* totalRecipient = nullptr;
-	UnasignedMoneyRecipient* unasignedRecipient = nullptr;
-	std::vector<Recipient*> recipients;
+	TotalContainer* totalContainer = nullptr;
+	UnasignedContainer* unasignedContainer = nullptr;
+	std::vector<Container*> containers;
 
 	Input* input = nullptr;
 	FileManager* file = nullptr;
@@ -192,7 +192,7 @@ private: // Variables
 		 n    = false;
 
 	// Preferences
-	bool showRecipientType = true;
+	bool showContainerType = true;
 	bool showFutureUnasigned = false;
 	bool allowFutureCovering = false;
 	bool showArrearUnasigned = false;

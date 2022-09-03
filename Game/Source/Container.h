@@ -6,9 +6,9 @@
 #include <string>
 static float textFieldSize = 150.0f;
 
-enum class RecipientType
+enum class ContainerType
 {
-	NO_RECIPIENT,
+	NO_CONTAINER,
 	TOTAL_MONEY,
 	UNASIGNED_MONEY,
 	FILTER,
@@ -17,11 +17,11 @@ enum class RecipientType
 	ARREAR,
 };
 
-class Recipient
+class Container
 {
 public: // Functions
 
-	virtual ~Recipient() 
+	virtual ~Container() 
 	{
 		name.clear();
 		name.shrink_to_fit();
@@ -47,15 +47,15 @@ public: // Functions
 	{
 		switch (type)
 		{
-		case RecipientType::FILTER: return "FILTER";
-		case RecipientType::LIMIT : return "LIMIT ";
-		case RecipientType::FUTURE: return "FUTURE";
-		case RecipientType::ARREAR: return "ARREAR";
+		case ContainerType::FILTER: return "FILTER";
+		case ContainerType::LIMIT : return "LIMIT ";
+		case ContainerType::FUTURE: return "FUTURE";
+		case ContainerType::ARREAR: return "ARREAR";
 		}
-		return "NO RECIPIENT";
+		return "NO CONTAINER";
 	}
 
-	RecipientType GetType() const
+	ContainerType GetType() const
 	{
 		return type;
 	}
@@ -87,7 +87,7 @@ public: // Functions
 
 protected: // Functions
 
-	Recipient(const char* name, float money, bool hidden, bool open, RecipientType type) 
+	Container(const char* name, float money, bool hidden, bool open, ContainerType type) 
 	{
 		this->money = money;
 		this->name = name;
@@ -116,6 +116,6 @@ protected: // Variables
 	float money = 0.0f;
 	std::string name;
 	std::intptr_t id = 0;
-	RecipientType type = RecipientType::NO_RECIPIENT;
+	ContainerType type = ContainerType::NO_CONTAINER;
 	std::string format;
 };

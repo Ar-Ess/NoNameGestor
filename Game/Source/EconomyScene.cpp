@@ -10,8 +10,8 @@ EconomyScene::EconomyScene(Input* input)
 	this->input = input;
 	this->file = new FileManager(EXTENSION);
 
-	totalRecipient = new TotalMoneyRecipient("Total Money", 0.0f);
-	unasignedRecipient = new UnasignedMoneyRecipient("Unasigned Money", 0.0f, &showFutureUnasigned, &allowFutureCovering, &showArrearUnasigned, &allowArrearsFill);
+	totalContainer = new TotalContainer("Total Money", 0.0f);
+	unasignedContainer = new UnasignedContainer("Unasigned Money", 0.0f, &showFutureUnasigned, &allowFutureCovering, &showArrearUnasigned, &allowArrearsFill);
 
 	openFileName = "New_File";
 	openFilePath.clear();
@@ -23,9 +23,9 @@ EconomyScene::~EconomyScene()
 
 bool EconomyScene::Start()
 {
-	totalRecipient->Start(comboCurrency[currency]);
-	unasignedRecipient->Start(comboCurrency[currency]);
-	for (Recipient* r : recipients) r->Start(comboCurrency[currency]);
+	totalContainer->Start(comboCurrency[currency]);
+	unasignedContainer->Start(comboCurrency[currency]);
+	for (Container* r : containers) r->Start(comboCurrency[currency]);
 
 	return true;
 }
@@ -43,12 +43,12 @@ bool EconomyScene::Update()
 	if (ctrl && !shft && l) Load();
 	if (ctrl && !shft && n) NewFile();
 
-	totalRecipient->Update();
-	float totalMoney = totalRecipient->GetMoney();
+	totalContainer->Update();
+	float totalMoney = totalContainer->GetMoney();
 	float futureMoney = 0;
 	float arrearMoney = 0;
 
-	for (Recipient* r : recipients)
+	for (Container* r : containers)
 	{
 		if (r->hidden) continue;
 
@@ -56,16 +56,16 @@ bool EconomyScene::Update()
 
 		switch (r->GetType())
 		{
-		case RecipientType::FUTURE: futureMoney += r->GetMoney(); break;
-		case RecipientType::ARREAR: arrearMoney -= r->GetMoney(); break;
-		case RecipientType::FILTER:
-		case RecipientType::LIMIT:
+		case ContainerType::FUTURE: futureMoney += r->GetMoney(); break;
+		case ContainerType::ARREAR: arrearMoney -= r->GetMoney(); break;
+		case ContainerType::FILTER:
+		case ContainerType::LIMIT:
 		default: totalMoney -= r->GetMoney(); break;
 		}
 	}
 
-	unasignedRecipient->SetMoney(totalMoney + futureMoney + arrearMoney, totalMoney, futureMoney, arrearMoney);
-	unasignedRecipient->Update();
+	unasignedContainer->SetMoney(totalMoney + futureMoney + arrearMoney, totalMoney, futureMoney, arrearMoney);
+	unasignedContainer->Update();
 
 	return true;
 }
@@ -101,9 +101,9 @@ void EconomyScene::NewFile()
 	openFileName = "New_File";
 	openFilePath.clear();
 
-	DeleteAllRecipients();
+	DeleteAllContainer();
 
-	totalRecipient->SetMoney(0.0f);
+	totalContainer->SetMoney(0.0f);
 }
 
 void EconomyScene::SaveAs()
@@ -181,22 +181,22 @@ void EconomyScene::Save()
 
 void EconomyScene::InternalSave(const char* path)
 {
-	float total = totalRecipient->GetMoney();
-	float unasigned = unasignedRecipient->GetMoney();
+	float total = totalContainer->GetMoney();
+	float unasigned = unasignedContainer->GetMoney();
 
 	file->OpenFile(path).
 		// Preferences
 		Write("version").String(VERSION).
-		Write("cnfSRT").Bool(showRecipientType).
+		Write("cnfSRT").Bool(showContainerType).
 		Write("cnfSFU").Bool(showFutureUnasigned).
 		Write("cnfAFC").Bool(allowFutureCovering).
 		Write("cnfTFS").Number(textFieldSize).
 		Write("currency").Number(currency).
 		// Generic File
 		Write("total").Number(total).
-		Write("size").Number((int)recipients.size());
+		Write("size").Number((int)containers.size());
 
-	for (Recipient* r : recipients)
+	for (Container* r : containers)
 	{
 		file->EditFile(path).
 			Write("name").String(r->GetName()).
@@ -207,9 +207,9 @@ void EconomyScene::InternalSave(const char* path)
 
 		switch (r->GetType())
 		{
-		case RecipientType::FILTER:
+		case ContainerType::FILTER:
 		{
-			FilterRecipient* fPR = (FilterRecipient*)r;
+			FilterContainer* fPR = (FilterContainer*)r;
 			int size = fPR->GetSize();
 			file->EditFile(path).
 				Write("size").Number(size);
@@ -223,9 +223,9 @@ void EconomyScene::InternalSave(const char* path)
 			break;
 		}
 
-		case RecipientType::LIMIT:
+		case ContainerType::LIMIT:
 		{
-			LimitRecipient* lPR = (LimitRecipient*)r;
+			LimitContainer* lPR = (LimitContainer*)r;
 			int size = lPR->GetSize();
 			file->EditFile(path).
 				Write("size").Number(size);
@@ -240,9 +240,9 @@ void EconomyScene::InternalSave(const char* path)
 			break;
 		}
 
-		case RecipientType::FUTURE:
+		case ContainerType::FUTURE:
 		{
-			FutureRecipient* fPR = (FutureRecipient*)r;
+			FutureContainer* fPR = (FutureContainer*)r;
 			int size = fPR->GetSize();
 			file->EditFile(path).
 				Write("size").Number(size);
@@ -256,9 +256,9 @@ void EconomyScene::InternalSave(const char* path)
 			break;
 		}
 
-		case RecipientType::ARREAR:
+		case ContainerType::ARREAR:
 		{
-			ArrearRecipient* aPR = (ArrearRecipient*)r;
+			ArrearContainer* aPR = (ArrearContainer*)r;
 			int size = aPR->GetSize();
 			file->EditFile(path).
 				Write("size").Number(size);
@@ -372,12 +372,12 @@ void EconomyScene::Load()
 	float total = 0;
 	int size = 0;
 
-	DeleteAllRecipients();
+	DeleteAllContainer();
 
 	// Top aspects
 	file->ViewFile(path.c_str(), 1).
 		// Preferences
-		Read("cnfSRT").AsBool(showRecipientType).
+		Read("cnfSRT").AsBool(showContainerType).
 		Read("cnfSFU").AsBool(showFutureUnasigned).
 		Read("cnfAFC").AsBool(allowFutureCovering).
 		Read("cnfTFS").AsFloat(textFieldSize).
@@ -404,12 +404,12 @@ void EconomyScene::Load()
 			Read("hide").AsBool(hidden).
 			Read("open").AsBool(open);
 
-		switch ((RecipientType)type)
+		switch ((ContainerType)type)
 		{
-		case RecipientType::FILTER:
+		case ContainerType::FILTER:
 		{
-			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
-			FilterRecipient* fR = (FilterRecipient*)recipients.back();
+			CreateContainer((ContainerType)type, name.c_str(), money, hidden, open);
+			FilterContainer* fR = (FilterContainer*)containers.back();
 			fR->ClearLabels();
 
 			int fSize = 0; //                           \/ Change depending on below aspects amount
@@ -436,10 +436,10 @@ void EconomyScene::Load()
 			break;
 		}
 
-		case RecipientType::LIMIT:
+		case ContainerType::LIMIT:
 		{
-			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
-			LimitRecipient* lPR = (LimitRecipient*)recipients.back();
+			CreateContainer((ContainerType)type, name.c_str(), money, hidden, open);
+			LimitContainer* lPR = (LimitContainer*)containers.back();
 			lPR->ClearLabels();
 
 			int lSize = 0; //                           \/ Change depending on below aspects amount
@@ -466,10 +466,10 @@ void EconomyScene::Load()
 			break;
 		}
 
-		case RecipientType::FUTURE:
+		case ContainerType::FUTURE:
 		{
-			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
-			FutureRecipient* fR = (FutureRecipient*)recipients.back();
+			CreateContainer((ContainerType)type, name.c_str(), money, hidden, open);
+			FutureContainer* fR = (FutureContainer*)containers.back();
 			fR->ClearLabels();
 			
 			int fSize = 0; //                           \/ Change depending on below aspects amount
@@ -496,10 +496,10 @@ void EconomyScene::Load()
 			break;
 		}
 
-		case RecipientType::ARREAR:
+		case ContainerType::ARREAR:
 		{
-			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
-			ArrearRecipient* aR = (ArrearRecipient*)recipients.back();
+			CreateContainer((ContainerType)type, name.c_str(), money, hidden, open);
+			ArrearContainer* aR = (ArrearContainer*)containers.back();
 			aR->ClearLabels();
 
 			int fSize = 0; //                           \/ Change depending on below aspects amount
@@ -529,10 +529,10 @@ void EconomyScene::Load()
 		default: break;
 		}
 
-		recipients.back()->loadOpen = true;
+		containers.back()->loadOpen = true;
 	}
 
-	totalRecipient->SetMoney(total);
+	totalContainer->SetMoney(total);
 	UpdateCurrency();
 
 }
@@ -632,12 +632,12 @@ void EconomyScene::Loadv1_0()
 	float total = 0;
 	int size = 0;
 
-	DeleteAllRecipients();
+	DeleteAllContainer();
 
 	// Top aspects
 	file->ViewFile(path.c_str(), 1).
 		// Preferences
-		Read("cnfSRT").AsBool(showRecipientType).
+		Read("cnfSRT").AsBool(showContainerType).
 		Read("cnfSFU").AsBool(showFutureUnasigned).
 		Read("cnfAFC").AsBool(allowFutureCovering).
 		Read("cnfTFS").AsFloat(textFieldSize).
@@ -665,13 +665,13 @@ void EconomyScene::Loadv1_0()
 			Read("open").AsBool(open);
 
 
-		switch ((RecipientType)type)
+		switch ((ContainerType)type)
 		{
-		case RecipientType::FILTER:
+		case ContainerType::FILTER:
 		{
-			CreateRecipient((RecipientType)type, "Filter Name", money, hidden, open);
+			CreateContainer((ContainerType)type, "Filter Name", money, hidden, open);
 			// Change: v1.1 -> v1.0 (Filters are plural forever)
-			FilterRecipient* fR = (FilterRecipient*)recipients.back();
+			FilterContainer* fR = (FilterContainer*)containers.back();
 			fR->ClearLabels();
 
 			fR->NewLabel(name.c_str(), money);
@@ -679,14 +679,14 @@ void EconomyScene::Loadv1_0()
 			break;
 		}
 
-		case RecipientType::LIMIT:
+		case ContainerType::LIMIT:
 		{
 			float limit = 1;
 			file->ViewFile(path.c_str(), positionToRead + 4).
 				Read("limit").AsFloat(limit);
 
-			CreateRecipient((RecipientType)type, "Limit Name", money, hidden, open);
-			LimitRecipient* lR = (LimitRecipient*)recipients.back();
+			CreateContainer((ContainerType)type, "Limit Name", money, hidden, open);
+			LimitContainer* lR = (LimitContainer*)containers.back();
 			lR->ClearLabels();
 
 			lR->NewLabel(name.c_str(), money, limit);
@@ -695,10 +695,10 @@ void EconomyScene::Loadv1_0()
 			break;
 		}
 
-		case RecipientType::FUTURE:
+		case ContainerType::FUTURE:
 		{
-			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
-			FutureRecipient* fR = (FutureRecipient*)recipients.back();
+			CreateContainer((ContainerType)type, name.c_str(), money, hidden, open);
+			FutureContainer* fR = (FutureContainer*)containers.back();
 			fR->ClearLabels();
 
 			int fSize = 0; //                           \/ Change depending on below aspects amount
@@ -725,10 +725,10 @@ void EconomyScene::Loadv1_0()
 			break;
 		}
 
-		case RecipientType::ARREAR:
+		case ContainerType::ARREAR:
 		{
-			CreateRecipient((RecipientType)type, name.c_str(), money, hidden, open);
-			ArrearRecipient* aR = (ArrearRecipient*)recipients.back();
+			CreateContainer((ContainerType)type, name.c_str(), money, hidden, open);
+			ArrearContainer* aR = (ArrearContainer*)containers.back();
 			aR->ClearLabels();
 
 			int fSize = 0; //                           \/ Change depending on below aspects amount
@@ -758,10 +758,10 @@ void EconomyScene::Loadv1_0()
 		default: break;
 		}
 
-		recipients.back()->loadOpen = true;
+		containers.back()->loadOpen = true;
 	}
 
-	totalRecipient->SetMoney(total);
+	totalContainer->SetMoney(total);
 	UpdateCurrency();
 
 }
@@ -818,16 +818,16 @@ bool EconomyScene::DrawMenuBar()
 		if (ImGui::BeginMenu("Create"))
 		{
 			if (ImGui::MenuItem("Filter"))
-				CreateRecipient(RecipientType::FILTER);
+				CreateContainer(ContainerType::FILTER);
 
 			if (ImGui::MenuItem("Limit"))
-				CreateRecipient(RecipientType::LIMIT);
+				CreateContainer(ContainerType::LIMIT);
 
 			if (ImGui::MenuItem("Future"))
-				CreateRecipient(RecipientType::FUTURE);
+				CreateContainer(ContainerType::FUTURE);
 
 			if (ImGui::MenuItem("Arrear"))
-				CreateRecipient(RecipientType::ARREAR);
+				CreateContainer(ContainerType::ARREAR);
 
 			ImGui::EndMenu();
 		}
@@ -961,8 +961,8 @@ bool EconomyScene::DrawPreferencesWindow(bool* open)
 
 	if (ImGui::Begin("Preferences", open, ImGuiWindowFlags_NoDocking))
 	{
-		AddHelper("Shows, at the side of each recipient,\na text noting it's type.", "?"); ImGui::SameLine();
-		ImGui::Checkbox("Show Recipient Typology Name", &showRecipientType); 
+		AddHelper("Shows, at the side of each container,\na text noting it's type.", "?"); ImGui::SameLine();
+		ImGui::Checkbox("Show Container Typology Name", &showContainerType); 
 
 		AddHelper("Shows the unsigned money in terms\nof future income.", "?"); ImGui::SameLine();
 		ImGui::Checkbox("Show Unasigned Future Money ", &showFutureUnasigned);
@@ -984,7 +984,7 @@ bool EconomyScene::DrawPreferencesWindow(bool* open)
 			ImGui::Checkbox("Allow Arrears Money Filling", &allowArrearsFill);
 		}
 
-		AddHelper("Enlarges the size of the text\nlabels of each recipient.", "?"); ImGui::SameLine();
+		AddHelper("Enlarges the size of the text\nlabels of each ontainer.", "?"); ImGui::SameLine();
 		ImGui::PushItemWidth(textFieldSize);
 		ImGui::DragFloat("Text Fiend Size", &textFieldSize, 0.1f, 1.0f, 1000.0f, "%f pts");
 		ImGui::PopItemWidth();
@@ -1009,14 +1009,14 @@ bool EconomyScene::DrawMainWindow(bool* open)
 		AddSeparator(1);
 		AddSpacing(2);
 
-		totalRecipient->Draw();
+		totalContainer->Draw();
 
 		AddSpacing(2);
 
-		size_t size = recipients.size();
+		size_t size = containers.size();
 		for (suint i = 0; i < size; ++i)
 		{
-			Recipient* r = recipients[i];
+			Container* r = containers[i];
 			ImGui::PushID(r->GetId() / ((i * size) + size * size));
 			bool reordered = false;
 
@@ -1025,7 +1025,7 @@ bool EconomyScene::DrawMainWindow(bool* open)
 
 			ImGui::Dummy({ 20, 0 }); ImGui::SameLine();
 
-			if (showRecipientType)
+			if (showContainerType)
 			{
 				ImGui::Text(r->GetTypeString());
 				ImGui::SameLine();
@@ -1041,7 +1041,7 @@ bool EconomyScene::DrawMainWindow(bool* open)
 			{
 				if (ImGui::MenuItem("Delete"))
 				{
-					DeleteRecipient(i);
+					DeleteContainer(i);
 					ImGui::EndPopup();
 					ImGui::PopID();
 					break;
@@ -1049,12 +1049,12 @@ bool EconomyScene::DrawMainWindow(bool* open)
 				if (ImGui::MenuItem("Process"))
 				{
 					int dif = 1;
-					r->GetType() == RecipientType::FUTURE ? dif = 1 : dif = -1;
-					float totalResult = totalRecipient->GetMoney() + (r->GetMoney() * dif);
+					r->GetType() == ContainerType::FUTURE ? dif = 1 : dif = -1;
+					float totalResult = totalContainer->GetMoney() + (r->GetMoney() * dif);
 					if (totalResult >= 0)
 					{
-						*totalRecipient->GetMoneyPtr() = totalResult;
-						DeleteRecipient(i);
+						*totalContainer->GetMoneyPtr() = totalResult;
+						DeleteContainer(i);
 						ImGui::EndPopup();
 						ImGui::PopID();
 						break;
@@ -1075,16 +1075,16 @@ bool EconomyScene::DrawMainWindow(bool* open)
 				if (ImGui::BeginDragDropSource())
 				{
 					intptr_t id = r->GetId();
-					ImGui::SetDragDropPayload("Recipient", &id, sizeof(intptr_t));
+					ImGui::SetDragDropPayload("Container", &id, sizeof(intptr_t));
 					ImGui::Text(r->GetName());
 					ImGui::EndDragDropSource();
 				}
 				if (ImGui::BeginDragDropTarget())
 				{
-					const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Recipient");
+					const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Container");
 					if (payload)
 					{
-						MoveRecipient(ReturnRecipientIndex(*((intptr_t*)payload->Data)), i);
+						MoveContainer(ReturnContainerIndex(*((intptr_t*)payload->Data)), i);
 						reordered = true;
 					}
 					ImGui::EndDragDropTarget();
@@ -1104,7 +1104,7 @@ bool EconomyScene::DrawMainWindow(bool* open)
 
 		AddSpacing(0);
 
-		unasignedRecipient->Draw();
+		unasignedContainer->Draw();
 	}
 	ImGui::End();
 
@@ -1130,30 +1130,30 @@ bool EconomyScene::DrawToolbarWindow(bool* open)
 		//}
 		//if (ImGui::IsItemDeactivated())
 		//{
-		//	CreateRecipient(RecipientType::FILTER_SINGULAR);
+		//	CreateContainer(ContainerType::FILTER_SINGULAR);
 		//	chrono.ChronoStop();
 		//}
 		//if (ImGui::BeginPopup("Filter Popup T"))
 		//{
 		//	if (ImGui::MenuItem("Singular"))
-		//		CreateRecipient(RecipientType::FILTER_SINGULAR);
+		//		CreateContainer(ContainerType::FILTER_SINGULAR);
 
 		//	if (ImGui::MenuItem("Plural"))
-		//		CreateRecipient(RecipientType::FILTER_PLURAL);
+		//		CreateContainer(ContainerType::FILTER_PLURAL);
 		//	ImGui::EndPopup();
 		//}*/
 
 		if (ImGui::Button("FILTER"))
-			CreateRecipient(RecipientType::FILTER);
+			CreateContainer(ContainerType::FILTER);
 
 		if (ImGui::Button("LIMIT "))
-			CreateRecipient(RecipientType::LIMIT);
+			CreateContainer(ContainerType::LIMIT);
 
 		if (ImGui::Button("FUTURE"))
-			CreateRecipient(RecipientType::FUTURE);
+			CreateContainer(ContainerType::FUTURE);
 
 		if (ImGui::Button("ARREAR"))
-			CreateRecipient(RecipientType::ARREAR);
+			CreateContainer(ContainerType::ARREAR);
 		
 	}
 	ImGui::End();
@@ -1175,59 +1175,59 @@ void EconomyScene::UpdateShortcuts()
 
 void EconomyScene::UpdateCurrency()
 {
-	totalRecipient->SetCurrency(comboCurrency[currency]);
-	unasignedRecipient->SetCurrency(comboCurrency[currency]);
-	for (Recipient* r : recipients) r->SetCurrency(comboCurrency[currency]);
+	totalContainer->SetCurrency(comboCurrency[currency]);
+	unasignedContainer->SetCurrency(comboCurrency[currency]);
+	for (Container* r : containers) r->SetCurrency(comboCurrency[currency]);
 }
 
-void EconomyScene::CreateRecipient(RecipientType recipient, const char* name, float money, bool hidden, bool open)
+void EconomyScene::CreateContainer(ContainerType container, const char* name, float money, bool hidden, bool open)
 {
-	switch (recipient)
+	switch (container)
 	{
-	case RecipientType::FILTER: recipients.push_back((Recipient*)(new FilterRecipient(name, money, hidden, open, totalRecipient->GetMoneyPtr()))); break;
-	case RecipientType::LIMIT : recipients.push_back((Recipient*)(new  LimitRecipient(name, money, hidden, open, totalRecipient->GetMoneyPtr()))); break;
-	case RecipientType::FUTURE: recipients.push_back((Recipient*)(new FutureRecipient(name, money, hidden, open, totalRecipient->GetMoneyPtr()))); break;
-	case RecipientType::ARREAR: recipients.push_back((Recipient*)(new ArrearRecipient(name, money, hidden, open, totalRecipient->GetMoneyPtr()))); break;
+	case ContainerType::FILTER: containers.push_back((Container*)(new FilterContainer(name, money, hidden, open, totalContainer->GetMoneyPtr()))); break;
+	case ContainerType::LIMIT : containers.push_back((Container*)(new  LimitContainer(name, money, hidden, open, totalContainer->GetMoneyPtr()))); break;
+	case ContainerType::FUTURE: containers.push_back((Container*)(new FutureContainer(name, money, hidden, open, totalContainer->GetMoneyPtr()))); break;
+	case ContainerType::ARREAR: containers.push_back((Container*)(new ArrearContainer(name, money, hidden, open, totalContainer->GetMoneyPtr()))); break;
 	default: break;
 	}
 
-	recipients.back()->SetCurrency(comboCurrency[currency]);
+	containers.back()->SetCurrency(comboCurrency[currency]);
 }
 
 void EconomyScene::SetMethod()
 {
-	float money = totalRecipient->GetMoney();
+	float money = totalContainer->GetMoney();
 
 	NewFile();
 
-	totalRecipient->SetMoney(money);
+	totalContainer->SetMoney(money);
 
 	switch (method)
 	{
 	case Method::MTHD_PARETO:
-		CreateRecipient(RecipientType::FILTER, "Available", money * 0.8f, false, false);
-		CreateRecipient(RecipientType::FILTER, "Savings", money * 0.2f, false, false);
+		CreateContainer(ContainerType::FILTER, "Available", money * 0.8f, false, false);
+		CreateContainer(ContainerType::FILTER, "Savings", money * 0.2f, false, false);
 		break;
 
 	case Method::MTHD_50_15_5:
-		CreateRecipient(RecipientType::FILTER, "Essential", money * 0.5f, false, false);
-		CreateRecipient(RecipientType::FILTER, "Future", money * 0.15f, false, false);
-		CreateRecipient(RecipientType::FILTER, "Unexpected", money * 0.05f, false, false);
+		CreateContainer(ContainerType::FILTER, "Essential", money * 0.5f, false, false);
+		CreateContainer(ContainerType::FILTER, "Future", money * 0.15f, false, false);
+		CreateContainer(ContainerType::FILTER, "Unexpected", money * 0.05f, false, false);
 		break;
 
 	case Method::MTHD_50_30_20:
-		CreateRecipient(RecipientType::FILTER, "Primary", money * 0.5f, false, false);
-		CreateRecipient(RecipientType::FILTER, "Leisure", money * 0.3f, false, false);
-		CreateRecipient(RecipientType::FILTER, "Savings", money * 0.2f, false, false);
+		CreateContainer(ContainerType::FILTER, "Primary", money * 0.5f, false, false);
+		CreateContainer(ContainerType::FILTER, "Leisure", money * 0.3f, false, false);
+		CreateContainer(ContainerType::FILTER, "Savings", money * 0.2f, false, false);
 		break;
 
 	case Method::MTHD_HARV_EKER:
-		CreateRecipient(RecipientType::FILTER, "Primary", money * 0.55f, false, false);
-		CreateRecipient(RecipientType::FILTER, "Education", money * 0.1f, false, false);
-		CreateRecipient(RecipientType::FILTER, "Leisure", money * 0.1f, false, false);
-		CreateRecipient(RecipientType::FILTER, "Donations", money * 0.06f, false, false);
-		CreateRecipient(RecipientType::FILTER, "Invest", money * 0.1f, false, false);
-		CreateRecipient(RecipientType::FILTER, "Savings", money * 0.1f, false, false);
+		CreateContainer(ContainerType::FILTER, "Primary", money * 0.55f, false, false);
+		CreateContainer(ContainerType::FILTER, "Education", money * 0.1f, false, false);
+		CreateContainer(ContainerType::FILTER, "Leisure", money * 0.1f, false, false);
+		CreateContainer(ContainerType::FILTER, "Donations", money * 0.06f, false, false);
+		CreateContainer(ContainerType::FILTER, "Invest", money * 0.1f, false, false);
+		CreateContainer(ContainerType::FILTER, "Savings", money * 0.1f, false, false);
 		break;
 
 	default:

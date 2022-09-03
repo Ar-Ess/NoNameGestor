@@ -1,20 +1,20 @@
 #pragma once
 
-#include "Recipient.h"
+#include "Container.h"
 #include "Label.h"
 #include <vector>
 
-class LimitRecipient : public Recipient
+class LimitContainer : public Container
 {
 public: // Functions
 
-	LimitRecipient(const char* name, float money, bool hidden, bool open, float* totalMoneyPtr) : Recipient(name, money, hidden, open, RecipientType::LIMIT)
+	LimitContainer(const char* name, float money, bool hidden, bool open, float* totalMoneyPtr) : Container(name, money, hidden, open, ContainerType::LIMIT)
 	{
 		this->totalMoneyPtr = totalMoneyPtr;
 		NewLabel();
 	}
 
-	~LimitRecipient() override
+	~LimitContainer() override
 	{
 		ClearLabels();
 	}
