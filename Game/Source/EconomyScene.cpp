@@ -1043,7 +1043,6 @@ bool EconomyScene::DrawMainWindow(bool* open)
 				{
 					DeleteRecipient(i);
 					ImGui::EndPopup();
-					ImGui::EndTable();
 					ImGui::PopID();
 					break;
 				}
@@ -1057,7 +1056,6 @@ bool EconomyScene::DrawMainWindow(bool* open)
 						*totalRecipient->GetMoneyPtr() = totalResult;
 						DeleteRecipient(i);
 						ImGui::EndPopup();
-						ImGui::EndTable();
 						ImGui::PopID();
 						break;
 					}

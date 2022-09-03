@@ -38,10 +38,10 @@ public: // Functions
 
 		for (suint i = 0; i < size; ++i)
 		{
-			ImGui::PushID(id * -1 * i);
+			ImGui::PushID(-id / ( i + 1 ));
 
 			if (i == 0) { if (ImGui::Button("+")) NewLabel(); }
-			else ImGui::Dummy({ 15, 0 });
+			else ImGui::Dummy({ 38, 0 });
 
 			ImGui::SameLine();
 

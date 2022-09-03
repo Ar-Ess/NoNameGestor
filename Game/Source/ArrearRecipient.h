@@ -36,7 +36,7 @@ public: // Functions
 			ImGui::PushID(id * -1 * i);
 
 			if (i == 0) { if (ImGui::Button("+")) NewLabel(); }
-			else ImGui::Dummy({ 15, 0 });
+			else ImGui::Dummy({ 38, 0 });
 
 			ImGui::SameLine();
 
