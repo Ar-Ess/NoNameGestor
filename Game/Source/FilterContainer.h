@@ -52,7 +52,7 @@ public: // Functions
 
 				if (ImGui::Button(" > "))
 				{
-					*totalMoneyPtr += GetLabelMoney(i);
+					*totalMoneyPtr -= GetLabelMoney(i);
 					DeleteLabel(i);
 					if (labels.empty()) NewLabel("New Filter");
 					ImGui::PopID();

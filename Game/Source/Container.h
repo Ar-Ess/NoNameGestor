@@ -122,10 +122,28 @@ public: // Functions
 
 	void SwapNames()
 	{
-		name.clear();
-		name.shrink_to_fit();
-
-		unified ? name = labels[0]->name.c_str() : name = "New Container";
+		if (nameBackup.empty())
+		{
+			if (!unified)
+				return;
+			else
+			{
+				nameBackup = name.c_str();
+				name.clear();
+				name = labels[0]->name.c_str();
+			}	
+		}
+		else
+		{
+			if (!unified)
+			{
+				name.clear();
+				name = nameBackup.c_str();
+				nameBackup.clear();
+			}
+			else
+				nameBackup.clear();
+		}
 	}
 
 protected: // Functions
@@ -169,6 +187,9 @@ protected: // Variables
 	float* totalMoneyPtr = nullptr;
 	std::vector<Label*> labels;
 	float money = 0.0f;
+	std::string nameBackup; 
+	//-Todo: Do this with pointers. A string pointer is the drawn one, and keep changing the adresses
+	// This will solve ploblem with save/load
 	std::string name;
 	std::intptr_t id = 0;
 	ContainerType type = ContainerType::NO_CONTAINER;
