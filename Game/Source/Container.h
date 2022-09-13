@@ -28,6 +28,7 @@ public: // Functions
 	{
 		name.clear();
 		name.shrink_to_fit();
+		namePtr = nullptr;
 	}
 
 	virtual void Start(const char* currency) {}
@@ -38,12 +39,12 @@ public: // Functions
 
 	const char* GetName() const
 	{
-		return name.c_str();
+		return namePtr->c_str();
 	}
 
 	std::string* GetString()
 	{
-		return &name;
+		return namePtr;
 	}
 
 	const char* GetTypeString() const
@@ -80,7 +81,7 @@ public: // Functions
 
 	unsigned int GetSize() const
 	{
-		return labels.size();
+		return size;
 	}
 
 	void NewLabel(const char* name = "New Container", float money = 0.0f, float limit = 1.0f)
@@ -91,6 +92,7 @@ public: // Functions
 			SwapNames();
 		}
 		labels.push_back(new Label(name, money, limit));
+		size = labels.size();
 	}
 
 	void ClearLabels()
@@ -98,6 +100,7 @@ public: // Functions
 		for (Label* l : labels) RELEASE(l);
 		labels.clear();
 		labels.shrink_to_fit();
+		size = 0;
 	}
 
 	float GetLabelMoney(int i) const
@@ -122,7 +125,11 @@ public: // Functions
 
 	void SwapNames()
 	{
-		if (nameBackup.empty())
+		if (unified)
+			namePtr = &labels[0]->name;
+		else
+			namePtr = &name;
+		/*if (nameBackup.empty())
 		{
 			if (!unified)
 				return;
@@ -143,7 +150,7 @@ public: // Functions
 			}
 			else
 				nameBackup.clear();
-		}
+		}*/
 	}
 
 protected: // Functions
@@ -152,12 +159,14 @@ protected: // Functions
 	{
 		this->money = 0;
 		this->name = name;
+		this->namePtr = &this->name;
 		this->type = type;
 		this->hidden = hidden;
 		this->open = open;
 		this->unified = unified;
 		this->totalMoneyPtr = totalMoneyPtr;
 		id = reinterpret_cast<int>(this);
+
 	}
 
 	void SetFormat(const char* form, const char* currency)
@@ -173,6 +182,7 @@ protected: // Functions
 		labels[index]->name.clear();
 		labels[index]->name.shrink_to_fit();
 		labels.erase(labels.begin() + index);
+		size = labels.size();
 	}
 
 public: // Variables
@@ -187,14 +197,11 @@ protected: // Variables
 	float* totalMoneyPtr = nullptr;
 	std::vector<Label*> labels;
 	float money = 0.0f;
-	std::string nameBackup; 
-	//-Todo: Do this with pointers. A string pointer is the drawn one, and keep changing the adresses
-	// This will solve ploblem with save/load
+	std::string* namePtr = nullptr;
 	std::string name;
 	std::intptr_t id = 0;
 	ContainerType type = ContainerType::NO_CONTAINER;
 	std::string format;
 
-	//-Todo: Instead of GetSize returning labels->size(), keep track of a unsigned int size variable that updates
-	// whenever a label is created or deleted. Performance optimitzation
+	unsigned int size = 0; //-TODO: Mirar si puc fer-ho amb size++/size-- en comptes d'igualar ->size()
 };
