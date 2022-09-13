@@ -197,7 +197,7 @@ protected: // Variables
 	float* totalMoneyPtr = nullptr;
 	std::vector<Label*> labels;
 	float money = 0.0f;
-	std::string* namePtr = nullptr;
+	std::string* namePtr = nullptr; //-TODO: quan carregem fitxer, mirar si esta unified o no i asignar nom corresponent
 	std::string name;
 	std::intptr_t id = 0;
 	ContainerType type = ContainerType::NO_CONTAINER;
