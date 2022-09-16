@@ -15,6 +15,8 @@ EconomyScene::EconomyScene(Input* input)
 
 	openFileName = "New_File";
 	openFilePath.clear();
+
+	//NewFile();
 }
 
 EconomyScene::~EconomyScene()
@@ -98,6 +100,7 @@ bool EconomyScene::CleanUp()
 
 void EconomyScene::NewFile()
 {
+	//openFiles.emplace_back(File{"New_File", nullptr});
 	openFileName = "New_File";
 	openFilePath.clear();
 
@@ -929,11 +932,11 @@ bool EconomyScene::DrawMenuBar()
 
 			ImGui::EndMenu();
 		}
-		//if (ImGui::BeginMenu("Window"))
-		//{
-		//	ImGui::MenuItem("Demo Window", "Ctrl + Shft + D", &demoWindow);
-		//	ImGui::EndMenu();
-		//}
+		if (ImGui::BeginMenu("Window"))
+		{
+			ImGui::MenuItem("Demo Window", "Ctrl + Shft + D", &demoWindow);
+			ImGui::EndMenu();
+		}
 	}
 	ImGui::EndMainMenuBar();
 
@@ -1019,113 +1022,146 @@ bool EconomyScene::DrawMainWindow(bool* open)
 	bool ret = true;
 	if (!(*open)) return ret;
 
-	if (ImGui::Begin("##Main", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar))
+	if (ImGui::Begin("##MainWindow", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar))
 	{
-		ImGui::Text(openFileName.c_str());
-		AddSeparator(1);
-		AddSpacing(2);
-
-		totalContainer->Draw();
-
-		AddSpacing(2);
-
-		size_t size = containers.size();
-		for (suint i = 0; i < size; ++i)
+		if (ImGui::BeginTabBar("##FileBar"))
 		{
-			Container* r = containers[i];
-			ImGui::PushID(r->GetId() / ((i * size) + size * size));
-			bool reordered = false;
+			AddSpacing(1);
 
-			bool hidden = r->hidden;
-			if (hidden) ImGui::BeginDisabled();
-
-			ImGui::Dummy({ 20, 0 }); ImGui::SameLine();
-
-			if (showContainerType)
+			if (ImGui::BeginTabBar("##SystemBar"))
 			{
-				ImGui::Text(r->GetTypeString());
-				ImGui::SameLine();
-			}
-			ImGui::PushItemWidth(textFieldSize);
-			ImGui::InputText("##LabelName", r->GetString()); ImGui::PopItemWidth(); ImGui::SameLine();
-
-			if (hidden) ImGui::EndDisabled();
-
-			if (ImGui::Button(":"))
-				ImGui::OpenPopup("Options Popup");
-			if (ImGui::BeginPopup("Options Popup"))
-			{
-				if (ImGui::MenuItem("Delete"))
+				if (ImGui::BeginTabItem("Gestor "))
 				{
+					DrawGestorSystem();
+					ImGui::EndTabItem();
+				}
+
+				if (ImGui::BeginTabItem("  Log  "))
+				{
+					DrawLogSystem();
+					ImGui::EndTabItem();
+				}
+
+				ImGui::EndTabBar();
+			}
+
+			ImGui::EndTabBar();
+		}
+	}
+	ImGui::End();
+
+	return ret;
+}
+
+void EconomyScene::DrawGestorSystem()
+{
+
+	/*ImGui::Text(openFileName.c_str());
+	AddSeparator(1);*/
+	AddSpacing(2);
+
+	totalContainer->Draw();
+
+	AddSpacing(2);
+
+	size_t size = containers.size();
+	for (suint i = 0; i < size; ++i)
+	{
+		Container* r = containers[i];
+		ImGui::PushID(r->GetId() / ((i * size) + size * size));
+		bool reordered = false;
+
+		bool hidden = r->hidden;
+		if (hidden) ImGui::BeginDisabled();
+
+		ImGui::Dummy({ 20, 0 }); ImGui::SameLine();
+
+		if (showContainerType)
+		{
+			ImGui::Text(r->GetTypeString());
+			ImGui::SameLine();
+		}
+		ImGui::PushItemWidth(textFieldSize);
+		ImGui::InputText("##LabelName", r->GetString()); ImGui::PopItemWidth(); ImGui::SameLine();
+
+		if (hidden) ImGui::EndDisabled();
+
+		if (ImGui::Button(":"))
+			ImGui::OpenPopup("Options Popup");
+		if (ImGui::BeginPopup("Options Popup"))
+		{
+			if (ImGui::MenuItem("Delete"))
+			{
+				DeleteContainer(i);
+				ImGui::EndPopup();
+				ImGui::PopID();
+				break;
+			}
+			if (ImGui::MenuItem("Process"))
+			{
+				int dif = 1;
+				r->GetType() == ContainerType::FUTURE ? dif = 1 : dif = -1;
+				float totalResult = totalContainer->GetMoney() + (r->GetMoney() * dif);
+				if (totalResult >= 0)
+				{
+					*totalContainer->GetMoneyPtr() = totalResult;
 					DeleteContainer(i);
 					ImGui::EndPopup();
 					ImGui::PopID();
 					break;
 				}
-				if (ImGui::MenuItem("Process"))
-				{
-					int dif = 1;
-					r->GetType() == ContainerType::FUTURE ? dif = 1 : dif = -1;
-					float totalResult = totalContainer->GetMoney() + (r->GetMoney() * dif);
-					if (totalResult >= 0)
-					{
-						*totalContainer->GetMoneyPtr() = totalResult;
-						DeleteContainer(i);
-						ImGui::EndPopup();
-						ImGui::PopID();
-						break;
-					}
-				}
-				if (r->GetSize() <= 1 && ImGui::MenuItem("Unify", "", &r->unified)) r->SwapNames();
-				ImGui::MenuItem("Hide", "", &r->hidden);
-				ImGui::EndPopup();
 			}
-			ImGui::SameLine();
-
-			if (r->loadOpen)
-			{
-				ImGui::SetNextItemOpen(r->open);
-				r->loadOpen = false;
-			}
-			if (r->open = ImGui::TreeNodeEx("[]", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding))
-			{
-				if (ImGui::BeginDragDropSource())
-				{
-					intptr_t id = r->GetId();
-					ImGui::SetDragDropPayload("Container", &id, sizeof(intptr_t));
-					ImGui::Text(r->GetName());
-					ImGui::EndDragDropSource();
-				}
-				if (ImGui::BeginDragDropTarget())
-				{
-					const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Container");
-					if (payload)
-					{
-						MoveContainer(ReturnContainerIndex(*((intptr_t*)payload->Data)), i);
-						reordered = true;
-					}
-					ImGui::EndDragDropTarget();
-				}
-
-				ImGui::Dummy({ 15, 0 }); ImGui::SameLine();
-				r->Draw();
-
-				ImGui::TreePop();
-			}
-			ImGui::PopID();
-
-			AddSpacing(0);
-
-			if (reordered) break;
+			if (r->GetSize() <= 1 && ImGui::MenuItem("Unify", "", &r->unified)) r->SwapNames();
+			ImGui::MenuItem("Hide", "", &r->hidden);
+			ImGui::EndPopup();
 		}
+		ImGui::SameLine();
+
+		if (r->loadOpen)
+		{
+			ImGui::SetNextItemOpen(r->open);
+			r->loadOpen = false;
+		}
+		if (r->open = ImGui::TreeNodeEx("[]", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding))
+		{
+			if (ImGui::BeginDragDropSource())
+			{
+				intptr_t id = r->GetId();
+				ImGui::SetDragDropPayload("Container", &id, sizeof(intptr_t));
+				ImGui::Text(r->GetName());
+				ImGui::EndDragDropSource();
+			}
+			if (ImGui::BeginDragDropTarget())
+			{
+				const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Container");
+				if (payload)
+				{
+					MoveContainer(ReturnContainerIndex(*((intptr_t*)payload->Data)), i);
+					reordered = true;
+				}
+				ImGui::EndDragDropTarget();
+			}
+
+			ImGui::Dummy({ 15, 0 }); ImGui::SameLine();
+			r->Draw();
+
+			ImGui::TreePop();
+		}
+		ImGui::PopID();
 
 		AddSpacing(0);
 
-		unasignedContainer->Draw();
+		if (reordered) break;
 	}
-	ImGui::End();
 
-	return ret;
+	AddSpacing(0);
+
+	unasignedContainer->Draw();
+}
+
+void EconomyScene::DrawLogSystem()
+{
+
 }
 
 bool EconomyScene::DrawToolbarWindow(bool* open)

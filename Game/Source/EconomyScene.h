@@ -9,6 +9,20 @@
 #include "MethodsEnum.h"
 #include "Chrono.h"
 
+struct File
+{
+	File(const char* fileName = nullptr, const char* filePath = nullptr)
+	{
+		openFileName.clear();
+		openFilePath.clear();
+		if (fileName) openFileName = fileName;
+		if (filePath) openFilePath = filePath;
+	}
+
+	std::string openFileName;
+	std::string openFilePath;
+};
+
 class EconomyScene
 {
 public:
@@ -36,6 +50,8 @@ private: // Functions
 
 	bool DrawPreferencesWindow(bool* open);
 	bool DrawMainWindow(bool* open);
+		void DrawGestorSystem();
+		void DrawLogSystem();
 
 	bool DrawToolbarWindow(bool* open);
 
@@ -121,59 +137,6 @@ private: // Functions
 
 	void SetMethod();
 
-	//// Given an Image enum type, width and height, draw an image
-	//void AddImage(Image img, unsigned int w = 0, unsigned int h = 0)
-	//{
-	//	int width = (int)img.GetImageDimensions().x;
-	//	int height = (int)img.GetImageDimensions().y;
-	//	if (w != 0 || h != 0)
-	//	{
-	//		width = w;
-	//		height = h;
-	//	}
-	//	ImGui::Image(ImTextureID(img.GetTextureId()), ImVec2(float(width), float(height)));
-	//}
-	//void AddImage(Image img, int proportion = 100)
-	//{
-	//	int width = (int)img.GetImageDimensions().x;
-	//	int height = (int)img.GetImageDimensions().y;
-	//	if (proportion <= 0) proportion = 100;
-	//	if (proportion != 100)
-	//	{
-	//		width = int(ceil((width * proportion) / 100));
-	//		height = int(ceil((height * proportion) / 100));
-	//	}
-	//	ImGui::Image(ImTextureID(img.GetTextureId()), ImVec2(float(width), float(height)));
-	//}
-	//// Given an Image enum type, width and height, draw an image
-	//bool AddImageButton(Image img, unsigned int w = 0, unsigned int h = 0)
-	//{
-	//	int width = (int)img.GetImageDimensions().x;
-	//	int height = (int)img.GetImageDimensions().y;
-	//	if (w != 0 || h != 0)
-	//	{
-	//		width = w;
-	//		height = h;
-	//	}
-	//	if (ImGui::ImageButton(ImTextureID(img.GetTextureId()), ImVec2(float(width), float(height)), ImVec2(0, 0), ImVec2(1, 1), 0)) return true;
-	//	return false;
-	//}
-	//bool AddImageButton(Image img, int proportion = 100)
-	//{
-	//	int width = (int)img.GetImageDimensions().x;
-	//	int height = (int)img.GetImageDimensions().y;
-	//	if (proportion <= 0) proportion = 100;
-	//	if (proportion != 100)
-	//	{
-	//		width = int(ceil((width * proportion) / 100));
-	//		height = int(ceil((height * proportion) / 100));
-	//	}
-	//	if (ImGui::ImageButton(ImTextureID(img.GetTextureId()), ImVec2(float(width), float(height)), ImVec2(0, 0), ImVec2(1, 1))) return true;
-	//	return false;
-	//}
-
-public: // Variables
-
 private: // Variables
 
 	TotalContainer* totalContainer = nullptr;
@@ -207,9 +170,12 @@ private: // Variables
 	bool loadingV1_0 = false;
 	bool versionError = false;
 
+	std::vector<File> openFiles;
+
 	std::string openFileName;
 	std::string openFilePath;
 
+	// Others
 	Method method = Method::MTHD_NO;
 
 	Chrono chrono;
