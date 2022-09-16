@@ -1001,7 +1001,7 @@ bool EconomyScene::DrawPreferencesWindow(bool* open)
 
 		AddHelper("Enlarges the size of the text\nlabels of each container.", "?"); ImGui::SameLine();
 		ImGui::PushItemWidth(textFieldSize);
-		ImGui::DragFloat("Text Fiend Size", &textFieldSize, 0.1f, 1.0f, 1000.0f, "%f pts");
+		ImGui::DragFloat("Text Fiend Size", &textFieldSize, 0.1f, 1.0f, 1000.0f, "%f pts", ImGuiSliderFlags_AlwaysClamp);
 		ImGui::PopItemWidth();
 
 		if (ImGui::Combo("Currency", &currency, comboCurrency, 5))

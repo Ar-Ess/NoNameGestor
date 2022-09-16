@@ -68,7 +68,7 @@ public: // Functions
 			else width += 50;
 
 			ImGui::PushItemWidth(width);
-			ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, 340282000000000000000000000000000000000.0f, "%.2f EUR");
+			ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, 340282000000000000000000000000000000000.0f, "%.2f EUR", ImGuiSliderFlags_AlwaysClamp);
 			ImGui::PopItemWidth();
 
 			ImGui::PopID();

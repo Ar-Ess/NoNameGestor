@@ -57,6 +57,9 @@
     <ClCompile Include="Source\Chrono.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Movement.cpp">
+      <Filter>Container\Movements</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\App.h" />
@@ -168,6 +171,9 @@
     <ClInclude Include="Source\UnasignedContainer.h">
       <Filter>Container\Constant</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Movement.h">
+      <Filter>Container\Movements</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="External">
@@ -202,6 +208,9 @@
     </Filter>
     <Filter Include="Container\Constant">
       <UniqueIdentifier>{7185b72b-3ea1-4c81-97a7-299824278e03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Container\Movements">
+      <UniqueIdentifier>{0fccce2a-200b-4e1b-8029-40ff21d90263}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

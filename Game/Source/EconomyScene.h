@@ -8,6 +8,7 @@
 #include "FileManager.h"
 #include "MethodsEnum.h"
 #include "Chrono.h"
+#include "Movement.h"
 
 class EconomyScene
 {
@@ -123,17 +124,24 @@ private: // Functions
 
 	void SetMethod();
 
+	void CreateMovement(float money, const char* name);
+
 private: // Variables
 
-	TotalContainer* totalContainer = nullptr;
-	UnasignedContainer* unasignedContainer = nullptr;
-	std::vector<Container*> containers;
-
+	// General
 	Input* input = nullptr;
 	FileManager* file = nullptr;
 
 	bool demoWindow = false;
 	bool preferencesWindow = false;
+
+	// Gestor
+	TotalContainer* totalContainer = nullptr;
+	UnasignedContainer* unasignedContainer = nullptr;
+	std::vector<Container*> containers;
+
+	//  Logs
+	std::vector<Movement*> movements;
 
 	// Shortcuts
 	bool ctrl = false, shft = false, d = false, 

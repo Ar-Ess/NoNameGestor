@@ -72,7 +72,7 @@ public: // Functions
 				ImGui::TableNextColumn();
 
 				ImGui::PushItemWidth(width);
-				ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, labels[i]->limit, format.c_str());
+				ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, labels[i]->limit, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
 				ImVec2 itemSize = ImGui::GetItemRectSize();
 				itemSize.y -= 15;
 				ImGui::PopItemWidth();ImGui::SameLine();
@@ -108,7 +108,7 @@ public: // Functions
 		ImGui::SetNextWindowSize(ImVec2(140, 100));
 		if (ImGui::BeginPopupModal("Edit limit", nullptr, ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
 		{
-			ImGui::DragFloat("##Drag1", &labels[editLimitIndex]->tempLimit, 1.0f, 0.0f, 340282000000000000000000000000000000000.0f, format.c_str());
+			ImGui::DragFloat("##Drag1", &labels[editLimitIndex]->tempLimit, 1.0f, 0.0f, 340282000000000000000000000000000000000.0f, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
 			if (ImGui::Button("Done"))
 			{
 				labels[editLimitIndex]->limit = labels[editLimitIndex]->tempLimit;

@@ -68,7 +68,7 @@ public: // Functions
 
 
 			ImGui::PushItemWidth(width);
-			ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, 340282000000000000000000000000000000000.0f, format.c_str());
+			ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, 340282000000000000000000000000000000000.0f, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
 			ImGui::PopItemWidth();
 
 			ImGui::PopID();
