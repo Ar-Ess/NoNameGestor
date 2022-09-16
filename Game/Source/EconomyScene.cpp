@@ -16,7 +16,6 @@ EconomyScene::EconomyScene(Input* input)
 	openFileName = "New_File";
 	openFilePath.clear();
 
-	//NewFile();
 }
 
 EconomyScene::~EconomyScene()

@@ -9,20 +9,6 @@
 #include "MethodsEnum.h"
 #include "Chrono.h"
 
-struct File
-{
-	File(const char* fileName = nullptr, const char* filePath = nullptr)
-	{
-		openFileName.clear();
-		openFilePath.clear();
-		if (fileName) openFileName = fileName;
-		if (filePath) openFilePath = filePath;
-	}
-
-	std::string openFileName;
-	std::string openFilePath;
-};
-
 class EconomyScene
 {
 public:
@@ -169,8 +155,6 @@ private: // Variables
 	bool saving = false, loading = false, savingAs = false;
 	bool loadingV1_0 = false;
 	bool versionError = false;
-
-	std::vector<File> openFiles;
 
 	std::string openFileName;
 	std::string openFilePath;
