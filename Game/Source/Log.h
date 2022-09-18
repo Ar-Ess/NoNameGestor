@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <assert.h>
 
 
 enum class LogType
@@ -41,6 +42,13 @@ public:
 		date[0] = day;
 		date[1] = month;
 		date[2] = year;
+	}
+
+	int GetDate(int index) const
+	{
+		// Index must be between 0 && 2
+		assert(index >= 0 && index < 3);
+		return date[index];
 	}
 
 	float totalInstance = 0;

@@ -195,6 +195,7 @@ void EconomyScene::InternalSave(const char* path)
 		Write("cnfAFC").Bool(allowFutureCovering).
 		Write("cnfCCU").Bool(createContainerUnified).
 		Write("cnfTFS").Number(textFieldSize).
+		Write("cnfDFT").Bool(dateFormatType).
 		Write("currency").Number(currency).
 		// Generic File
 		Write("containers").Number(total).
@@ -294,16 +295,23 @@ void EconomyScene::InternalSave(const char* path)
 			MovementLog* m = (MovementLog*)l;
 			file->EditFile(path).
 				Write("name").String(m->GetName()).
+				Write("type").Number((int)m->GetType()).
 				Write("money").Number(m->money).
-				Write("t_money").Number(m->totalInstance);
+				Write("t_money").Number(m->totalInstance).
+				Write("date").Date(m->GetDate(0), m->GetDate(1), m->GetDate(2));
+
+			break;
 		}
 		case LogType::INFORMATIVE_LOG:
 		{
-			MovementLog* m = (MovementLog*)l;
+			InformativeLog* i = (InformativeLog*)l;
 			file->EditFile(path).
-				Write("name").String(m->GetName()).
-				Write("money").Number(m->money).
-				Write("t_money").Number(m->totalInstance);
+				Write("name").String(i->GetName()).
+				Write("type").Number((int)i->GetType()).
+				Write("old_money").Number(i->totalInstance).
+				Write("new_money").Number(i->newInstance);
+
+			break;
 		}
 		}
 	}
@@ -404,6 +412,7 @@ void EconomyScene::Load()
 	int size = 0;
 
 	DeleteAllContainer();
+	DeleteAllLogs();
 
 	// Y aspects
 	file->ViewFile(path.c_str(), 1).
@@ -414,16 +423,19 @@ void EconomyScene::Load()
 		Read("cnfAFC").AsBool(allowFutureCovering).
 		Read("cnfCCU").AsBool(createContainerUnified).
 		Read("cnfTFS").AsFloat(textFieldSize).
+		Read("cnfDFT").AsBool(dateFormatType).
 		Read("currency").AsInt(currency).
 		// General Project
 		Read("containers").AsFloat(total).
 		Read("size").AsInt(size);
 
+	const int yAspects = 10; // Update if more preferences added
+
 	int added = 0;
 
 	for (unsigned int i = 0; i < size; ++i)
 	{//      Change depending on how many X aspects \/     \/ Change it depending on how many Y aspects (count version as one)
-		int positionToRead =                   (i * 6)  +  9 + added;
+		int positionToRead =                   (i * 6)  +  yAspects + added;
 		int type = -1;
 		float money = 0;
 		bool hidden = false, open = false, unified = true;
@@ -574,9 +586,9 @@ void EconomyScene::Load()
 	}
 
 	int movSize = 0;
-	int movPos = file->ViewFile(path.c_str(), 9).Search("logs");
+	int movPos = file->ViewFile(path.c_str(), yAspects).Search("logs");
+	//      Amount of constant writted variables /\ Y aspects
 	added = 0;
-	//  Amount of constant writted variables /\ (config variables and others)
 
 	file->ViewFile(path.c_str(), movPos)
 		.Read("logs").AsInt(movSize);
@@ -587,16 +599,44 @@ void EconomyScene::Load()
 	{
 		std::string name;
 		float money = 0;
+		float newMoney = 0;
+		int movType = 0;
 		float totalMoneyInstance = 0;
+		int day = 0, month = 0, year = 0;
 
-		file->ViewFile(path.c_str(), movPos + added)
-			.Read("name").AsString(name)
-			.Read("money").AsFloat(money)
-			.Read("t_money").AsFloat(totalMoneyInstance);
+		file->ViewFile(path.c_str(), movPos + added).
+			Read("name").AsString(name).
+			Read("type").AsInt(movType);
 
-		logs.emplace_back(new MovementLog(money, totalMoneyInstance, name.c_str(), &dateFormatType));
+		added += 2;
 
-		added += 3;
+		switch ((LogType)movType)
+		{
+		case LogType::MOVEMENT_LOG:
+		{
+			file->ViewFile(path.c_str(), movPos + added).
+				Read("money").AsFloat(money).
+				Read("t_money").AsFloat(totalMoneyInstance).
+				Read("date").AsDate(day, month, year);
+
+			logs.emplace_back(new MovementLog(money, totalMoneyInstance, name.c_str(), &dateFormatType));
+			if (day > 0) logs.back()->SetDate(day, month, year);
+
+			added += 3;
+			break;
+		}
+		case LogType::INFORMATIVE_LOG:
+		{
+			file->ViewFile(path.c_str(), movPos + added).
+				Read("old_money").AsFloat(money).
+				Read("new_money").AsFloat(newMoney);
+
+			logs.emplace_back(new InformativeLog(money, newMoney, name.c_str()));
+
+			added += 2;
+			break;
+		}
+		}
 	}
 
 	totalContainer->SetMoney(total);
