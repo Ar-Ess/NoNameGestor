@@ -3,7 +3,7 @@
 #include "App.h"
 
 #include "Defs.h"
-#include "Log.h"
+#include "LogFunction.h"
 
 #include "SDL/include/SDL.h"
 #include "External/imgui/imgui_impl_sdl.h"

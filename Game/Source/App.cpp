@@ -8,7 +8,7 @@
 #include <time.h>
 
 #include "Defs.h"
-#include "Log.h"
+#include "LogFunction.h"
 
 App::App(int argc, char* args[]) : argc(argc), args(args)
 {

@@ -3,9 +3,6 @@
   <ItemGroup>
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\App.cpp" />
-    <ClCompile Include="Source\Log.cpp">
-      <Filter>Utils</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Input.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
@@ -57,16 +54,22 @@
     <ClCompile Include="Source\Chrono.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Movement.cpp">
-      <Filter>Container\Movements</Filter>
+    <ClCompile Include="Source\LogFunction.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Log.cpp">
+      <Filter>Container\Log</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\InformativeLog.cpp">
+      <Filter>Container\Log\Logs</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\MovementLog.cpp">
+      <Filter>Container\Log\Logs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\App.h" />
     <ClInclude Include="Source\Defs.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Log.h">
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="Source\Input.h">
@@ -171,8 +174,20 @@
     <ClInclude Include="Source\UnasignedContainer.h">
       <Filter>Container\Constant</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Movement.h">
-      <Filter>Container\Movements</Filter>
+    <ClInclude Include="Source\LogFunction.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Log.h">
+      <Filter>Container\Log</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\InformativeLog.h">
+      <Filter>Container\Log\Logs</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\MovementLog.h">
+      <Filter>Container\Log\Logs</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\LogHeader.h">
+      <Filter>Container\Log</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -209,8 +224,11 @@
     <Filter Include="Container\Constant">
       <UniqueIdentifier>{7185b72b-3ea1-4c81-97a7-299824278e03}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Container\Movements">
+    <Filter Include="Container\Log">
       <UniqueIdentifier>{0fccce2a-200b-4e1b-8029-40ff21d90263}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Container\Log\Logs">
+      <UniqueIdentifier>{37af4f78-067a-417b-bb63-ba4d7e60a1c1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -1,7 +1,7 @@
 #include "App.h"
 
 #include "Defs.h"
-#include "Log.h"
+#include "LogFunction.h"
 
 #include "SDL/include/SDL.h"
 #include <stdlib.h>

@@ -10,7 +10,7 @@ EconomyScene::EconomyScene(Input* input)
 	this->input = input;
 	this->file = new FileManager(EXTENSION);
 
-	totalContainer = new TotalContainer("Total Money");
+	totalContainer = new TotalContainer("Total Money", &logs, &dateFormatType);
 	unasignedContainer = new UnasignedContainer("Unasigned Money", &showFutureUnasigned, &allowFutureCovering, &showArrearUnasigned, &allowArrearsFill);
 
 	openFileName = "New_File";
@@ -104,6 +104,7 @@ void EconomyScene::NewFile()
 	openFilePath.clear();
 
 	DeleteAllContainer();
+	DeleteAllLogs();
 
 	totalContainer->SetMoney(0.0f);
 }
@@ -196,7 +197,7 @@ void EconomyScene::InternalSave(const char* path)
 		Write("cnfTFS").Number(textFieldSize).
 		Write("currency").Number(currency).
 		// Generic File
-		Write("total").Number(total).
+		Write("containers").Number(total).
 		Write("size").Number((int)containers.size());
 
 	for (Container* r : containers)
@@ -278,6 +279,32 @@ void EconomyScene::InternalSave(const char* path)
 
 		default:
 			break;
+		}
+	}
+
+	file->EditFile(path).
+		Write("logs").Number((int)logs.size());
+
+	for (Log* l : logs)
+	{
+		switch (l->GetType())
+		{
+		case LogType::MOVEMENT_LOG:
+		{
+			MovementLog* m = (MovementLog*)l;
+			file->EditFile(path).
+				Write("name").String(m->GetName()).
+				Write("money").Number(m->money).
+				Write("t_money").Number(m->totalInstance);
+		}
+		case LogType::INFORMATIVE_LOG:
+		{
+			MovementLog* m = (MovementLog*)l;
+			file->EditFile(path).
+				Write("name").String(m->GetName()).
+				Write("money").Number(m->money).
+				Write("t_money").Number(m->totalInstance);
+		}
 		}
 	}
 }
@@ -389,7 +416,7 @@ void EconomyScene::Load()
 		Read("cnfTFS").AsFloat(textFieldSize).
 		Read("currency").AsInt(currency).
 		// General Project
-		Read("total").AsFloat(total).
+		Read("containers").AsFloat(total).
 		Read("size").AsInt(size);
 
 	int added = 0;
@@ -546,9 +573,34 @@ void EconomyScene::Load()
 
 	}
 
+	int movSize = 0;
+	int movPos = file->ViewFile(path.c_str(), 9).Search("logs");
+	added = 0;
+	//  Amount of constant writted variables /\ (config variables and others)
+
+	file->ViewFile(path.c_str(), movPos)
+		.Read("logs").AsInt(movSize);
+
+	++added;
+
+	for (unsigned int i = 0; i < movSize; ++i)
+	{
+		std::string name;
+		float money = 0;
+		float totalMoneyInstance = 0;
+
+		file->ViewFile(path.c_str(), movPos + added)
+			.Read("name").AsString(name)
+			.Read("money").AsFloat(money)
+			.Read("t_money").AsFloat(totalMoneyInstance);
+
+		logs.emplace_back(new MovementLog(money, totalMoneyInstance, name.c_str(), &dateFormatType));
+
+		added += 3;
+	}
+
 	totalContainer->SetMoney(total);
 	UpdateCurrency();
-
 }
 
 void EconomyScene::Loadv1_0()
@@ -946,7 +998,7 @@ bool EconomyScene::DrawDocking()
 {
 	bool ret = true;
 
-	ImGuiDockNodeFlags dockspace_flags = (ImGuiDockNodeFlags_PassthruCentralNode);
+	ImGuiDockNodeFlags dockspace_flags = (ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_NoResize);
 	ImGuiViewport* viewport = ImGui::GetMainViewport();
 	ImGui::SetNextWindowPos(viewport->Pos);
 	ImGui::SetNextWindowSize(viewport->Size);
@@ -976,39 +1028,73 @@ bool EconomyScene::DrawPreferencesWindow(bool* open)
 
 	if (ImGui::Begin("Preferences", open, ImGuiWindowFlags_NoDocking))
 	{
-		AddHelper("Shows, at the side of each container,\na text noting it's type.", "?"); ImGui::SameLine();
-		ImGui::Checkbox("Show Container Typology Name", &showContainerType); 
+		ImGui::Spacing();
 
-		AddHelper("Shows the unsigned money in terms\nof future income.", "?"); ImGui::SameLine();
-		ImGui::Checkbox("Show Unasigned Future Money ", &showFutureUnasigned);
-		
-		if (showFutureUnasigned)
-		{
-			ImGui::Dummy(ImVec2{ 6, 0 }); ImGui::SameLine();
-			AddHelper("Allows future money to cover\nactual money whenever it goes\nin negative numbers.\nIMPORTANT:\nUse this option if you know for sure\nyou'll receive the future income.", "?"); ImGui::SameLine();
-			ImGui::Checkbox("Allow Future Money Covering ", &allowFutureCovering);
-		}
-
-		AddHelper("Shows the unsigned money in terms\nof arrears outcome.", "?"); ImGui::SameLine();
-		ImGui::Checkbox("Show Unasigned Arrears Money ", &showArrearUnasigned);
-
-		if (showArrearUnasigned)
-		{
-			ImGui::Dummy(ImVec2{ 6, 0 }); ImGui::SameLine();
-			AddHelper("Allows unasigned actual money to fill\nunasigned arrears whenever they exist.", "?"); ImGui::SameLine();
-			ImGui::Checkbox("Allow Arrears Money Filling", &allowArrearsFill);
-		}
-
-		AddHelper("Enlarges the size of the text\nlabels of each container.", "?"); ImGui::SameLine();
-		ImGui::PushItemWidth(textFieldSize);
-		ImGui::DragFloat("Text Fiend Size", &textFieldSize, 0.1f, 1.0f, 1000.0f, "%f pts", ImGuiSliderFlags_AlwaysClamp);
-		ImGui::PopItemWidth();
-
-		if (ImGui::Combo("Currency", &currency, comboCurrency, 5))
+		ImGui::Text("Currency:");
+		if (ImGui::Combo("##Currency", &currency, comboCurrency, 5))
 			UpdateCurrency();
 
-		AddHelper("Creates all containers unified by default", "?"); ImGui::SameLine();
-		ImGui::Checkbox("Create Container Unified Default", &createContainerUnified);
+		ImGui::Spacing();
+
+		if (ImGui::BeginTabBar("##PreferencesTabBar"))
+		{
+			if (ImGui::BeginTabItem("Gestor"))
+			{
+				AddHelper("Shows, at the side of each container,\na text noting it's type.", "?"); ImGui::SameLine();
+				ImGui::Checkbox("Show Container Typology Name", &showContainerType);
+
+				AddHelper("Shows the unsigned money in terms\nof future income.", "?"); ImGui::SameLine();
+				ImGui::Checkbox("Show Unasigned Future Money ", &showFutureUnasigned);
+
+				if (showFutureUnasigned)
+				{
+					ImGui::Dummy(ImVec2{ 6, 0 }); ImGui::SameLine();
+					AddHelper("Allows future money to cover\nactual money whenever it goes\nin negative numbers.\nIMPORTANT:\nUse this option if you know for sure\nyou'll receive the future income.", "?"); ImGui::SameLine();
+					ImGui::Checkbox("Allow Future Money Covering ", &allowFutureCovering);
+				}
+
+				AddHelper("Shows the unsigned money in terms\nof arrears outcome.", "?"); ImGui::SameLine();
+				ImGui::Checkbox("Show Unasigned Arrears Money ", &showArrearUnasigned);
+
+				if (showArrearUnasigned)
+				{
+					ImGui::Dummy(ImVec2{ 6, 0 }); ImGui::SameLine();
+					AddHelper("Allows unasigned actual money to fill\nunasigned arrears whenever they exist.", "?"); ImGui::SameLine();
+					ImGui::Checkbox("Allow Arrears Money Filling", &allowArrearsFill);
+				}
+
+				AddHelper("Enlarges the size of the text\nlabels of each container.", "?"); ImGui::SameLine();
+				ImGui::PushItemWidth(textFieldSize);
+				ImGui::DragFloat("Text Fiend Size", &textFieldSize, 0.1f, 1.0f, 1000.0f, "%f pts", ImGuiSliderFlags_AlwaysClamp);
+				ImGui::PopItemWidth();
+
+				AddHelper("Creates all containers unified by default", "?"); ImGui::SameLine();
+				ImGui::Checkbox("Create Container Unified Default", &createContainerUnified);
+
+				ImGui::EndTabItem();
+			}
+
+			if (ImGui::BeginTabItem(" Log  "))
+			{
+				ImGui::Spacing();
+				ImGui::Text("Date Format:");
+				static bool otherDate = !dateFormatType;
+				if (ImGui::Checkbox("d/m/y", &dateFormatType))
+				{
+					dateFormatType = true;
+					otherDate = false;
+				}
+				ImGui::SameLine();
+				if (ImGui::Checkbox("m/d/y", &otherDate))
+				{
+					dateFormatType = false;
+					otherDate = true;
+				}
+				ImGui::EndTabItem();
+			}
+
+			ImGui::EndTabBar();
+		}
 
 	}
 	ImGui::End();
@@ -1023,25 +1109,22 @@ bool EconomyScene::DrawMainWindow(bool* open)
 
 	if (ImGui::Begin("##MainWindow", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar))
 	{
-		if (ImGui::BeginTabBar("##FileBar"))
+		ImGui::Text(openFileName.c_str());
+		AddSeparator(1);
+		AddSpacing(1);
+
+		if (ImGui::BeginTabBar("##SystemBar"))
 		{
-			AddSpacing(1);
-
-			if (ImGui::BeginTabBar("##SystemBar"))
+			if (ImGui::BeginTabItem("Gestor "))
 			{
-				if (ImGui::BeginTabItem("Gestor "))
-				{
-					DrawGestorSystem();
-					ImGui::EndTabItem();
-				}
+				DrawGestorSystem();
+				ImGui::EndTabItem();
+			}
 
-				if (ImGui::BeginTabItem("  Log  "))
-				{
-					DrawLogSystem();
-					ImGui::EndTabItem();
-				}
-
-				ImGui::EndTabBar();
+			if (ImGui::BeginTabItem("  Log  "))
+			{
+				DrawLogSystem(ImGui::IsItemDeactivated());
+				ImGui::EndTabItem();
 			}
 
 			ImGui::EndTabBar();
@@ -1054,10 +1137,7 @@ bool EconomyScene::DrawMainWindow(bool* open)
 
 void EconomyScene::DrawGestorSystem()
 {
-
-	/*ImGui::Text(openFileName.c_str());
-	AddSeparator(1);*/
-	AddSpacing(2);
+	AddSpacing(3);
 
 	totalContainer->Draw();
 
@@ -1158,9 +1238,40 @@ void EconomyScene::DrawGestorSystem()
 	unasignedContainer->Draw();
 }
 
-void EconomyScene::DrawLogSystem()
+void EconomyScene::DrawLogSystem(bool checkMismatch)
 {
+	static float test = 0;
+	static float updt = 0;
+	AddSpacing(3);
+	AddSeparator();
 
+	std::vector<Log*>::reverse_iterator it;
+	for (it = logs.rbegin(); it != logs.rend(); ++it)
+	{
+		Log* log = *it;
+		if (!checkMismatch || log->GetId() != logs.back()->GetId() || log->totalInstance == totalContainer->GetMoney())
+		{
+			log->Draw(comboCurrency[currency]);
+			continue;
+		}
+		
+		float oldInstance = log->totalInstance;
+		if (log->GetType() == LogType::INFORMATIVE_LOG)
+		{
+			logs.erase(logs.begin() + logs.size() - 1);
+			RELEASE(log);
+			log = logs.back();
+			oldInstance = log->totalInstance;
+		}
+
+		CreateInformative(oldInstance, "Unlogged movement");
+		logs.back()->Draw(comboCurrency[currency]);
+
+		break;
+
+	}
+
+	AddSeparator();
 }
 
 bool EconomyScene::DrawToolbarWindow(bool* open)
@@ -1246,6 +1357,10 @@ void EconomyScene::CreateContainer(ContainerType container, const char* name, bo
 	}
 
 	containers.back()->SetCurrency(comboCurrency[currency]);
+}
+
+void EconomyScene::CheckLogMismatch()
+{
 }
 
 void EconomyScene::SetMethod()

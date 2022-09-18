@@ -4,11 +4,12 @@
 #include <vector>
 #include "imgui/imgui.h"
 #include "Input.h"
-#include "ContainerHeader.h"
 #include "FileManager.h"
-#include "MethodsEnum.h"
 #include "Chrono.h"
-#include "Movement.h"
+
+#include "ContainerHeader.h"
+#include "LogHeader.h"
+#include "MethodsEnum.h"
 
 class EconomyScene
 {
@@ -38,7 +39,7 @@ private: // Functions
 	bool DrawPreferencesWindow(bool* open);
 	bool DrawMainWindow(bool* open);
 		void DrawGestorSystem();
-		void DrawLogSystem();
+		void DrawLogSystem(bool checkMismatch);
 
 	bool DrawToolbarWindow(bool* open);
 
@@ -46,6 +47,13 @@ private: // Functions
 	void UpdateCurrency();
 
 	void CreateContainer(ContainerType container, const char* name = "New Container", bool hidden = false, bool open = false);
+
+	void CreateInformative(float oldInstance, const char* information)
+	{
+		logs.emplace_back(new InformativeLog(oldInstance, totalContainer->GetMoney(), information));
+	}
+
+	void CheckLogMismatch();
 
 	// Input from 0 (smallest spacing) to whatever you need
 	void AddSpacing(unsigned int spaces = 1)
@@ -89,7 +97,12 @@ private: // Functions
 	{
 		for (Container* r : containers) RELEASE(r);
 		containers.clear();
-		containers.shrink_to_fit();
+	}
+
+	void DeleteAllLogs()
+	{
+		for (Log* l : logs) RELEASE(l);
+		logs.clear();
 	}
 
 	void MoveContainer(suint index, suint position)
@@ -124,8 +137,6 @@ private: // Functions
 
 	void SetMethod();
 
-	void CreateMovement(float money, const char* name);
-
 private: // Variables
 
 	// General
@@ -141,7 +152,7 @@ private: // Variables
 	std::vector<Container*> containers;
 
 	//  Logs
-	std::vector<Movement*> movements;
+	std::vector<Log*> logs;
 
 	// Shortcuts
 	bool ctrl = false, shft = false, d = false, 
@@ -155,6 +166,7 @@ private: // Variables
 	bool showArrearUnasigned = false;
 	bool allowArrearsFill = false;
 	bool createContainerUnified = true;
+	bool dateFormatType = true;
 
 	int currency = 0;
 	const char* comboCurrency[5] = { "EUR", "USD", "COP", "ARS", "PEN"};

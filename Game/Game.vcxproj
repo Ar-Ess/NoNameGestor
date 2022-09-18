@@ -102,10 +102,12 @@
     <ClCompile Include="Source\External\imgui\imgui_stdlib.cpp" />
     <ClCompile Include="Source\External\imgui\imgui_tables.cpp" />
     <ClCompile Include="Source\External\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="Source\InformativeLog.cpp" />
+    <ClCompile Include="Source\Log.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\App.cpp" />
     <ClCompile Include="Source\Input.cpp" />
-    <ClCompile Include="Source\Movement.cpp" />
+    <ClCompile Include="Source\MovementLog.cpp" />
     <ClCompile Include="Source\PerfTimer.cpp" />
     <ClCompile Include="Source\Render.cpp" />
     <ClCompile Include="Source\Scene.cpp" />
@@ -129,9 +131,12 @@
     <ClInclude Include="Source\FileManager.h" />
     <ClInclude Include="Source\FilterContainer.h" />
     <ClInclude Include="Source\FutureContainer.h" />
+    <ClInclude Include="Source\InformativeLog.h" />
     <ClInclude Include="Source\Label.h" />
     <ClInclude Include="Source\LimitContainer.h" />
-    <ClInclude Include="Source\Movement.h" />
+    <ClInclude Include="Source\Log.h" />
+    <ClInclude Include="Source\LogHeader.h" />
+    <ClInclude Include="Source\MovementLog.h" />
     <ClInclude Include="Source\Multibool.h" />
     <ClInclude Include="Source\ContainerHeader.h" />
     <ClInclude Include="Source\MethodsEnum.h" />
@@ -148,8 +153,8 @@
     <ClInclude Include="Source\TotalContainer.h" />
     <ClInclude Include="Source\Window.h" />
     <ClInclude Include="Source\Defs.h" />
-    <ClInclude Include="Source\Log.h" />
-    <ClCompile Include="Source\Log.cpp" />
+    <ClInclude Include="Source\LogFunction.h" />
+    <ClCompile Include="Source\LogFunction.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />

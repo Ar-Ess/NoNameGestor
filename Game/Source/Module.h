@@ -1,7 +1,7 @@
 #ifndef __MODULE_H__
 #define __MODULE_H__
 
-#include "Log.h"
+#include "LogFunction.h"
 #include "Defs.h"
 
 class Module

@@ -154,15 +154,12 @@ private:
 					{
 						variableExists = true;
 						line.clear();
-						line.shrink_to_fit();
 						break;
 					}
 					line.clear();
-					line.shrink_to_fit();
 
 					std::getline(file, line, '\n');
 					line.clear();
-					line.shrink_to_fit();
 				}
 
 				// The variable inputted does not exist in the document
@@ -199,15 +196,12 @@ private:
 					{
 						variableExists = true;
 						line.clear();
-						line.shrink_to_fit();
 						break;
 					}
 					line.clear();
-					line.shrink_to_fit();
 
 					std::getline(file, line, '\n');
 					line.clear();
-					line.shrink_to_fit();
 				}
 
 				// The variable inputted does not exist in the document
@@ -244,15 +238,12 @@ private:
 					{
 						variableExists = true;
 						line.clear();
-						line.shrink_to_fit();
 						break;
 					}
 					line.clear();
-					line.shrink_to_fit();
 
 					std::getline(file, line, '\n');
 					line.clear();
-					line.shrink_to_fit();
 				}
 
 				// The variable inputted does not exist in the document
@@ -289,7 +280,6 @@ private:
 					{
 						variableExists = true;
 						line.clear();
-						line.shrink_to_fit();
 						break;
 					}
 					line.clear();
@@ -297,7 +287,6 @@ private:
 
 					std::getline(file, line, '\n');
 					line.clear();
-					line.shrink_to_fit();
 				}
 
 				// The variable inputted does not exist in the document
@@ -331,15 +320,12 @@ private:
 					{
 						variableExists = true;
 						line.clear();
-						line.shrink_to_fit();
 						break;
 					}
 					line.clear();
-					line.shrink_to_fit();
 
 					std::getline(file, line, '\n');
 					line.clear();
-					line.shrink_to_fit();
 				}
 
 				// The variable inputted in the function Read("variable") does not exist in the document
@@ -388,6 +374,42 @@ private:
 			assert(access != Access::OPEN);
 
 			return Returns(name.c_str(), variable, access, this);
+		}
+
+		int Search(const char* variable)
+		{
+			assert(access == Access::VIEW, "You can only search in view mode");
+
+			std::fstream file;
+
+			file.open(name, std::ios::in);
+
+			assert(file.is_open()); // File is not open
+
+			if (jumpLines > 0) InternalJumpLines(&file);
+
+			int numOfLines = 0;
+			bool variableExists = false;
+			while (!file.eof())
+			{
+				std::string line;
+				std::getline(file, line, ' ');
+				if (InternalSameString(variable, line))
+				{
+					variableExists = true;
+					line.clear();
+					break;
+				}
+				++numOfLines;
+				line.clear();
+
+				std::getline(file, line, '\n');
+				line.clear();
+			}
+
+			if (!variableExists) return 0;
+
+			return numOfLines + jumpLines;
 		}
 
 	private:

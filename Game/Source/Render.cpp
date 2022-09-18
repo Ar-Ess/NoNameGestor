@@ -3,7 +3,7 @@
 #include "Render.h"
 #include "Input.h"
 #include "Defs.h"
-#include "Log.h"
+#include "LogFunction.h"
 
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 720

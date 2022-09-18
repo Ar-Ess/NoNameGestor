@@ -1,6 +1,6 @@
 #include "Scene.h"
 #include "Defs.h"
-#include "Log.h"
+#include "LogFunction.h"
 #include "imgui/imgui.h"
 
 Scene::Scene(Render* render, Input* input, Window* window)
