@@ -52,7 +52,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON1               ICON                    "C:\\Users\\marti\\Downloads\\NNGLogo.ico"
+//IDI_ICON1               ICON                    "C:\\marti\\Downloads\\NNGLogo.ico" //-Todo: Change path
 
 #endif    // Catalan (Catalan) resources
 /////////////////////////////////////////////////////////////////////////////

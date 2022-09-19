@@ -10,7 +10,7 @@ EconomyScene::EconomyScene(Input* input)
 	this->input = input;
 	this->file = new FileManager(EXTENSION);
 
-	totalContainer = new TotalContainer("Total Money", &logs, &dateFormatType);
+	totalContainer = new TotalContainer("Total Money", &logs, &dateFormatType, &maxLogs);
 	unasignedContainer = new UnasignedContainer("Unasigned Money", &showFutureUnasigned, &allowFutureCovering, &showArrearUnasigned, &allowArrearsFill);
 
 	openFileName = "New_File";
@@ -197,6 +197,7 @@ void EconomyScene::InternalSave(const char* path)
 		Write("cnfTFS").Number(textFieldSize).
 		Write("cnfDFT").Bool(dateFormatType).
 		Write("currency").Number(currency).
+		Write("maxLogs").Number(maxLogs).
 		// Generic File
 		Write("containers").Number(total).
 		Write("size").Number((int)containers.size());
@@ -425,11 +426,12 @@ void EconomyScene::Load()
 		Read("cnfTFS").AsFloat(textFieldSize).
 		Read("cnfDFT").AsBool(dateFormatType).
 		Read("currency").AsInt(currency).
+		Read("maxLogs").AsInt(maxLogs).
 		// General Project
 		Read("containers").AsFloat(total).
 		Read("size").AsInt(size);
 
-	const int yAspects = 10; // Update if more preferences added
+	const int yAspects = 11; // Update if more preferences added
 
 	int added = 0;
 
@@ -1130,6 +1132,15 @@ bool EconomyScene::DrawPreferencesWindow(bool* open)
 					dateFormatType = false;
 					otherDate = true;
 				}
+
+				ImGui::Spacing();
+
+				ImGui::Text("Maximum Ammount of Logs:");
+				ImGui::PushItemWidth(180);
+				ImGui::SliderInt("##MALSlider", &maxLogs, 5, 40, "%d Logs", ImGuiSliderFlags_AlwaysClamp);
+				ImGui::PopItemWidth();
+				ImGui::Text("5                       40");
+
 				ImGui::EndTabItem();
 			}
 
@@ -1280,6 +1291,8 @@ void EconomyScene::DrawGestorSystem()
 
 void EconomyScene::DrawLogSystem(bool checkMismatch)
 {
+	if (checkMismatch) CheckLogMismatch();
+
 	static float test = 0;
 	static float updt = 0;
 	AddSpacing(3);

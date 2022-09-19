@@ -9,10 +9,11 @@ class TotalContainer : public Container
 {
 public: // Functions
 
-	TotalContainer(const char* name, std::vector<Log*>* logs, bool* dateFormat) : Container(name, false, true, false, nullptr, ContainerType::TOTAL_MONEY)
+	TotalContainer(const char* name, std::vector<Log*>* logs, bool* dateFormat, int* maxLogs) : Container(name, false, true, false, nullptr, ContainerType::TOTAL_MONEY)
 	{
 		this->logs = logs;
 		this->dateFormat = dateFormat;
+		this->maxLogs = maxLogs;
 	}
 
 	void Start(const char* currency) override
@@ -161,6 +162,12 @@ public: // Functions
 	{
 		logs->emplace_back(new MovementLog(money, this->money, name, dateFormat));
 		if (datePicked) logs->back()->SetDate(date[0], date[1], date[2]);
+		if (logs->size() > *maxLogs)
+		{
+			Log* erase = logs->front();
+			logs->erase(logs->begin());
+			RELEASE(erase);
+		}
 	}
 
 private: // Functions
@@ -175,5 +182,6 @@ private: // Variables
 	int date[3] = { 1, 1, 2010 };
 	bool datePicked = false;
 	bool* dateFormat = nullptr;
+	int* maxLogs = nullptr;
 };
 

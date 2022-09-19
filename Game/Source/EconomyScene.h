@@ -51,6 +51,12 @@ private: // Functions
 	void CreateInformative(float oldInstance, const char* information)
 	{
 		logs.emplace_back(new InformativeLog(oldInstance, totalContainer->GetMoney(), information));
+		if (logs.size() > maxLogs)
+		{
+			Log* erase = logs.front();
+			logs.erase(logs.begin());
+			RELEASE(erase);
+		}
 	}
 
 	void CheckLogMismatch();
@@ -170,6 +176,8 @@ private: // Variables
 
 	int currency = 0;
 	const char* comboCurrency[5] = { "EUR", "USD", "COP", "ARS", "PEN"};
+
+	int maxLogs = 30;
 
 	// Save & Load
 	bool saving = false, loading = false, savingAs = false;
