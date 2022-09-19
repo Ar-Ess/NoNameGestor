@@ -1,5 +1,6 @@
 #include "EconomyScene.h"
 #include <windows.h>
+#include <iostream>
 
 #define VERSION "v1.1"
 #define EXTENSION ".nng"
@@ -875,6 +876,20 @@ void EconomyScene::Loadv1_0()
 
 }
 
+void EconomyScene::ExportGestor()
+{
+	std::fstream file;
+	std::string exportPath = openFilePath + openFileName;
+
+	file.open(exportPath, std::ios::app | std::ios::ate);
+
+	assert(file.is_open()); // File is not open
+
+	//file << variable << " " << number << "," << std::endl;
+
+	file.close();
+}
+
 bool EconomyScene::DrawMenuBar()
 {
 	if (ImGui::BeginMainMenuBar())
@@ -901,6 +916,16 @@ bool EconomyScene::DrawMenuBar()
 			{
 				if (ImGui::MenuItem("Load v1.0"))
 					Loadv1_0();
+
+				ImGui::EndMenu();
+			}
+
+			ImGui::Separator();
+
+			if (ImGui::BeginMenu("Export"))
+			{
+				if (ImGui::MenuItem("Gestor"))
+					ExportGestor();
 
 				ImGui::EndMenu();
 			}

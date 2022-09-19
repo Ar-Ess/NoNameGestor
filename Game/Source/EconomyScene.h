@@ -32,6 +32,7 @@ private: // Functions
 	void InternalSave(const char* path);
 	void Load();
 	void Loadv1_0();
+	void ExportGestor();
 
 	bool DrawMenuBar();
 	bool DrawDocking();
