@@ -22,6 +22,16 @@ public:
 
 	}
 
+	virtual float GetOldInstance() const
+	{
+		return 0.0f;
+	}
+
+	virtual float GetNewInstance() const
+	{
+		return 0.0f;
+	}
+
 	LogType GetType() const
 	{
 		return type;

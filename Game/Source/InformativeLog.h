@@ -16,6 +16,10 @@ public:
 
 	void Draw(const char* currency) override;
 
+	virtual float GetOldInstance() const override;
+
+	virtual float GetNewInstance() const override;
+
 public:
 
 	float newInstance = 0;

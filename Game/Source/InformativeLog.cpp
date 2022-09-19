@@ -17,3 +17,13 @@ void InformativeLog::Draw(const char* currency)
 	ImGui::Spacing();
 	ImGui::Separator();
 }
+
+float InformativeLog::GetOldInstance() const
+{
+	return totalInstance;
+}
+
+float InformativeLog::GetNewInstance() const
+{
+	return newInstance;
+}

@@ -28,3 +28,13 @@ void MovementLog::Draw(const char* currency)
 	ImGui::Spacing();
 	ImGui::Separator();
 }
+
+float MovementLog::GetOldInstance() const
+{
+	return totalInstance - money;
+}
+
+float MovementLog::GetNewInstance() const
+{
+	return totalInstance;
+}

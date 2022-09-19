@@ -51,6 +51,11 @@ private: // Functions
 	void CreateInformative(float oldInstance, const char* information)
 	{
 		logs.emplace_back(new InformativeLog(oldInstance, totalContainer->GetMoney(), information));
+		CheckLogLeaking();
+	}
+
+	void CheckLogLeaking()
+	{
 		if (logs.size() > maxLogs)
 		{
 			Log* erase = logs.front();

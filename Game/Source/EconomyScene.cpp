@@ -1301,26 +1301,27 @@ void EconomyScene::DrawLogSystem(bool checkMismatch)
 	std::vector<Log*>::reverse_iterator it;
 	for (it = logs.rbegin(); it != logs.rend(); ++it)
 	{
-		Log* log = *it;
-		if (!checkMismatch || log->GetId() != logs.back()->GetId() || log->totalInstance == totalContainer->GetMoney())
-		{
-			log->Draw(comboCurrency[currency]);
-			continue;
-		}
-		
-		float oldInstance = log->totalInstance;
-		if (log->GetType() == LogType::INFORMATIVE_LOG)
-		{
-			logs.erase(logs.begin() + logs.size() - 1);
-			RELEASE(log);
-			log = logs.back();
-			oldInstance = log->totalInstance;
-		}
+		(*it)->Draw(comboCurrency[currency]);
+		//Log* log = *it;
+		//if (!checkMismatch || log->GetId() != logs.back()->GetId() || log->totalInstance == totalContainer->GetMoney())
+		//{
+		//	log->Draw(comboCurrency[currency]);
+		//	continue;
+		//}
+		//
+		//float oldInstance = log->totalInstance;
+		//if (log->GetType() == LogType::INFORMATIVE_LOG)
+		//{
+		//	logs.erase(logs.begin() + logs.size() - 1);
+		//	RELEASE(log);
+		//	log = logs.back();
+		//	oldInstance = log->totalInstance;
+		//}
 
-		CreateInformative(oldInstance, "Unlogged movement");
-		logs.back()->Draw(comboCurrency[currency]);
+		//CreateInformative(oldInstance, "Unlogged movement");
+		//logs.back()->Draw(comboCurrency[currency]);
 
-		break;
+		//break;
 
 	}
 
@@ -1414,6 +1415,32 @@ void EconomyScene::CreateContainer(ContainerType container, const char* name, bo
 
 void EconomyScene::CheckLogMismatch()
 {
+	Log* prev = nullptr;
+	bool first = true;
+	size_t size = logs.size();
+	for (unsigned int i = 0; i < size; ++i)
+	{
+		if (first)
+		{
+			prev = logs[i];
+			first = false;
+			continue;
+		}
+		Log* curr = logs[i];
+
+		if (curr->GetOldInstance() != prev->GetNewInstance())
+		{
+			logs.emplace(logs.begin() + i, new InformativeLog(prev->GetNewInstance(), curr->GetOldInstance(), "Unlogged movement"));
+			CheckLogLeaking();
+		}
+
+		prev = logs[i];
+	}
+
+	if (prev->GetOldInstance() != totalContainer->GetMoney())
+	{
+		CreateInformative(prev->GetOldInstance(), "Unlogged movement");
+	}
 }
 
 void EconomyScene::SetMethod()
