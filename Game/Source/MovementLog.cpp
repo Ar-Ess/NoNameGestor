@@ -23,7 +23,8 @@ void MovementLog::Draw(const char* currency)
 		ImGui::SameLine(200);
 		ImGui::Text("%d / %d / %d", date[index[0]], date[index[1]], date[2]);
 	}
-	ImGui::TextColored(TO_COLOR(color), "%.2f %s", money, currency);
+	if (money > 0) ImGui::TextColored(TO_COLOR(color), "+%.2f %s", money, currency);
+	else ImGui::TextColored(TO_COLOR(color), "+%.2f %s", money, currency);
 	ImGui::SameLine(200); ImGui::Text("%.2f %s", totalInstance, currency);
 	ImGui::Spacing();
 	ImGui::Separator();

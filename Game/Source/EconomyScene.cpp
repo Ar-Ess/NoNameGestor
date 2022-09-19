@@ -1299,31 +1299,7 @@ void EconomyScene::DrawLogSystem(bool checkMismatch)
 	AddSeparator();
 
 	std::vector<Log*>::reverse_iterator it;
-	for (it = logs.rbegin(); it != logs.rend(); ++it)
-	{
-		(*it)->Draw(comboCurrency[currency]);
-		//Log* log = *it;
-		//if (!checkMismatch || log->GetId() != logs.back()->GetId() || log->totalInstance == totalContainer->GetMoney())
-		//{
-		//	log->Draw(comboCurrency[currency]);
-		//	continue;
-		//}
-		//
-		//float oldInstance = log->totalInstance;
-		//if (log->GetType() == LogType::INFORMATIVE_LOG)
-		//{
-		//	logs.erase(logs.begin() + logs.size() - 1);
-		//	RELEASE(log);
-		//	log = logs.back();
-		//	oldInstance = log->totalInstance;
-		//}
-
-		//CreateInformative(oldInstance, "Unlogged movement");
-		//logs.back()->Draw(comboCurrency[currency]);
-
-		//break;
-
-	}
+	for (it = logs.rbegin(); it != logs.rend(); ++it) (*it)->Draw(comboCurrency[currency]);
 
 	AddSeparator();
 }
@@ -1437,9 +1413,9 @@ void EconomyScene::CheckLogMismatch()
 		prev = logs[i];
 	}
 
-	if (prev->GetOldInstance() != totalContainer->GetMoney())
+	if (!logs.empty() && logs.back()->GetNewInstance() != totalContainer->GetMoney())
 	{
-		CreateInformative(prev->GetOldInstance(), "Unlogged movement");
+		CreateInformative(logs.back()->GetNewInstance(), "Unlogged movement");
 	}
 }
 
