@@ -876,7 +876,7 @@ void EconomyScene::Loadv1_0()
 
 }
 
-void EconomyScene::ExportGestor()
+void EconomyScene::ExportGestor(std::vector<Container*>* exporting)
 {
 	std::fstream file;
 	std::string exportPath = openFilePath + openFileName;
@@ -924,8 +924,29 @@ bool EconomyScene::DrawMenuBar()
 
 			if (ImGui::BeginMenu("Export"))
 			{
-				if (ImGui::MenuItem("Gestor"))
-					ExportGestor();
+				if (ImGui::BeginMenu("Gestor"))
+				{
+					for (Container* c : containers)
+					{
+						ImGui::PushID(c->GetId());
+
+						ImGui::Checkbox(c->GetName(), &c->exporting);
+
+						ImGui::PopID();
+					}
+
+					if (ImGui::MenuItem("Export"))
+					{
+						std::vector<Container*> toExport;
+						for (Container* c : containers)
+						{
+							if (!c->exporting) continue;
+							toExport.emplace_back(c);
+						}
+						ExportGestor(&toExport);
+					}
+					ImGui::EndMenu();
+				}
 
 				ImGui::EndMenu();
 			}

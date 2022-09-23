@@ -191,6 +191,7 @@ public: // Variables
 	bool unified = true;
 	bool open = false;
 	bool loadOpen = false;
+	bool exporting = false;
 
 protected: // Variables
 

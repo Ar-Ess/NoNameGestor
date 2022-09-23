@@ -32,7 +32,7 @@ private: // Functions
 	void InternalSave(const char* path);
 	void Load();
 	void Loadv1_0();
-	void ExportGestor();
+	void ExportGestor(std::vector<Container*>* exporting);
 
 	bool DrawMenuBar();
 	bool DrawDocking();
