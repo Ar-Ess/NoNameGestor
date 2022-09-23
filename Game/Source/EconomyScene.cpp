@@ -5,6 +5,7 @@
 #define VERSION "v1.1"
 #define EXTENSION ".nng"
 #include "External/ImGuiFileDialog/ImGuiFileDialog.h"
+#include "imgui/imgui_internal.h"
 
 EconomyScene::EconomyScene(Input* input)
 {
@@ -15,6 +16,7 @@ EconomyScene::EconomyScene(Input* input)
 	unasignedContainer = new UnasignedContainer("Unasigned Money", &showFutureUnasigned, &allowFutureCovering, &showArrearUnasigned, &allowArrearsFill);
 
 	openFileName = "New_File";
+	openFileName += EXTENSION;
 	openFilePath.clear();
 
 }
@@ -879,13 +881,34 @@ void EconomyScene::Loadv1_0()
 void EconomyScene::ExportGestor(std::vector<Container*>* exporting)
 {
 	std::fstream file;
-	std::string exportPath = openFilePath + openFileName;
+	std::string filePath = openFilePath;
+	if (filePath.empty()) filePath = "C:\\Users\\marti\\OneDrive\\Escriptori\\";
+	filePath += openFileName;
+	filePath.erase(filePath.end() - 3, filePath.end());
+	filePath += "txt";
 
-	file.open(exportPath, std::ios::app | std::ios::ate);
+	file.open(filePath, std::ios::out);
 
 	assert(file.is_open()); // File is not open
 
-	//file << variable << " " << number << "," << std::endl;
+	std::vector<Container*>::const_iterator it = exporting->begin();
+	for (it; it != exporting->end(); ++it)
+	{
+		file << (*it)->GetName() << ":";
+		if ((*it)->unified)
+		{
+			file << " " << (*it)->GetMoney() << " " << comboCurrency[currency] << std::endl << std::endl;
+		}
+		else
+		{
+			file << std::endl;
+			unsigned int size = (*it)->GetSize();
+			for (unsigned int i = 0; i < size; ++i)
+			{
+				file << " - " << (*it)->GetLabelName(i) << ": " << (*it)->GetLabelMoney(i) << " " << comboCurrency[currency] << std::endl << std::endl;
+			}
+		}
+	}
 
 	file.close();
 }
@@ -926,16 +949,34 @@ bool EconomyScene::DrawMenuBar()
 			{
 				if (ImGui::BeginMenu("Gestor"))
 				{
-					for (Container* c : containers)
+					bool empty = containers.empty();
+					bool selected = false;
+					if (!empty)
 					{
-						ImGui::PushID(c->GetId());
-
-						ImGui::Checkbox(c->GetName(), &c->exporting);
-
-						ImGui::PopID();
+						ImGui::Text("Select the containers:");
+						AddSpacing(1);
+						for (Container* c : containers)
+						{
+							ImGui::Text("  - ");
+							ImGui::SameLine();
+							ImGui::PushID(c->GetId());
+							ImGui::PushItemFlag(ImGuiItemFlags_SelectableDontClosePopup, true);
+							ImGui::MenuItem(c->GetName(), "", &c->exporting);
+							ImGui::PopItemFlag();
+							ImGui::PopID();
+							if (!selected && c->exporting) selected = true;
+						}
 					}
+					else
+					{
+						ImGui::TextDisabled("No containers yet:");
+						AddSpacing(3);
+					}
+					AddSpacing(1);
+					AddSeparator();
+					if (!selected || empty) ImGui::BeginDisabled();
 
-					if (ImGui::MenuItem("Export"))
+					if (ImGui::Selectable("  Export", false, ImGuiSelectableFlags_None, {70, 14}))
 					{
 						std::vector<Container*> toExport;
 						for (Container* c : containers)
@@ -945,6 +986,14 @@ bool EconomyScene::DrawMenuBar()
 						}
 						ExportGestor(&toExport);
 					}
+					if (!selected) ImGui::EndDisabled();
+					ImGui::SameLine();
+					ImGui::Text("|");
+					ImGui::SameLine();
+					if (ImGui::Selectable("Export All", false, ImGuiSelectableFlags_None, { 70, 14 }))
+						ExportGestor(&containers);
+					if (empty) ImGui::EndDisabled();
+
 					ImGui::EndMenu();
 				}
 
