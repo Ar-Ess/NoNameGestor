@@ -196,6 +196,8 @@ void EconomyScene::InternalSave(const char* path)
 		Write("cnfSRT").Bool(showContainerType).
 		Write("cnfSFU").Bool(showFutureUnasigned).
 		Write("cnfAFC").Bool(allowFutureCovering).
+		Write("cnfSAU").Bool(showArrearUnasigned).
+		Write("cnfAAF").Bool(allowArrearsFill).
 		Write("cnfCCU").Bool(createContainerUnified).
 		Write("cnfTFS").Number(textFieldSize).
 		Write("cnfDFT").Bool(dateFormatType).
@@ -243,7 +245,7 @@ void EconomyScene::InternalSave(const char* path)
 			for (int i = 0; i < size; ++i)
 			{
 				file->EditFile(path)
-					.Write("name ").String(lPR->GetLabelName (i))
+					.Write("name" ).String(lPR->GetLabelName (i))
 					.Write("limit").Number(lPR->GetLabelLimit(i))
 					.Write("money").Number(lPR->GetLabelMoney(i));
 			}
@@ -425,6 +427,8 @@ void EconomyScene::Load()
 		Read("cnfSRT").AsBool(showContainerType).
 		Read("cnfSFU").AsBool(showFutureUnasigned).
 		Read("cnfAFC").AsBool(allowFutureCovering).
+		Read("cnfSAU").AsBool(showArrearUnasigned).
+		Read("cnfAAF").AsBool(allowArrearsFill).
 		Read("cnfCCU").AsBool(createContainerUnified).
 		Read("cnfTFS").AsFloat(textFieldSize).
 		Read("cnfDFT").AsBool(dateFormatType).
@@ -434,7 +438,7 @@ void EconomyScene::Load()
 		Read("containers").AsFloat(total).
 		Read("size").AsInt(size);
 
-	const int yAspects = 11; // Update if more preferences added
+	const int yAspects = 13; // Update if more preferences added
 
 	int added = 0;
 
@@ -562,7 +566,7 @@ void EconomyScene::Load()
 			aC->loadOpen = true;
 
 			int fSize = 0; //                           \/ Change depending on X aspects amount
-			int futurePositionToRead = positionToRead + 5;
+			int futurePositionToRead = positionToRead + 6;
 
 			file->ViewFile(path.c_str(), futurePositionToRead).
 				Read("size").AsInt(fSize);
@@ -986,7 +990,7 @@ bool EconomyScene::DrawMenuBar()
 						}
 						ExportGestor(&toExport);
 					}
-					if (!selected) ImGui::EndDisabled();
+					if (!selected && !empty) ImGui::EndDisabled();
 					ImGui::SameLine();
 					ImGui::Text("|");
 					ImGui::SameLine();
