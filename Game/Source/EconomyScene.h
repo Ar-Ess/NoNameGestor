@@ -47,7 +47,7 @@ private: // Functions
 	void UpdateShortcuts();
 	void UpdateCurrency();
 
-	void CreateContainer(ContainerType container, const char* name = "New Container", bool hidden = false, bool open = false);
+	void CreateContainer(ContainerType container, const char* name = "New Container", bool hidden = false, bool open = true);
 
 	void CreateInformative(float oldInstance, const char* information)
 	{
@@ -103,6 +103,7 @@ private: // Functions
 		Container* r = containers[index];
 		containers.erase(containers.begin() + index);
 		RELEASE(r);
+		SwitchLoadOpen();
 	}
 
 	void DeleteAllContainer()
@@ -145,6 +146,11 @@ private: // Functions
 		assert(i != -1); // There is not a container like "r"
 
 		return i;
+	}
+
+	void SwitchLoadOpen()
+	{
+		for (Container* c : containers) c->loadOpen = true;
 	}
 
 	void SetMethod();

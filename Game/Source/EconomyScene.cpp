@@ -1410,43 +1410,33 @@ bool EconomyScene::DrawToolbarWindow(bool* open)
 
 	if (ImGui::Begin("Toolbar", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar))
 	{
-		// Filter button timer
-		/*ImGui::Button("FILTER T");
-		//if (ImGui::IsItemActive())
-		//{
-		//	if (chrono.ChronoStart(1.0f))
-		//	{
-		//		ImGui::OpenPopup("Filter Popup T");
-		//		chrono.ChronoStop();
-		//	}
-		//}
-		//if (ImGui::IsItemDeactivated())
-		//{
-		//	CreateContainer(ContainerType::FILTER_SINGULAR);
-		//	chrono.ChronoStop();
-		//}
-		//if (ImGui::BeginPopup("Filter Popup T"))
-		//{
-		//	if (ImGui::MenuItem("Singular"))
-		//		CreateContainer(ContainerType::FILTER_SINGULAR);
-
-		//	if (ImGui::MenuItem("Plural"))
-		//		CreateContainer(ContainerType::FILTER_PLURAL);
-		//	ImGui::EndPopup();
-		//}*/
+		bool action = false;
 
 		if (ImGui::Button("FILTER"))
+		{
 			CreateContainer(ContainerType::FILTER);
+			action = true;
+		}
 
 		if (ImGui::Button("LIMIT "))
+		{
 			CreateContainer(ContainerType::LIMIT);
+			action = true;
+		}
 
 		if (ImGui::Button("FUTURE"))
+		{
 			CreateContainer(ContainerType::FUTURE);
+			action = true;
+		}
 
 		if (ImGui::Button("ARREAR"))
+		{
 			CreateContainer(ContainerType::ARREAR);
-		
+			action = true;
+		}
+
+		if (action) SwitchLoadOpen();
 	}
 	ImGui::End();
 
@@ -1478,10 +1468,10 @@ void EconomyScene::CreateContainer(ContainerType container, const char* name, bo
 
 	switch (container)
 	{
-	case ContainerType::FILTER: containers.push_back((Container*)(new FilterContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
-	case ContainerType::LIMIT : containers.push_back((Container*)(new  LimitContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
-	case ContainerType::FUTURE: containers.push_back((Container*)(new FutureContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
-	case ContainerType::ARREAR: containers.push_back((Container*)(new ArrearContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
+	case ContainerType::FILTER: containers.emplace_back((Container*)(new FilterContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
+	case ContainerType::LIMIT : containers.emplace_back((Container*)(new  LimitContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
+	case ContainerType::FUTURE: containers.emplace_back((Container*)(new FutureContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
+	case ContainerType::ARREAR: containers.emplace_back((Container*)(new ArrearContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
 	default: break;
 	}
 
