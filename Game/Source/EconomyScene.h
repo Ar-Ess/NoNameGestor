@@ -33,6 +33,7 @@ private: // Functions
 	void Load();
 	void Loadv1_0();
 	void ExportGestor(std::vector<Container*>* exporting);
+	void ExportLogs(uint start, uint end);
 
 	bool DrawMenuBar();
 	bool DrawDocking();

@@ -886,10 +886,10 @@ void EconomyScene::ExportGestor(std::vector<Container*>* exporting)
 {
 	std::fstream file;
 	std::string filePath = openFilePath;
-	if (filePath.empty()) filePath = "C:\\Users\\marti\\OneDrive\\Escriptori\\";
+	if (filePath.empty()) filePath = "Exports\\";
 	filePath += openFileName;
-	filePath.erase(filePath.end() - 3, filePath.end());
-	filePath += "txt";
+	filePath.erase(filePath.end() - 4, filePath.end());
+	filePath += "_Gestor.txt";
 
 	file.open(filePath, std::ios::out);
 
@@ -912,6 +912,34 @@ void EconomyScene::ExportGestor(std::vector<Container*>* exporting)
 				file << " - " << (*it)->GetLabelName(i) << ": " << (*it)->GetLabelMoney(i) << " " << comboCurrency[currency] << std::endl << std::endl;
 			}
 		}
+	}
+
+	file.close();
+}
+
+void EconomyScene::ExportLogs(uint start, uint end)
+{
+	std::fstream file;
+	std::string filePath = openFilePath;
+	if (filePath.empty()) filePath = "Exports\\";
+	filePath += openFileName;
+	filePath.erase(filePath.end() - 4, filePath.end());
+	filePath += "_Logs.txt";
+
+	file.open(filePath, std::ios::out);
+
+	assert(file.is_open()); // File is not open
+
+	for (uint i = start; i != end + 1; ++i)
+	{
+		Log* log = logs[i];
+		file << log->GetName() << ":" << std::endl;
+		char a = '+', b = '-';
+		char* sign = nullptr;
+		log->totalInstance > 0 ? sign = &a : sign = &b;
+
+		file << log->GetDate(0) << " / " << log->GetDate(1) << " / " << log->GetDate(2) << std::endl;
+		file << log->GetOldInstance() << " -> " << log->GetNewInstance() << " | " << sign << log->totalInstance << std::endl << std::endl;
 	}
 
 	file.close();
@@ -996,6 +1024,61 @@ bool EconomyScene::DrawMenuBar()
 					ImGui::SameLine();
 					if (ImGui::Selectable("Export All", false, ImGuiSelectableFlags_None, { 70, 14 }))
 						ExportGestor(&containers);
+					if (empty) ImGui::EndDisabled();
+
+					ImGui::EndMenu();
+				}
+				
+				if (ImGui::BeginMenu("Logs"))
+				{
+					static int from = 0, to = 0;
+					size_t size = logs.size();
+					bool empty = logs.empty();
+					if (!empty)
+					{
+
+						ImGui::Text("Set a range:");
+						AddSpacing(1);
+
+						ImGui::PushItemWidth(20);
+						ImGui::BeginGroup();
+						ImGui::Text("From:");
+						ImGui::DragInt("##FromDrag", &from, 1, 0, size - 2);
+						ImGui::EndGroup();
+
+						ImGui::SameLine();
+
+						ImGui::BeginGroup();
+						ImGui::Text("To:");
+						ImGui::DragInt("##ToDrag", &to, 1, 1, size - 1);
+						ImGui::EndGroup();
+						ImGui::PopItemWidth();
+
+					}
+					else
+					{
+						ImGui::TextDisabled("No logs yet:");
+						AddSpacing(3);
+					}
+					
+					AddSpacing(1);
+					AddSeparator();
+					if (empty) ImGui::BeginDisabled();
+					if (ImGui::Selectable("  Export", false, ImGuiSelectableFlags_None, { 70, 14 }))
+					{
+						ExportLogs(from, to);
+						from = 0;
+						to = 0;
+					}
+					ImGui::SameLine();
+					ImGui::Text("|");
+					ImGui::SameLine();
+					if (ImGui::Selectable("Export All", false, ImGuiSelectableFlags_None, { 70, 14 }))
+					{
+						ExportLogs(0, size - 1);
+						from = 0;
+						to = 0;
+					}
 					if (empty) ImGui::EndDisabled();
 
 					ImGui::EndMenu();

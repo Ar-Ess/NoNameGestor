@@ -50,12 +50,7 @@ public: // Functions
 
 				ImGui::SameLine();
 
-				if (ImGui::Button(" O "))
-				{
-					*totalMoneyPtr -= GetLabelMoney(i);
-					ImGui::PopID();
-					break;
-				}
+				if (ImGui::Button(" O ")) *totalMoneyPtr -= GetLabelMoney(i);
 				ImGui::SameLine();
 
 				ImGui::PushItemWidth(textFieldSize);
