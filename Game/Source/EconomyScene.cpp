@@ -933,13 +933,17 @@ void EconomyScene::ExportLogs(uint start, uint end)
 	for (uint i = start; i != end + 1; ++i)
 	{
 		Log* log = logs[i];
-		file << log->GetName() << ":" << std::endl;
+		file << log->GetName() << ": ";
 		char a = '+', b = '-';
 		char* sign = nullptr;
 		log->totalInstance > 0 ? sign = &a : sign = &b;
 
-		file << log->GetDate(0) << " / " << log->GetDate(1) << " / " << log->GetDate(2) << std::endl;
-		file << log->GetOldInstance() << " -> " << log->GetNewInstance() << " | " << sign << log->totalInstance << std::endl << std::endl;
+		if (log->GetDate(0) != 0)
+			file << log->GetDate(0) << " / " << log->GetDate(1) << " / " << log->GetDate(2) << std::endl;
+		else
+			file << std::endl;
+
+		file << log->GetOldInstance() << " -> " << log->GetNewInstance() << " | " << *sign << log->totalInstance << std::endl << std::endl;
 	}
 
 	file.close();
@@ -1031,27 +1035,30 @@ bool EconomyScene::DrawMenuBar()
 				
 				if (ImGui::BeginMenu("Logs"))
 				{
-					static int from = 0, to = 0;
 					size_t size = logs.size();
-					bool empty = logs.empty();
+					static int from = 1, to = 1;
+					bool empty = (size == 0);
 					if (!empty)
 					{
-
 						ImGui::Text("Set a range:");
-						AddSpacing(1);
+						AddSpacing(0);
 
-						ImGui::PushItemWidth(20);
-						ImGui::BeginGroup();
-						ImGui::Text("From:");
-						ImGui::DragInt("##FromDrag", &from, 1, 0, size - 2);
-						ImGui::EndGroup();
-
+						ImGui::Dummy({ 6, 0 });
 						ImGui::SameLine();
-
-						ImGui::BeginGroup();
+						ImGui::Text("From:");
+						ImGui::SameLine();
+						ImGui::Dummy({4, 0});
+						ImGui::SameLine();
 						ImGui::Text("To:");
-						ImGui::DragInt("##ToDrag", &to, 1, 1, size - 1);
-						ImGui::EndGroup();
+
+						ImGui::PushItemWidth(40);
+						ImGui::Dummy({6, 0});
+						ImGui::SameLine();
+						ImGui::DragInt("##FromDrag", &from, size / 6, 1, size );
+						ImGui::SameLine();
+						ImGui::Dummy({ 4, 0 });
+						ImGui::SameLine();
+						ImGui::DragInt("##ToDrag", &to, size / 6, 1, size);
 						ImGui::PopItemWidth();
 
 					}
@@ -1066,9 +1073,9 @@ bool EconomyScene::DrawMenuBar()
 					if (empty) ImGui::BeginDisabled();
 					if (ImGui::Selectable("  Export", false, ImGuiSelectableFlags_None, { 70, 14 }))
 					{
-						ExportLogs(from, to);
-						from = 0;
-						to = 0;
+						ExportLogs(from - 1, to - 1);
+						from = 1;
+						to = size;
 					}
 					ImGui::SameLine();
 					ImGui::Text("|");
@@ -1076,8 +1083,8 @@ bool EconomyScene::DrawMenuBar()
 					if (ImGui::Selectable("Export All", false, ImGuiSelectableFlags_None, { 70, 14 }))
 					{
 						ExportLogs(0, size - 1);
-						from = 0;
-						to = 0;
+						from = 1;
+						to = size;
 					}
 					if (empty) ImGui::EndDisabled();
 
