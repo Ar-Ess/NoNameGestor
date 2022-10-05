@@ -1037,6 +1037,12 @@ bool EconomyScene::DrawMenuBar()
 			if (ImGui::MenuItem("Arrear"))
 				CreateContainer(ContainerType::ARREAR);
 
+			if (ImGui::MenuItem("Const"))
+				CreateContainer(ContainerType::CONSTANT);
+
+			if (ImGui::MenuItem("Saving"))
+				CreateContainer(ContainerType::SAVING);
+
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Methods"))
@@ -1326,7 +1332,7 @@ void EconomyScene::DrawGestorSystem()
 				ImGui::PopID();
 				break;
 			}
-			if (ImGui::MenuItem("Process"))
+			if (r->GetType() != ContainerType::CONSTANT && ImGui::MenuItem("Process"))
 			{
 				int dif = 1;
 				r->GetType() == ContainerType::FUTURE ? dif = 1 : dif = -1;
@@ -1436,6 +1442,18 @@ bool EconomyScene::DrawToolbarWindow(bool* open)
 			action = true;
 		}
 
+		if (ImGui::Button("CONST "))
+		{
+			CreateContainer(ContainerType::CONSTANT);
+			action = true;
+		}
+
+		if (ImGui::Button("SAVING"))
+		{
+			CreateContainer(ContainerType::SAVING);
+			action = true;
+		}
+
 		if (action) SwitchLoadOpen();
 	}
 	ImGui::End();
@@ -1468,10 +1486,12 @@ void EconomyScene::CreateContainer(ContainerType container, const char* name, bo
 
 	switch (container)
 	{
-	case ContainerType::FILTER: containers.emplace_back((Container*)(new FilterContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
-	case ContainerType::LIMIT : containers.emplace_back((Container*)(new  LimitContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
-	case ContainerType::FUTURE: containers.emplace_back((Container*)(new FutureContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
-	case ContainerType::ARREAR: containers.emplace_back((Container*)(new ArrearContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
+	case ContainerType::FILTER  : containers.emplace_back((Container*)(new FilterContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
+	case ContainerType::LIMIT   : containers.emplace_back((Container*)(new  LimitContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
+	case ContainerType::FUTURE  : containers.emplace_back((Container*)(new FutureContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
+	case ContainerType::ARREAR  : containers.emplace_back((Container*)(new ArrearContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
+	case ContainerType::CONSTANT: containers.emplace_back((Container*)(new  ConstContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
+	case ContainerType::SAVING  : containers.emplace_back((Container*)(new SavingContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
 	default: break;
 	}
 

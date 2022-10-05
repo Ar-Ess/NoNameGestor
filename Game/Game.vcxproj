@@ -116,6 +116,8 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="Source\ArrearContainer.h" />
     <ClInclude Include="Source\Chrono.h" />
+    <ClInclude Include="Source\ConstContainer.h" />
+    <ClInclude Include="Source\ContainerEnum.h" />
     <ClInclude Include="Source\EconomyScene.h" />
     <ClInclude Include="Source\External\ImGuiFileDialog\ImGuiFileDialog.h" />
     <ClInclude Include="Source\External\ImGuiFileDialog\ImGuiFileDialogConfig.h" />
@@ -140,6 +142,7 @@
     <ClInclude Include="Source\Multibool.h" />
     <ClInclude Include="Source\ContainerHeader.h" />
     <ClInclude Include="Source\MethodsEnum.h" />
+    <ClInclude Include="Source\SavingContainer.h" />
     <ClInclude Include="Source\UnasignedContainer.h" />
     <ClInclude Include="Source\PerfTimer.h" />
     <ClInclude Include="Source\Point.h" />

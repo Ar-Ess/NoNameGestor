@@ -189,6 +189,15 @@
     <ClInclude Include="Source\LogHeader.h">
       <Filter>Container\Log</Filter>
     </ClInclude>
+    <ClInclude Include="Source\SavingContainer.h">
+      <Filter>Container\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ConstContainer.h">
+      <Filter>Container\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ContainerEnum.h">
+      <Filter>Enums</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="External">

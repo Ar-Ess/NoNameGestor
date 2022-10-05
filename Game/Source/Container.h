@@ -6,19 +6,9 @@
 #include "imgui/imgui_stdlib.h"
 #include <string>
 #include <vector>
+#include "ContainerEnum.h"
 
 static float textFieldSize = 150.0f;
-
-enum class ContainerType
-{
-	NO_CONTAINER,
-	TOTAL_MONEY,
-	UNASIGNED_MONEY,
-	FILTER,
-	LIMIT,
-	FUTURE,
-	ARREAR,
-};
 
 class Container
 {
@@ -51,10 +41,12 @@ public: // Functions
 	{
 		switch (type)
 		{
-		case ContainerType::FILTER: return "FILTER";
-		case ContainerType::LIMIT : return "LIMIT ";
-		case ContainerType::FUTURE: return "FUTURE";
-		case ContainerType::ARREAR: return "ARREAR";
+		case ContainerType::FILTER:   return "FILTER";
+		case ContainerType::LIMIT :   return "LIMIT ";
+		case ContainerType::FUTURE:   return "FUTURE";
+		case ContainerType::ARREAR:   return "ARREAR";
+		case ContainerType::CONSTANT: return "CONST ";
+		case ContainerType::SAVING:   return "SAVING";
 		}
 		return "NO CONTAINER";
 	}
