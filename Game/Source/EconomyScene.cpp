@@ -343,42 +343,12 @@ void EconomyScene::Load()
 	}
 
 	// Version Error Popup
-	if (versionError)
-	{
-		ImGui::OpenPopup("Version Error");
-		ImGui::SetNextWindowPos(ImVec2((1280 / 2) - 180, (720 / 2) - 90));
-		ImGui::SetNextWindowSize(ImVec2(360, 180));
-		if (ImGui::BeginPopupModal("Version Error", nullptr, ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
-		{
-			ImGui::Text("File version different from program's version");
-			AddSpacing();
-			AddSeparator(2);
-			AddSpacing(1);
-			ImGui::Text("SOLUTION:");
-			ImGui::Text("Read the 'ReadMe.md' about how to load\nolder/newer files (Save & Load section).");
-			AddSpacing(2);
-			if (ImGui::Button("Go To 'ReadMe'"))
-			{
-				ShellExecute(NULL, NULL, "https://github.com/Ar-Ess/NoNameGestor/blob/main/README.md", NULL, NULL, SW_SHOWNORMAL);
-				ImGui::EndPopup();
-				loading = false;
-				versionError = false;
-				return;
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("Okey"))
-			{
-				ImGui::EndPopup();
-				loading = false;
-				versionError = false;
-				return;
-			}
-		}
-		ImGui::EndPopup();
-		//assert(false && "ERROR: The loaded file version is different from the program's one. SOLUTION: Read the 'ReadMe.md' about how to load older/newer files (Save & Load section). Find the info here: https://github.com/Ar-Ess/NoNameGestor");
-		
-		return;
-	}
+	bool vErr = versionError;
+	if (ErrorPopup(&versionError,
+		"File version different from program's version",
+		"SOLUTION:\nRead the 'ReadMe.md' about how to load\nolder/newer files (Save & Load section).")) loading = false;
+	if (vErr) return;
+	// Version Error Popup
 
 	loading = false;
 
@@ -612,43 +582,12 @@ void EconomyScene::Loadv1_0()
 	}
 
 	// Version Error Popup
-	// -TODO: Check if this error still has sense (Loadv1.0())
-	if (versionError)
-	{
-		ImGui::OpenPopup("Version Error");
-		ImGui::SetNextWindowPos(ImVec2((1280 / 2) - 180, (720 / 2) - 90));
-		ImGui::SetNextWindowSize(ImVec2(360, 180));
-		if (ImGui::BeginPopupModal("Version Error", nullptr, ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
-		{
-			ImGui::Text("File version different from program's version");
-			AddSpacing();
-			AddSeparator(2);
-			AddSpacing(1);
-			ImGui::Text("SOLUTION:");
-			ImGui::Text("Read the 'ReadMe.md' about how to load\nolder/newer files (Save & Load section).");
-			AddSpacing(2);
-			if (ImGui::Button("Go To 'ReadMe'"))
-			{
-				ShellExecute(NULL, NULL, "https://github.com/Ar-Ess/NoNameGestor/blob/main/README.md", NULL, NULL, SW_SHOWNORMAL);
-				ImGui::EndPopup();
-				loadingV1_0 = false;
-				versionError = false;
-				return;
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("Okey"))
-			{
-				ImGui::EndPopup();
-				loadingV1_0 = false;
-				versionError = false;
-				return;
-			}
-		}
-		ImGui::EndPopup();
-		//assert(false && "ERROR: The loaded file version is different from the program's one. SOLUTION: Read the 'ReadMe.md' about how to load older/newer files (Save & Load section). Find the info here: https://github.com/Ar-Ess/NoNameGestor");
-
-		return;
-	}
+	bool vErr = versionError;
+	if (ErrorPopup(&versionError,
+		"A v1.0 Loader can only load v1.0 files", 
+		"SOLUTION:\nGo to File > Load. If an error occurs shows again,\nfollow the instructions of that error.\nThis method only loads v1.0 files.")) loadingV1_0 = false;
+	if (vErr) return;
+	// Version Error Popup
 
 	loadingV1_0 = false;
 
@@ -794,6 +733,43 @@ void EconomyScene::Loadv1_0()
 	totalContainer->SetMoney(total);
 	UpdateCurrency();
 
+}
+
+bool EconomyScene::ErrorPopup(bool* open, const char* title, const char* description)
+{
+	if (*open)
+	{
+		ImGui::OpenPopup("Error");
+		ImGui::SetNextWindowPos(ImVec2((1280 / 2) - 180, (720 / 2) - 90));
+		ImGui::SetNextWindowSize(ImVec2(360, 180));
+		if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+		{
+			ImGui::Text(title);
+			AddSpacing();
+			AddSeparator(2);
+			AddSpacing(1);
+			ImGui::Text(description);
+			AddSpacing(2);
+			if (ImGui::Button("Documentation"))
+			{
+				ShellExecute(NULL, NULL, "https://github.com/Ar-Ess/NoNameGestor/blob/main/README.md", NULL, NULL, SW_SHOWNORMAL);
+				ImGui::EndPopup();
+				*open = false;
+				return true;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Okey"))
+			{
+				ImGui::EndPopup();
+				*open = false;
+				return true;
+			}
+		}
+		ImGui::EndPopup();
+		return false;
+	}
+
+	return false;
 }
 
 void EconomyScene::ExportGestor(std::vector<Container*>* exporting)

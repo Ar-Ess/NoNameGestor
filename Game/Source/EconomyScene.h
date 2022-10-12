@@ -32,6 +32,7 @@ private: // Functions
 	void InternalSave(const char* path);
 	void Load();
 	void Loadv1_0();
+	bool ErrorPopup(bool* open, const char* title, const char* description);
 	void ExportGestor(std::vector<Container*>* exporting);
 	void ExportLogs(uint start, uint end);
 
