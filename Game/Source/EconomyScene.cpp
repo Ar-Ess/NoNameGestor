@@ -299,47 +299,25 @@ void EconomyScene::InternalSave(const char* path)
 
 void EconomyScene::Load()
 {
+	// Load Logic
 	if (!loading)
 	{
 		loading = true;
 		return;
 	}
 
-	// open Dialog Simple
-	if (!versionError) ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose a path", ".nng", ".");
-	std::string path;
-	std::string name;
-	std::string version;
+	// Draw File Dialog
+	std::string path, name;
 	size_t format = 0;
-	//display
-	if (!versionError && ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
-	{
-		// action if OK
-		if (ImGuiFileDialog::Instance()->IsOk() == true && file->Exists(ImGuiFileDialog::Instance()->GetFilePathName().c_str(), false))
-		{
-			path = ImGuiFileDialog::Instance()->GetCurrentPath() + "\\";
-			name = ImGuiFileDialog::Instance()->GetCurrentFileName();
-			format = ImGuiFileDialog::Instance()->GetCurrentFilter().size();
-			ImGuiFileDialog::Instance()->Close();
-
-			// Check if the version file is the same as the program version
-			std::string checkPath = path;
-			checkPath += name;
-			checkPath.erase(checkPath.end() - format, checkPath.end());
-			file->ViewFile(checkPath.c_str()).
-				Read("version").AsString(version);
-			versionError = !SameString(VERSION, version);
-		}
-		else
-		{
-			ImGuiFileDialog::Instance()->Close();
-			loading = false;
-			return;
-		}
-	}
+	bool closed = false;
+	if (!DrawFileDialog(&versionError, VERSION, &path, &name, &format, &closed)) return;
 	else
 	{
-		if (!versionError) return;
+		if (closed)
+		{
+			loading = false;
+			return; // Return true
+		}
 	}
 
 	// Version Error Popup
@@ -348,8 +326,8 @@ void EconomyScene::Load()
 		"File version different from program's version",
 		"SOLUTION:\nRead the 'ReadMe.md' about how to load\nolder/newer files (Save & Load section).")) loading = false;
 	if (vErr) return;
-	// Version Error Popup
 
+	// Load
 	loading = false;
 
 	openFileName = name;
@@ -358,6 +336,11 @@ void EconomyScene::Load()
 	path += name;
 	path.erase(path.end() - format, path.end());
 
+	LoadInternal(path.c_str());
+}
+
+void EconomyScene::LoadInternal(const char* path)
+{
 	float total = 0;
 	int size = 0;
 
@@ -365,7 +348,7 @@ void EconomyScene::Load()
 	DeleteAllLogs();
 
 	// Y aspects
-	file->ViewFile(path.c_str(), 1).
+	file->ViewFile(path, 1).
 		// Preferences
 	  //Read("version")
 		Read("cnfSRT").AsBool(showContainerType).
@@ -388,14 +371,14 @@ void EconomyScene::Load()
 
 	for (unsigned int i = 0; i < size; ++i)
 	{
-		int positionToRead =                   (i * xAspects)  +  yAspects + added;
+		int positionToRead = (i * xAspects) + yAspects + added;
 		int type = -1;
 		float money = 0;
 		bool hidden = false, open = false, unified = true;
 		std::string name;
 
 		// X aspects
-		file->ViewFile(path.c_str(), positionToRead).
+		file->ViewFile(path, positionToRead).
 			Read("name").AsString(name).
 			Read("type").AsInt(type).
 			Read("money").AsFloat(money).
@@ -418,7 +401,7 @@ void EconomyScene::Load()
 			int lSize = 0;
 			int futurePositionToRead = positionToRead + xAspects;
 
-			file->ViewFile(path.c_str(), futurePositionToRead).
+			file->ViewFile(path, futurePositionToRead).
 				Read("size").AsInt(lSize);
 
 			added++;
@@ -427,7 +410,7 @@ void EconomyScene::Load()
 			{
 				std::string lName;
 				float lMoney, lLimit; //     Change depending on "vars on top" \/
-				file->ViewFile(path.c_str(), (futurePositionToRead + 1) + (i * 3)).
+				file->ViewFile(path, (futurePositionToRead + 1) + (i * 3)).
 					Read("name").AsString(lName). // "Vars on top"
 					Read("limit").AsFloat(lLimit).
 					Read("money").AsFloat(lMoney);
@@ -453,7 +436,7 @@ void EconomyScene::Load()
 			int fSize = 0;
 			int futurePositionToRead = positionToRead + xAspects;
 
-			file->ViewFile(path.c_str(), futurePositionToRead).
+			file->ViewFile(path, futurePositionToRead).
 				Read("size").AsInt(fSize);
 
 			added++;
@@ -462,7 +445,7 @@ void EconomyScene::Load()
 			{
 				std::string fName;
 				float fMoney;
-				file->ViewFile(path.c_str(), (futurePositionToRead + 1) + (i * 2)).
+				file->ViewFile(path, (futurePositionToRead + 1) + (i * 2)).
 					Read("name").AsString(fName). // Variables on top
 					Read("money").AsFloat(fMoney);
 
@@ -480,10 +463,10 @@ void EconomyScene::Load()
 	}
 
 	int movSize = 0;
-	int movPos = file->ViewFile(path.c_str(), yAspects).Search("logs");
+	int movPos = file->ViewFile(path, yAspects).Search("logs");
 	added = 0;
 
-	file->ViewFile(path.c_str(), movPos)
+	file->ViewFile(path, movPos)
 		.Read("logs").AsInt(movSize);
 
 	++added;
@@ -497,7 +480,7 @@ void EconomyScene::Load()
 		float totalMoneyInstance = 0;
 		int day = 0, month = 0, year = 0;
 
-		file->ViewFile(path.c_str(), movPos + added).
+		file->ViewFile(path, movPos + added).
 			Read("name").AsString(name).
 			Read("type").AsInt(movType);
 
@@ -507,7 +490,7 @@ void EconomyScene::Load()
 		{
 		case LogType::MOVEMENT_LOG:
 		{
-			file->ViewFile(path.c_str(), movPos + added).
+			file->ViewFile(path, movPos + added).
 				Read("money").AsFloat(money).
 				Read("t_money").AsFloat(totalMoneyInstance).
 				Read("date").AsDate(day, month, year);
@@ -520,7 +503,7 @@ void EconomyScene::Load()
 		}
 		case LogType::INFORMATIVE_LOG:
 		{
-			file->ViewFile(path.c_str(), movPos + added).
+			file->ViewFile(path, movPos + added).
 				Read("old_money").AsFloat(money).
 				Read("new_money").AsFloat(newMoney);
 
@@ -536,203 +519,40 @@ void EconomyScene::Load()
 	UpdateCurrency();
 }
 
-void EconomyScene::Loadv1_0()
+bool EconomyScene::DrawFileDialog(bool* vError, const char* v, std::string* path, std::string* name, size_t* format, bool* closed)
 {
-	if (!loadingV1_0)
+	if (!*vError)
 	{
-		loadingV1_0 = true;
-		return;
-	}
-
-	// open Dialog Simple
-	if (!versionError) ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose a path", ".nng", ".");
-	std::string path;
-	std::string name;
-	std::string version;
-	size_t format = 0;
-	//display
-	if (!versionError && ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
-	{
-		// action if OK
-		if (ImGuiFileDialog::Instance()->IsOk() == true && file->Exists(ImGuiFileDialog::Instance()->GetFilePathName().c_str(), false))
+		std::string version;
+		ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose a path", ".nng", ".");
+		if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
 		{
-			path = ImGuiFileDialog::Instance()->GetCurrentPath() + "\\";
-			name = ImGuiFileDialog::Instance()->GetCurrentFileName();
-			format = ImGuiFileDialog::Instance()->GetCurrentFilter().size();
-			ImGuiFileDialog::Instance()->Close();
-
-			// Check if the version file is the same as the program version
-			std::string checkPath = path;
-			checkPath += name;
-			checkPath.erase(checkPath.end() - format, checkPath.end());
-			file->ViewFile(checkPath.c_str()).
-				Read("version").AsString(version);
-			versionError = !SameString("v1.0", version);
-		}
-		else
-		{
-			ImGuiFileDialog::Instance()->Close();
-			loadingV1_0 = false;
-			return;
-		}
-	}
-	else
-	{
-		if (!versionError) return;
-	}
-
-	// Version Error Popup
-	bool vErr = versionError;
-	if (ErrorPopup(&versionError,
-		"A v1.0 Loader can only load v1.0 files", 
-		"SOLUTION:\nGo to File > Load. If an error occurs shows again,\nfollow the instructions of that error.\nThis method only loads v1.0 files.")) loadingV1_0 = false;
-	if (vErr) return;
-	// Version Error Popup
-
-	loadingV1_0 = false;
-
-	openFileName = name;
-	openFilePath = path;
-
-	path += name;
-	path.erase(path.end() - format, path.end());
-
-	float total = 0;
-	int size = 0;
-
-	DeleteAllContainer();
-
-	// Y aspects
-	file->ViewFile(path.c_str(), 1).
-		// Preferences
-		Read("cnfSRT").AsBool(showContainerType).
-		Read("cnfSFU").AsBool(showFutureUnasigned).
-		Read("cnfAFC").AsBool(allowFutureCovering).
-		Read("cnfTFS").AsFloat(textFieldSize).
-		Read("currency").AsInt(currency).
-		// General Project
-		Read("total").AsFloat(total).
-		Read("size").AsInt(size);
-
-	int added = 0;
-
-	for (unsigned int i = 0; i < size; ++i)
-	{ //Change depednig X aspects \/   \/ Change it depending on how many Y aspects
-		int positionToRead = (i * 5) + 8 + added;
-		int type = -1;
-		float money = 0;
-		bool hidden = false, open = false;
-		std::string name;
-
-		// X aspects
-		file->ViewFile(path.c_str(), positionToRead).
-			Read("name").AsString(name).
-			Read("type").AsInt(type).
-			Read("money").AsFloat(money).
-			Read("hide").AsBool(hidden).
-			Read("open").AsBool(open);
-
-
-		switch ((ContainerType)type)
-		{
-		case ContainerType::FILTER:
-		{
-			CreateContainer((ContainerType)type, "Filter Name", hidden, open);
-			// Change: v1.1 -> v1.0 (Filters are plural forever)
-			FilterContainer* fR = (FilterContainer*)containers.back();
-			fR->ClearLabels();
-
-			fR->NewLabel(name.c_str(), money);
-
-			break;
-		}
-
-		case ContainerType::LIMIT:
-		{
-			float limit = 1;
-			file->ViewFile(path.c_str(), positionToRead + 4).
-				Read("limit").AsFloat(limit);
-
-			CreateContainer((ContainerType)type, "Limit Name", hidden, open);
-			// Change: v1.1 -> v1.0 (Limits are plural forever)
-			LimitContainer* lR = (LimitContainer*)containers.back();
-			lR->ClearLabels();
-
-			lR->NewLabel(name.c_str(), money, limit);
-			added++;
-
-			break;
-		}
-
-		case ContainerType::FUTURE:
-		{
-			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
-			FutureContainer* fR = (FutureContainer*)containers.back();
-			fR->ClearLabels();
-
-			int fSize = 0; //                           \/ Change depending on X aspects amount
-			int futurePositionToRead = positionToRead + 5;
-
-			file->ViewFile(path.c_str(), futurePositionToRead).
-				Read("size").AsInt(fSize);
-
-			added++;
-
-			for (suint i = 0; i < fSize; ++i)
+			// action if OK
+			if (ImGuiFileDialog::Instance()->IsOk() == true && file->Exists(ImGuiFileDialog::Instance()->GetFilePathName().c_str(), false))
 			{
-				std::string fName;
-				float fMoney;
-				file->ViewFile(path.c_str(), (futurePositionToRead + 1) + (i * 2)).
-					Read("name").AsString(fName).
-					Read("money").AsFloat(fMoney);
+				*path = ImGuiFileDialog::Instance()->GetCurrentPath() + "\\";
+				*name = ImGuiFileDialog::Instance()->GetCurrentFileName();
+				*format = ImGuiFileDialog::Instance()->GetCurrentFilter().size();
+				ImGuiFileDialog::Instance()->Close();
 
-				fR->NewLabel(fName.c_str(), fMoney);
-
-				added += 2;
+				// Check if the version file is the same as the program version
+				std::string checkPath = *path;
+				checkPath += *name;
+				checkPath.erase(checkPath.end() - *format, checkPath.end());
+				file->ViewFile(checkPath.c_str()).
+					Read("version").AsString(version);
+				*vError = !SameString(v, version);
+				return true;
 			}
-
-			break;
-		}
-
-		case ContainerType::ARREAR:
-		{
-			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
-			ArrearContainer* aR = (ArrearContainer*)containers.back();
-			aR->ClearLabels();
-
-			int fSize = 0; //                           \/ Change depending on X aspects amount
-			int futurePositionToRead = positionToRead + 5;
-
-			file->ViewFile(path.c_str(), futurePositionToRead).
-				Read("size").AsInt(fSize);
-
-			added++;
-
-			for (suint i = 0; i < fSize; ++i)
+			else
 			{
-				std::string fName;
-				float fMoney;
-				file->ViewFile(path.c_str(), (futurePositionToRead + 1) + (i * 2)).
-					Read("name").AsString(fName).
-					Read("money").AsFloat(fMoney);
-
-				aR->NewLabel(fName.c_str(), fMoney);
-
-				added += 2;
+				ImGuiFileDialog::Instance()->Close();
+				*closed = true;
+				return true; // Return true
 			}
-
-			break;
 		}
-
-		default: break;
-		}
-
-		containers.back()->loadOpen = true;
+		else return false; // Return false
 	}
-
-	totalContainer->SetMoney(total);
-	UpdateCurrency();
-
 }
 
 bool EconomyScene::ErrorPopup(bool* open, const char* title, const char* description)
@@ -1566,4 +1386,182 @@ void EconomyScene::SetMethod()
 	}
 
 	method = Method::MTHD_NO;
+}
+
+// Old Loads -------------------------------------------
+void EconomyScene::Loadv1_0()
+{
+	// Load Logic
+	if (!loadingV1_0)
+	{
+		loadingV1_0 = true;
+		return;
+	}
+
+	// Draw File Dialog
+	std::string path, name;
+	size_t format = 0;
+	bool closed = false;
+	if (!DrawFileDialog(&versionError, "v1.0", &path, &name, &format, &closed)) return;
+	else
+	{
+		if (closed)
+		{
+			loadingV1_0 = false;
+			return; // Return true
+		}
+	}
+
+	// Version Error Popup
+	bool vErr = versionError;
+	if (ErrorPopup(&versionError,
+		"A v1.0 Loader can only load v1.0 files",
+		"SOLUTION:\nGo to File > Load. If an error occurs shows again,\nfollow the instructions of that error.\nThis method only loads v1.0 files.")) loadingV1_0 = false;
+	if (vErr) return;
+
+	// Load
+	loadingV1_0 = false;
+
+	openFileName = name;
+	openFilePath = path;
+
+	path += name;
+	path.erase(path.end() - format, path.end());
+
+	float total = 0;
+	int size = 0;
+
+	DeleteAllContainer();
+
+	// Y aspects
+	file->ViewFile(path.c_str(), 1).
+		// Preferences
+		Read("cnfSRT").AsBool(showContainerType).
+		Read("cnfSFU").AsBool(showFutureUnasigned).
+		Read("cnfAFC").AsBool(allowFutureCovering).
+		Read("cnfTFS").AsFloat(textFieldSize).
+		Read("currency").AsInt(currency).
+		// General Project
+		Read("total").AsFloat(total).
+		Read("size").AsInt(size);
+
+	int added = 0;
+
+	for (unsigned int i = 0; i < size; ++i)
+	{ //Change depednig X aspects \/   \/ Change it depending on how many Y aspects
+		int positionToRead = (i * 5) + 8 + added;
+		int type = -1;
+		float money = 0;
+		bool hidden = false, open = false;
+		std::string name;
+
+		// X aspects
+		file->ViewFile(path.c_str(), positionToRead).
+			Read("name").AsString(name).
+			Read("type").AsInt(type).
+			Read("money").AsFloat(money).
+			Read("hide").AsBool(hidden).
+			Read("open").AsBool(open);
+
+
+		switch ((ContainerType)type)
+		{
+		case ContainerType::FILTER:
+		{
+			CreateContainer((ContainerType)type, "Filter Name", hidden, open);
+			// Change: v1.1 -> v1.0 (Filters are plural forever)
+			FilterContainer* fR = (FilterContainer*)containers.back();
+			fR->ClearLabels();
+
+			fR->NewLabel(name.c_str(), money);
+
+			break;
+		}
+
+		case ContainerType::LIMIT:
+		{
+			float limit = 1;
+			file->ViewFile(path.c_str(), positionToRead + 4).
+				Read("limit").AsFloat(limit);
+
+			CreateContainer((ContainerType)type, "Limit Name", hidden, open);
+			// Change: v1.1 -> v1.0 (Limits are plural forever)
+			LimitContainer* lR = (LimitContainer*)containers.back();
+			lR->ClearLabels();
+
+			lR->NewLabel(name.c_str(), money, limit);
+			added++;
+
+			break;
+		}
+
+		case ContainerType::FUTURE:
+		{
+			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
+			FutureContainer* fR = (FutureContainer*)containers.back();
+			fR->ClearLabels();
+
+			int fSize = 0; //                           \/ Change depending on X aspects amount
+			int futurePositionToRead = positionToRead + 5;
+
+			file->ViewFile(path.c_str(), futurePositionToRead).
+				Read("size").AsInt(fSize);
+
+			added++;
+
+			for (suint i = 0; i < fSize; ++i)
+			{
+				std::string fName;
+				float fMoney;
+				file->ViewFile(path.c_str(), (futurePositionToRead + 1) + (i * 2)).
+					Read("name").AsString(fName).
+					Read("money").AsFloat(fMoney);
+
+				fR->NewLabel(fName.c_str(), fMoney);
+
+				added += 2;
+			}
+
+			break;
+		}
+
+		case ContainerType::ARREAR:
+		{
+			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
+			ArrearContainer* aR = (ArrearContainer*)containers.back();
+			aR->ClearLabels();
+
+			int fSize = 0; //                           \/ Change depending on X aspects amount
+			int futurePositionToRead = positionToRead + 5;
+
+			file->ViewFile(path.c_str(), futurePositionToRead).
+				Read("size").AsInt(fSize);
+
+			added++;
+
+			for (suint i = 0; i < fSize; ++i)
+			{
+				std::string fName;
+				float fMoney;
+				file->ViewFile(path.c_str(), (futurePositionToRead + 1) + (i * 2)).
+					Read("name").AsString(fName).
+					Read("money").AsFloat(fMoney);
+
+				aR->NewLabel(fName.c_str(), fMoney);
+
+				added += 2;
+			}
+
+			break;
+		}
+
+		default: break;
+		}
+
+		containers.back()->loadOpen = true;
+	}
+
+	totalContainer->SetMoney(total);
+	UpdateCurrency();
+
 }

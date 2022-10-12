@@ -31,7 +31,9 @@ private: // Functions
 	void Save();
 	void InternalSave(const char* path);
 	void Load();
+	void LoadInternal(const char* path);
 	void Loadv1_0();
+	bool DrawFileDialog(bool* vError, const char* v, std::string* path, std::string* name, size_t* format, bool* closed);
 	bool ErrorPopup(bool* open, const char* title, const char* description);
 	void ExportGestor(std::vector<Container*>* exporting);
 	void ExportLogs(uint start, uint end);
