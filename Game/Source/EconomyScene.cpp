@@ -60,10 +60,12 @@ bool EconomyScene::Update()
 
 		switch (r->GetType())
 		{
+		case ContainerType::CONSTANT: break;
 		case ContainerType::FUTURE: futureMoney += r->GetMoney(); break;
 		case ContainerType::ARREAR: arrearMoney -= r->GetMoney(); break;
 		case ContainerType::FILTER:
 		case ContainerType::LIMIT:
+		case ContainerType::SAVING:
 		default: totalMoney -= r->GetMoney(); break;
 		}
 	}
@@ -219,21 +221,6 @@ void EconomyScene::InternalSave(const char* path)
 
 		switch (r->GetType())
 		{
-		case ContainerType::FILTER:
-		{
-			FilterContainer* fPR = (FilterContainer*)r;
-			int size = fPR->GetSize();
-			file->EditFile(path).
-				Write("size").Number(size);
-
-			for (int i = 0; i < size; ++i)
-			{
-				file->EditFile(path)
-					.Write("name").String(fPR->GetLabelName(i))
-					.Write("money").Number(fPR->GetLabelMoney(i));
-			}
-			break;
-		}
 
 		case ContainerType::LIMIT:
 		{
@@ -245,41 +232,28 @@ void EconomyScene::InternalSave(const char* path)
 			for (int i = 0; i < size; ++i)
 			{
 				file->EditFile(path)
-					.Write("name" ).String(lPR->GetLabelName (i))
+					.Write("name").String(lPR->GetLabelName(i))
 					.Write("limit").Number(lPR->GetLabelLimit(i))
 					.Write("money").Number(lPR->GetLabelMoney(i));
 			}
 			break;
 		}
-
+		case ContainerType::FILTER:
 		case ContainerType::FUTURE:
-		{
-			FutureContainer* fPR = (FutureContainer*)r;
-			int size = fPR->GetSize();
-			file->EditFile(path).
-				Write("size").Number(size);
-
-			for (int i = 0; i < size; ++i)
-			{
-				file->EditFile(path)
-					.Write("name").String(fPR->GetLabelName(i))
-					.Write("money").Number(fPR->GetLabelMoney(i));
-			}
-			break;
-		}
-
 		case ContainerType::ARREAR:
+		case ContainerType::CONSTANT:
+		case ContainerType::SAVING:
 		{
-			ArrearContainer* aPR = (ArrearContainer*)r;
-			int size = aPR->GetSize();
+			Container* c = r;
+			int size = c->GetSize();
 			file->EditFile(path).
 				Write("size").Number(size);
 
 			for (int i = 0; i < size; ++i)
 			{
 				file->EditFile(path)
-					.Write("name").String(aPR->GetLabelName(i))
-					.Write("money").Number(aPR->GetLabelMoney(i));
+					.Write("name").String(c->GetLabelName(i))
+					.Write("money").Number(c->GetLabelMoney(i));
 			}
 			break;
 		}
@@ -439,12 +413,12 @@ void EconomyScene::Load()
 		Read("size").AsInt(size);
 
 	const int yAspects = 13; // Update if more preferences added
-
+	const int xAspects = 6; // Update if more properties added (X aspects below)
 	int added = 0;
 
 	for (unsigned int i = 0; i < size; ++i)
-	{//      Change depending on how many X aspects \/     \/ Change it depending on how many Y aspects (count version as one)
-		int positionToRead =                   (i * 6)  +  yAspects + added;
+	{
+		int positionToRead =                   (i * xAspects)  +  yAspects + added;
 		int type = -1;
 		float money = 0;
 		bool hidden = false, open = false, unified = true;
@@ -459,40 +433,10 @@ void EconomyScene::Load()
 			Read("open").AsBool(open).
 			Read("unfd").AsBool(unified);
 
+		const int xAspects = 6; // Update if more properties added
+
 		switch ((ContainerType)type)
 		{
-		case ContainerType::FILTER:
-		{
-			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
-			FilterContainer* fC = (FilterContainer*)containers.back();
-			fC->ClearLabels();
-			fC->unified = unified;
-			fC->loadOpen = true;
-
-			int fSize = 0; //                           \/ Change depending on X aspects amount
-			int futurePositionToRead = positionToRead + 6;
-
-			file->ViewFile(path.c_str(), futurePositionToRead).
-				Read("size").AsInt(fSize);
-
-			added++;
-
-			for (suint i = 0; i < fSize; ++i)
-			{
-				std::string fName;
-				float fMoney;
-				file->ViewFile(path.c_str(), (futurePositionToRead + 1) + (i * 2)).
-					Read("name").AsString(fName). // Variables on top
-					Read("money").AsFloat(fMoney);
-
-				fC->NewLabel(fName.c_str(), fMoney);
-
-				added += 2; // Change depending on how many variables on top
-			}
-
-			break;
-		}
-
 		case ContainerType::LIMIT:
 		{
 			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
@@ -501,8 +445,8 @@ void EconomyScene::Load()
 			lC->unified = unified;
 			lC->loadOpen = true;
 
-			int lSize = 0; //                           \/ Change depending on X aspects amount
-			int futurePositionToRead = positionToRead + 6;
+			int lSize = 0;
+			int futurePositionToRead = positionToRead + xAspects;
 
 			file->ViewFile(path.c_str(), futurePositionToRead).
 				Read("size").AsInt(lSize);
@@ -524,49 +468,20 @@ void EconomyScene::Load()
 			}
 			break;
 		}
-
+		case ContainerType::FILTER:
 		case ContainerType::FUTURE:
-		{
-			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
-			FutureContainer* fC = (FutureContainer*)containers.back();
-			fC->ClearLabels();
-			fC->unified = unified;
-			fC->loadOpen = true;
-			
-			int fSize = 0; //                           \/ Change depending on X aspects amount
-			int futurePositionToRead = positionToRead + 6;
-
-			file->ViewFile(path.c_str(), futurePositionToRead).
-				Read("size").AsInt(fSize);
-
-			added++;
-
-			for (suint i = 0; i < fSize; ++i)
-			{
-				std::string fName;
-				float fMoney;
-				file->ViewFile(path.c_str(), (futurePositionToRead + 1) + (i * 2)).
-					Read("name").AsString(fName). // Variables on top
-					Read("money").AsFloat(fMoney);
-
-				fC->NewLabel(fName.c_str(), fMoney);
-
-				added += 2; // Change depending on how many variables on top
-			}
-
-			break;
-		}
-
 		case ContainerType::ARREAR:
+		case ContainerType::SAVING:
+		case ContainerType::CONSTANT:
 		{
 			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
-			ArrearContainer* aC = (ArrearContainer*)containers.back();
-			aC->ClearLabels();
-			aC->unified = unified;
-			aC->loadOpen = true;
+			Container* c = containers.back();
+			c->ClearLabels();
+			c->unified = unified;
+			c->loadOpen = true;
 
-			int fSize = 0; //                           \/ Change depending on X aspects amount
-			int futurePositionToRead = positionToRead + 6;
+			int fSize = 0;
+			int futurePositionToRead = positionToRead + xAspects;
 
 			file->ViewFile(path.c_str(), futurePositionToRead).
 				Read("size").AsInt(fSize);
@@ -581,7 +496,7 @@ void EconomyScene::Load()
 					Read("name").AsString(fName). // Variables on top
 					Read("money").AsFloat(fMoney);
 
-				aC->NewLabel(fName.c_str(), fMoney);
+				c->NewLabel(fName.c_str(), fMoney);
 
 				added += 2; // Change depending on how many variables on top
 			}
@@ -596,7 +511,6 @@ void EconomyScene::Load()
 
 	int movSize = 0;
 	int movPos = file->ViewFile(path.c_str(), yAspects).Search("logs");
-	//      Amount of constant writted variables /\ Y aspects
 	added = 0;
 
 	file->ViewFile(path.c_str(), movPos)
