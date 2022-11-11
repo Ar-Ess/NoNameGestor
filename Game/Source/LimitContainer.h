@@ -86,32 +86,6 @@ public: // Functions
 				editLimitIndex = i;
 			}
 
-			/*
-			if (ImGui::BeginTable(name.c_str(), 1))
-			{
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-
-				ImGui::PushItemWidth(width);
-				ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, labels[i]->limit, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
-				ImVec2 itemSize = ImGui::GetItemRectSize();
-				itemSize.y -= 15;
-				ImGui::PopItemWidth();ImGui::SameLine();
-
-				ImGui::Text("/"); ImGui::SameLine();
-				ImGui::Text(format.c_str(), labels[i]->limit); ImGui::SameLine();
-				if (ImGui::Button("Edit"))
-				{
-					editLimit = true;
-					editLimitIndex = i;
-				}
-
-				ImGui::TableNextColumn();
-
-				ImGui::ProgressBar(labels[i]->money / labels[i]->limit, itemSize, "");
-			}
-			ImGui::EndTable();*/
-
 			ImGui::PopID();
 		}
 

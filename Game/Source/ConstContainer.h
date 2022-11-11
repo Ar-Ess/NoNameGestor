@@ -54,7 +54,7 @@ public: // Functions
 				ImGui::SameLine();
 
 				ImGui::PushItemWidth(textFieldSize);
-				ImGui::InputText("##FilterName", &labels[i]->name);
+				ImGui::InputText("##ConstName", &labels[i]->name);
 				ImGui::PopItemWidth(); ImGui::SameLine();
 			}
 			else
@@ -74,17 +74,62 @@ public: // Functions
 				width += 50;
 			}
 
-
+			ImGui::BeginGroup();
 			ImGui::PushItemWidth(width);
-			ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, 340282000000000000000000000000000000000.0f, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
+			ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, labels[i]->limit, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
+			ImVec2 itemSize = ImGui::GetItemRectSize();
+			itemSize.y -= 15;
 			ImGui::PopItemWidth();
+
+			ImGui::ProgressBar(labels[i]->money / labels[i]->limit, itemSize, "");
+			ImGui::EndGroup();
+
+			ImGui::SameLine();
+
+			ImGui::Text("/"); ImGui::SameLine();
+			ImGui::Text(format.c_str(), labels[i]->limit); ImGui::SameLine();
+			if (ImGui::Button("Edit"))
+			{
+				editLimit = true;
+				editLimitIndex = i;
+			}
 
 			ImGui::PopID();
 		}
 
 		if (hidden) ImGui::EndDisabled();
+
+		if (!editLimit)
+		{
+			if (hidden) ImGui::EndDisabled();
+			return;
+		}
+
+		ImGui::PushID(id);
+		ImGui::OpenPopup("Edit const");
+		ImGui::SetNextWindowPos(ImVec2((ImGui::GetWindowSize().x / 2) - 70, (ImGui::GetWindowSize().y / 2) - 50));
+		ImGui::SetNextWindowSize(ImVec2(140, 100));
+		if (ImGui::BeginPopupModal("Edit const", nullptr, ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+		{
+			ImGui::DragFloat("##Drag1", &labels[editLimitIndex]->tempLimit, 1.0f, 0.0f, 340282000000000000000000000000000000000.0f, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
+			if (ImGui::Button("Done"))
+			{
+				labels[editLimitIndex]->limit = labels[editLimitIndex]->tempLimit;
+				editLimit = false;
+			}
+		}
+		ImGui::EndPopup();
+		ImGui::PopID();
+	}
+
+	float GetLabelLimit(int i) const
+	{
+		return labels[i]->limit;
 	}
 
 private:
+
+	bool editLimit = false;
+	int editLimitIndex = 0;
 
 };

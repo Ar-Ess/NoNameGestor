@@ -187,6 +187,7 @@ private: // Variables
 	bool allowFutureCovering = false;
 	bool showArrearUnasigned = false;
 	bool allowArrearsFill = false;
+	bool showConstantTotal = false;
 	bool createContainerUnified = true;
 	bool dateFormatType = true;
 

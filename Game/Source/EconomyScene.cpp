@@ -13,7 +13,7 @@ EconomyScene::EconomyScene(Input* input)
 	this->file = new FileManager(EXTENSION);
 
 	totalContainer = new TotalContainer("Total Money", &logs, &dateFormatType, &maxLogs);
-	unasignedContainer = new UnasignedContainer("Unasigned Money", &showFutureUnasigned, &allowFutureCovering, &showArrearUnasigned, &allowArrearsFill);
+	unasignedContainer = new UnasignedContainer("Unasigned Money", &showFutureUnasigned, &allowFutureCovering, &showArrearUnasigned, &allowArrearsFill, &showConstantTotal);
 
 	openFileName = "New_File";
 	openFileName += EXTENSION;
@@ -51,6 +51,7 @@ bool EconomyScene::Update()
 	float totalMoney = totalContainer->GetMoney();
 	float futureMoney = 0;
 	float arrearMoney = 0;
+	float constMoney = 0;
 
 	for (Container* r : containers)
 	{
@@ -60,9 +61,11 @@ bool EconomyScene::Update()
 
 		switch (r->GetType())
 		{
-		case ContainerType::CONSTANT: break;
+
 		case ContainerType::FUTURE: futureMoney += r->GetMoney(); break;
 		case ContainerType::ARREAR: arrearMoney -= r->GetMoney(); break;
+		case ContainerType::CONSTANT:
+			for (int i = 0; i < ((ConstContainer*)r)->GetSize(); ++i) constMoney += ((ConstContainer*)r)->GetLabelLimit(i);
 		case ContainerType::FILTER:
 		case ContainerType::LIMIT:
 		case ContainerType::SAVING:
@@ -70,7 +73,7 @@ bool EconomyScene::Update()
 		}
 	}
 
-	unasignedContainer->SetMoney(totalMoney + futureMoney + arrearMoney, totalMoney, futureMoney, arrearMoney);
+	unasignedContainer->SetMoney(totalMoney + futureMoney + arrearMoney, totalMoney, futureMoney, arrearMoney, constMoney);
 	unasignedContainer->Update();
 
 	return true;
@@ -200,6 +203,7 @@ void EconomyScene::InternalSave(const char* path)
 		Write("cnfAFC").Bool(allowFutureCovering).
 		Write("cnfSAU").Bool(showArrearUnasigned).
 		Write("cnfAAF").Bool(allowArrearsFill).
+		Write("cnfSCT").Bool(showConstantTotal).
 		Write("cnfCCU").Bool(createContainerUnified).
 		Write("cnfTFS").Number(textFieldSize).
 		Write("cnfDFT").Bool(dateFormatType).
@@ -221,7 +225,22 @@ void EconomyScene::InternalSave(const char* path)
 
 		switch (r->GetType())
 		{
+		case ContainerType::CONSTANT:
+		{
+			ConstContainer* cC = (ConstContainer*)r;
+			int size = cC->GetSize();
+			file->EditFile(path).
+				Write("size").Number(size);
 
+			for (int i = 0; i < size; ++i)
+			{
+				file->EditFile(path)
+					.Write("name").String(cC->GetLabelName(i))
+					.Write("limit").Number(cC->GetLabelLimit(i))
+					.Write("money").Number(cC->GetLabelMoney(i));
+			}
+			break;
+		}
 		case ContainerType::LIMIT:
 		{
 			LimitContainer* lPR = (LimitContainer*)r;
@@ -241,7 +260,6 @@ void EconomyScene::InternalSave(const char* path)
 		case ContainerType::FILTER:
 		case ContainerType::FUTURE:
 		case ContainerType::ARREAR:
-		case ContainerType::CONSTANT:
 		case ContainerType::SAVING:
 		{
 			Container* c = r;
@@ -350,12 +368,13 @@ void EconomyScene::LoadInternal(const char* path)
 	// Y aspects
 	file->ViewFile(path, 1).
 		// Preferences
-	  //Read("version")
+	    //Read("version")
 		Read("cnfSRT").AsBool(showContainerType).
 		Read("cnfSFU").AsBool(showFutureUnasigned).
 		Read("cnfAFC").AsBool(allowFutureCovering).
 		Read("cnfSAU").AsBool(showArrearUnasigned).
 		Read("cnfAAF").AsBool(allowArrearsFill).
+		Read("cnfSCT").AsBool(showConstantTotal).
 		Read("cnfCCU").AsBool(createContainerUnified).
 		Read("cnfTFS").AsFloat(textFieldSize).
 		Read("cnfDFT").AsBool(dateFormatType).
@@ -365,7 +384,7 @@ void EconomyScene::LoadInternal(const char* path)
 		Read("containers").AsFloat(total).
 		Read("size").AsInt(size);
 
-	const int yAspects = 13; // Update if more preferences added
+	const int yAspects = 14; // Update if more preferences added
 	const int xAspects = 6; // Update if more properties added (X aspects below)
 	int added = 0;
 
@@ -390,6 +409,37 @@ void EconomyScene::LoadInternal(const char* path)
 
 		switch ((ContainerType)type)
 		{
+		case ContainerType::CONSTANT:
+		{
+			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
+			ConstContainer* cC = (ConstContainer*)containers.back();
+			cC->ClearLabels();
+			cC->unified = unified;
+			cC->loadOpen = true;
+
+			int lSize = 0;
+			int futurePositionToRead = positionToRead + xAspects;
+
+			file->ViewFile(path, futurePositionToRead).
+				Read("size").AsInt(lSize);
+
+			added++;
+
+			for (suint i = 0; i < lSize; ++i)
+			{
+				std::string cName;
+				float cMoney, cLimit;  //Change depending on "vars top"\/
+				file->ViewFile(path, (futurePositionToRead + 1) + (i * 3)).
+					Read("name").AsString(cName). // "Vars on top"
+					Read("limit").AsFloat(cLimit).
+					Read("money").AsFloat(cMoney);
+
+				cC->NewLabel(cName.c_str(), cMoney, cLimit);
+
+				added += 3; // Change depending on how many "vars on top"
+			}
+			break;
+		}
 		case ContainerType::LIMIT:
 		{
 			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
@@ -425,7 +475,6 @@ void EconomyScene::LoadInternal(const char* path)
 		case ContainerType::FUTURE:
 		case ContainerType::ARREAR:
 		case ContainerType::SAVING:
-		case ContainerType::CONSTANT:
 		{
 			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
 			Container* c = containers.back();
@@ -456,7 +505,6 @@ void EconomyScene::LoadInternal(const char* path)
 
 			break;
 		}
-
 		default: break;
 		}
 
@@ -747,6 +795,7 @@ bool EconomyScene::DrawMenuBar()
 				{
 					size_t size = logs.size();
 					static int from = 1, to = 1;
+					
 					bool empty = (size == 0);
 					if (!empty)
 					{
@@ -764,11 +813,13 @@ bool EconomyScene::DrawMenuBar()
 						ImGui::PushItemWidth(40);
 						ImGui::Dummy({6, 0});
 						ImGui::SameLine();
-						ImGui::DragInt("##FromDrag", &from, size / 6, 1, size );
+						ImGui::DragInt("##FromDrag", &from, (size + 1) / 100, 1, size );
+						if (ImGui::IsItemEdited()) if (from > to) to = from;
 						ImGui::SameLine();
 						ImGui::Dummy({ 4, 0 });
 						ImGui::SameLine();
-						ImGui::DragInt("##ToDrag", &to, size / 6, 1, size);
+						ImGui::DragInt("##ToDrag", &to, (size+1) / 100, 1, size );
+						if (ImGui::IsItemEdited()) if (from > to) from = to;
 						ImGui::PopItemWidth();
 
 					}
@@ -1009,6 +1060,9 @@ bool EconomyScene::DrawPreferencesWindow(bool* open)
 					AddHelper("Allows unasigned actual money to fill\nunasigned arrears whenever they exist.", "?"); ImGui::SameLine();
 					ImGui::Checkbox("Allow Arrears Money Filling", &allowArrearsFill);
 				}
+
+				AddHelper("Shows the total money in terms\nof constant outcome.", "?"); ImGui::SameLine();
+				ImGui::Checkbox("Show Total Constrant Money ", &showConstantTotal);
 
 				AddHelper("Enlarges the size of the text\nlabels of each container.", "?"); ImGui::SameLine();
 				ImGui::PushItemWidth(textFieldSize);
@@ -1326,7 +1380,7 @@ void EconomyScene::CheckLogMismatch()
 		}
 		Log* curr = logs[i];
 
-		if (curr->GetOldInstance() != prev->GetNewInstance())
+		if ((curr->GetOldInstance() - prev->GetNewInstance()) > 0.001f)
 		{
 			logs.emplace(logs.begin() + i, new InformativeLog(prev->GetNewInstance(), curr->GetOldInstance(), "Unlogged movement"));
 			CheckLogLeaking();
@@ -1335,7 +1389,7 @@ void EconomyScene::CheckLogMismatch()
 		prev = logs[i];
 	}
 
-	if (!logs.empty() && logs.back()->GetNewInstance() != totalContainer->GetMoney())
+	if (!logs.empty() && (logs.back()->GetNewInstance() - totalContainer->GetMoney()) > 0.001f)
 	{
 		CreateInformative(logs.back()->GetNewInstance(), "Unlogged movement");
 	}
