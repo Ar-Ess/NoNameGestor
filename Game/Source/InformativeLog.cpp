@@ -6,10 +6,11 @@ InformativeLog::InformativeLog(float oldInstance, float newInstance, const char*
 	this->newInstance = newInstance;
 }
 
-void InformativeLog::Draw(const char* currency)
+void InformativeLog::Draw(const char* currency, int index)
 {
 	ImGui::Separator();
 	ImGui::Spacing();
+	ImGui::Text("%d.", index); ImGui::SameLine();
 	ImGui::Text(name.c_str());
 	ImGui::TextColored({ 1, 1, 0.4, 1 }, "%.2f %s", totalInstance, currency);
 	ImGui::SameLine(130); ImGui::TextColored({ 1, 1, 0.4, 1 }, "->");

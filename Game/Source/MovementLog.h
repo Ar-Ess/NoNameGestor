@@ -15,7 +15,7 @@ public:
 		name.shrink_to_fit();
 	}
 
-	void Draw(const char* currency) override;
+	void Draw(const char* currency, int index) override;
 
 	virtual float GetOldInstance() const override;
 

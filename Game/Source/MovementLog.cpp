@@ -7,10 +7,11 @@ MovementLog::MovementLog(float money, float totalInstance, const char* name, boo
 	money >= 0 ? color[1] = 255 : color[0] = 255;
 }
 
-void MovementLog::Draw(const char* currency)
+void MovementLog::Draw(const char* currency, int index)
 {
 	ImGui::Separator();
 	ImGui::Spacing();
+	ImGui::Text("%d.", index); ImGui::SameLine();
 	ImGui::Text(name.c_str());
 	if (date[0] != 0)
 	{

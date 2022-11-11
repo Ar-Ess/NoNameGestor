@@ -36,9 +36,9 @@ bool EconomyScene::Start()
 
 bool EconomyScene::Update()
 {
-	if ((int)method > 0) SetMethod();
-
 	UpdateShortcuts();
+
+	if ((int)method > 0) SetMethod();
 
 	if (ctrl &&  shft && d) demoWindow = !demoWindow;
 	if (ctrl &&  shft && p) preferencesWindow = !preferencesWindow;
@@ -1198,13 +1198,26 @@ void EconomyScene::DrawLogSystem(bool checkMismatch)
 {
 	if (checkMismatch) CheckLogMismatch();
 
-	static float test = 0;
-	static float updt = 0;
-	AddSpacing(3);
+	AddSpacing(1);
+
+	int logsLeft = maxLogs - logs.size();
+	if (logsLeft < 5 && logsLeft > 0)
+	{
+		ImGui::TextColored(ImVec4{ 1.0f, 1.0f, 1.0f, 0.4f }, "Warning! You are %d logs from the maximum log size.", logsLeft); ImGui::SameLine();
+		AddHelper("Overcoming this maximum will delete automatically\nthe last log. Upgrade the maximum log amount\nor export the logs in a file.\n[File > Export > Logs]");
+	}
+	else if (logsLeft == 0)
+	{
+		ImGui::TextColored(ImVec4{ 1.0f, 1.0f, 1.0f, 0.4f }, "Warning! You are %d logs from the maximum log size.", logsLeft); ImGui::SameLine();
+		AddHelper("Overcoming this maximum will delete automatically\nthe last log. Upgrade the maximum log amount\nor export the logs in a file.\n[File > Export > Logs]");
+	}
+	
+	AddSpacing(2);
 	AddSeparator();
 
 	std::vector<Log*>::reverse_iterator it;
-	for (it = logs.rbegin(); it != logs.rend(); ++it) (*it)->Draw(comboCurrency[currency]);
+	int i = 0;
+	for (it = logs.rbegin(); it != logs.rend(); ++it) (*it)->Draw(comboCurrency[currency], ++i);
 
 	AddSeparator();
 }

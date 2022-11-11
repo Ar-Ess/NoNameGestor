@@ -17,7 +17,7 @@ public:
 
 	virtual ~Log() {}
 
-	virtual void Draw(const char* currency)
+	virtual void Draw(const char* currency, int index)
 	{
 
 	}
