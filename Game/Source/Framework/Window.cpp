@@ -1,5 +1,8 @@
 #include "Window.h"
 
+#include "../External/imgui/imgui_impl_sdl.h"
+#include "../External/imgui/imgui_impl_sdlrenderer.h"
+
 Window::Window() : Module()
 {
 }
@@ -19,7 +22,21 @@ bool Window::Awake()
 
 	uint32 flags = SDL_WINDOW_SHOWN;
 
-	window = SDL_CreateWindow("", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, size.x, size.y, flags);
+	SDL_WindowFlags wFlags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_SHOWN);
+	window = SDL_CreateWindow("No Name Gestor - NoNameSL", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, size.x, size.y, wFlags);
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+	// Setup Dear ImGui style
+	ImGui::StyleColorsDark();
+	//ImGui::StyleColorsLight();
+
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
+	io.WantCaptureMouse = true;
+	io.WantCaptureKeyboard = true;
 
 	if (!window)
 	{

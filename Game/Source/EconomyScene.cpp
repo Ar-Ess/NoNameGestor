@@ -34,7 +34,7 @@ bool EconomyScene::Start()
 	return true;
 }
 
-bool EconomyScene::Update()
+bool EconomyScene::Update(float dt)
 {
 	UpdateShortcuts();
 
@@ -79,7 +79,7 @@ bool EconomyScene::Update()
 	return true;
 }
 
-bool EconomyScene::Draw()
+bool EconomyScene::Draw(float dt)
 {
 	bool ret = true;
 

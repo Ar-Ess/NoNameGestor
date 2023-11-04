@@ -1,4 +1,6 @@
 #include "Render.h"
+#include "../External/imgui/imgui_impl_sdl.h"
+#include "../External/imgui/imgui_impl_sdlrenderer.h"
 
 Render::Render(Window* win) : Module()
 {
@@ -17,6 +19,7 @@ bool Render::Awake()
 	flags |= SDL_RENDERER_PRESENTVSYNC;
 
 	renderer = SDL_CreateRenderer(win->window, -1, flags);
+	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
 	if (!renderer)
 		return false;
@@ -26,6 +29,9 @@ bool Render::Awake()
 
 bool Render::Start()
 {
+	ImGui_ImplSDL2_InitForSDLRenderer(win->window, renderer);
+	ImGui_ImplSDLRenderer_Init(renderer);
+
 	SDL_RenderGetViewport(renderer, &viewport);
 	VSync(true);
 
@@ -34,6 +40,11 @@ bool Render::Start()
 
 bool Render::PreUpdate(float dt)
 {
+	// Generate new frame
+	ImGui_ImplSDLRenderer_NewFrame();
+	ImGui_ImplSDL2_NewFrame(win->window);
+	ImGui::NewFrame();
+
 	SDL_RenderClear(renderer);
 
 	return true;
@@ -41,7 +52,10 @@ bool Render::PreUpdate(float dt)
 
 bool Render::Update(float dt)
 {
+	ImGui::Render();
 	SDL_SetRenderDrawColor(renderer, background.r, background.g, background.g, background.a);
+	SDL_RenderClear(renderer);
+	ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 	SDL_RenderPresent(renderer);
 
 	return true;
@@ -50,6 +64,9 @@ bool Render::Update(float dt)
 bool Render::CleanUp()
 {
 	LOG("Destroying SDL render");
+	ImGui_ImplSDLRenderer_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
 	SDL_DestroyRenderer(renderer);
 	return true;
 }

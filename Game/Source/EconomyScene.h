@@ -17,9 +17,9 @@ public:
 	EconomyScene();
 	~EconomyScene();
 
-	bool Start();
-	bool Update();
-	bool Draw();
+	bool Start() override;
+	bool Update(float dt) override;
+	bool Draw(float dt) override;
 
 	bool CleanUp();
 
