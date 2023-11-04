@@ -1,21 +1,20 @@
-#ifndef __ECONOMY_SCENE_H__
-#define __ECONOMY_SCENE_H__
+#pragma once
 
+#include "Framework/Scene.h"
+#include "Framework/Defs.h"
 #include <vector>
 #include "imgui/imgui.h"
-#include "Input.h"
 #include "FileManager.h"
 #include "Chrono.h"
 
 #include "ContainerHeader.h"
-#include "LogHeader.h"
 #include "MethodsEnum.h"
 
-class EconomyScene
+class EconomyScene : public Scene
 {
 public:
 
-	EconomyScene(Input* input);
+	EconomyScene();
 	~EconomyScene();
 
 	bool Start();
@@ -36,7 +35,7 @@ private: // Functions
 	bool DrawFileDialog(bool* vError, const char* v, std::string* path, std::string* name, size_t* format, bool* closed);
 	bool ErrorPopup(bool* open, const char* title, const char* description);
 	void ExportGestor(std::vector<Container*>* exporting);
-	void ExportLogs(uint start, uint end);
+	void ExportLogs(unsigned int start, unsigned int end);
 
 	bool DrawMenuBar();
 	bool DrawDocking();
@@ -55,7 +54,7 @@ private: // Functions
 
 	void CreateInformative(float oldInstance, const char* information)
 	{
-		logs.emplace_back(new InformativeLog(oldInstance, totalContainer->GetMoney(), information));
+		//logs.emplace_back(new InformativeLog(oldInstance, totalContainer->GetMoney(), information));
 		CheckLogLeaking();
 	}
 
@@ -100,7 +99,7 @@ private: // Functions
 		}
 	}
 
-	void DeleteContainer(suint index)
+	void DeleteContainer(unsigned int index)
 	{
 		assert(index >= 0 && index < containers.size());
 
@@ -122,10 +121,10 @@ private: // Functions
 		logs.clear();
 	}
 
-	void MoveContainer(suint index, suint position)
+	void MoveContainer(unsigned int index, unsigned int position)
 	{
 		if (index == position) return;
-		suint size = containers.size();
+		unsigned int size = containers.size();
 		assert(index >= 0 && index < size);
 		assert(position >= 0 && position < size);
 
@@ -211,5 +210,3 @@ private: // Variables
 	bool openToolbarPopup = false;
 
 };
-
-#endif //__ECONOMY_SCENE_H__

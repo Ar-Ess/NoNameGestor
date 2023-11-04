@@ -7,7 +7,7 @@
 #include "External/ImGuiFileDialog/ImGuiFileDialog.h"
 #include "imgui/imgui_internal.h"
 
-EconomyScene::EconomyScene(Input* input)
+EconomyScene::EconomyScene()
 {
 	this->input = input;
 	this->file = new FileManager(EXTENSION);
@@ -302,12 +302,12 @@ void EconomyScene::InternalSave(const char* path)
 		}
 		case LogType::INFORMATIVE_LOG:
 		{
-			InformativeLog* i = (InformativeLog*)l;
-			file->EditFile(path).
-				Write("name").String(i->GetName()).
-				Write("type").Number((int)i->GetType()).
-				Write("old_money").Number(i->totalInstance).
-				Write("new_money").Number(i->newInstance);
+			//InformativeLog* i = (InformativeLog*)l;
+			//file->EditFile(path).
+			//	Write("name").String(i->GetName()).
+			//	Write("type").Number((int)i->GetType()).
+			//	Write("old_money").Number(i->totalInstance).
+			//	Write("new_money").Number(i->newInstance);
 
 			break;
 		}
@@ -425,7 +425,7 @@ void EconomyScene::LoadInternal(const char* path)
 
 			added++;
 
-			for (suint i = 0; i < lSize; ++i)
+			for (unsigned int i = 0; i < lSize; ++i)
 			{
 				std::string cName;
 				float cMoney, cLimit;  //Change depending on "vars top"\/
@@ -456,7 +456,7 @@ void EconomyScene::LoadInternal(const char* path)
 
 			added++;
 
-			for (suint i = 0; i < lSize; ++i)
+			for (unsigned int i = 0; i < lSize; ++i)
 			{
 				std::string lName;
 				float lMoney, lLimit; //     Change depending on "vars on top" \/
@@ -490,7 +490,7 @@ void EconomyScene::LoadInternal(const char* path)
 
 			added++;
 
-			for (suint i = 0; i < fSize; ++i)
+			for (unsigned int i = 0; i < fSize; ++i)
 			{
 				std::string fName;
 				float fMoney;
@@ -555,7 +555,7 @@ void EconomyScene::LoadInternal(const char* path)
 				Read("old_money").AsFloat(money).
 				Read("new_money").AsFloat(newMoney);
 
-			logs.emplace_back(new InformativeLog(money, newMoney, name.c_str()));
+			//logs.emplace_back(new InformativeLog(money, newMoney, name.c_str()));
 
 			added += 2;
 			break;
@@ -675,7 +675,7 @@ void EconomyScene::ExportGestor(std::vector<Container*>* exporting)
 	file.close();
 }
 
-void EconomyScene::ExportLogs(uint start, uint end)
+void EconomyScene::ExportLogs(unsigned int start, unsigned int end)
 {
 	std::fstream file;
 	std::string filePath = openFilePath;
@@ -688,7 +688,7 @@ void EconomyScene::ExportLogs(uint start, uint end)
 
 	assert(file.is_open()); // File is not open
 
-	for (uint i = start; i != end + 1; ++i)
+	for (unsigned int i = start; i != end + 1; ++i)
 	{
 		Log* log = logs[i];
 		file << log->GetName() << ": ";
@@ -1154,7 +1154,7 @@ void EconomyScene::DrawGestorSystem()
 	AddSpacing(2);
 
 	size_t size = containers.size();
-	for (suint i = 0; i < size; ++i)
+	for (unsigned int i = 0; i < size; ++i)
 	{
 		Container* r = containers[i];
 		ImGui::PushID(r->GetId() / ((i * size) + size * size));
@@ -1330,14 +1330,14 @@ bool EconomyScene::DrawToolbarWindow(bool* open)
 
 void EconomyScene::UpdateShortcuts()
 {
-	ctrl = input->GetKey(SDL_SCANCODE_LCTRL) == KeyState::KEY_REPEAT;
-	shft = input->GetKey(SDL_SCANCODE_LSHIFT) == KeyState::KEY_REPEAT;
+	//ctrl = input->GetKey(SDL_SCANCODE_LCTRL) == KeyState::KEY_REPEAT;
+	//shft = input->GetKey(SDL_SCANCODE_LSHIFT) == KeyState::KEY_REPEAT;
 
-	d    = input->GetKey(SDL_SCANCODE_D) == KeyState::KEY_DOWN;
-	p    = input->GetKey(SDL_SCANCODE_P) == KeyState::KEY_DOWN;
-	s    = input->GetKey(SDL_SCANCODE_S) == KeyState::KEY_DOWN;
-	l    = input->GetKey(SDL_SCANCODE_L) == KeyState::KEY_DOWN;
-	n    = input->GetKey(SDL_SCANCODE_N) == KeyState::KEY_DOWN;
+	//d    = input->GetKey(SDL_SCANCODE_D) == KeyState::KEY_DOWN;
+	//p    = input->GetKey(SDL_SCANCODE_P) == KeyState::KEY_DOWN;
+	//s    = input->GetKey(SDL_SCANCODE_S) == KeyState::KEY_DOWN;
+	//l    = input->GetKey(SDL_SCANCODE_L) == KeyState::KEY_DOWN;
+	//n    = input->GetKey(SDL_SCANCODE_N) == KeyState::KEY_DOWN;
 }
 
 void EconomyScene::UpdateCurrency()
@@ -1382,7 +1382,7 @@ void EconomyScene::CheckLogMismatch()
 
 		if ((curr->GetOldInstance() - prev->GetNewInstance()) > 0.001f)
 		{
-			logs.emplace(logs.begin() + i, new InformativeLog(prev->GetNewInstance(), curr->GetOldInstance(), "Unlogged movement"));
+			//logs.emplace(logs.begin() + i, new InformativeLog(prev->GetNewInstance(), curr->GetOldInstance(), "Unlogged movement"));
 			CheckLogLeaking();
 		}
 
@@ -1576,7 +1576,7 @@ void EconomyScene::Loadv1_0()
 
 			added++;
 
-			for (suint i = 0; i < fSize; ++i)
+			for (unsigned int i = 0; i < fSize; ++i)
 			{
 				std::string fName;
 				float fMoney;
@@ -1606,7 +1606,7 @@ void EconomyScene::Loadv1_0()
 
 			added++;
 
-			for (suint i = 0; i < fSize; ++i)
+			for (unsigned int i = 0; i < fSize; ++i)
 			{
 				std::string fName;
 				float fMoney;

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -41,6 +41,7 @@
 #include "SDL_events.h"
 #include "SDL_filesystem.h"
 #include "SDL_gamecontroller.h"
+#include "SDL_guid.h"
 #include "SDL_haptic.h"
 #include "SDL_hidapi.h"
 #include "SDL_hints.h"
@@ -48,7 +49,7 @@
 #include "SDL_loadso.h"
 #include "SDL_log.h"
 #include "SDL_messagebox.h"
-#include "SDL_metal.h"
+#include "../External/SDL/include/SDL_metal.h"
 #include "SDL_mutex.h"
 #include "SDL_power.h"
 #include "SDL_render.h"

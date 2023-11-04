@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defs.h"
+#include "Framework/Defs.h"
 #include "Label.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_stdlib.h"

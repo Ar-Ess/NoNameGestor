@@ -33,7 +33,7 @@ public: // Functions
 
 		size_t size = labels.size();
 
-		for (suint i = 0; i < size; ++i)
+		for (unsigned int i = 0; i < size; ++i)
 		{
 			ImGui::PushID(id * -1 * i);
 
