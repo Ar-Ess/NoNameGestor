@@ -47,7 +47,7 @@ private: // Functions --------------------------------------------
 	bool DrawFileDialog(bool* vError, const char* v, std::string* path, std::string* name, size_t* format, bool* closed);
 	bool ErrorPopup(bool* open, const char* title, const char* description);
 	void ExportGestor(std::vector<Container*>* exporting);
-	void ExportLogs(unsigned int start, unsigned int end);
+//	void ExportLogs(unsigned int start, unsigned int end);
 
 	bool DrawMenuBar();
 	bool DrawDocking();
@@ -110,16 +110,6 @@ private: // Functions --------------------------------------------
 		}
 	}
 
-	void DeleteContainer(unsigned int index)
-	{
-		assert(index >= 0 && index < containers.size());
-
-		Container* r = containers[index];
-		containers.erase(containers.begin() + index);
-		RELEASE(r);
-		SwitchLoadOpen();
-	}
-
 	void DeleteAllContainer()
 	{
 		for (Container* r : containers) RELEASE(r);
@@ -145,27 +135,22 @@ private: // Functions --------------------------------------------
 		containers.insert(containers.begin() + position, r);
 	}
 
-	int ReturnContainerIndex(intptr_t id)
-	{
-		size_t size = containers.size();
-		int i = 0;
-		for (std::vector<Container*>::const_iterator it = containers.begin(); it != containers.end(); ++it)
-		{
-			Container* rTarget = (*it);
-			if (id == rTarget->GetId()) return i;
-			++i;
-		}
+	//int ReturnContainerIndex(intptr_t id)
+	//{
+	//	size_t size = containers.size();
+	//	int i = 0;
+	//	for (std::vector<Container*>::const_iterator it = containers.begin(); it != containers.end(); ++it)
+	//	{
+	//		Container* rTarget = (*it);
+	//		if (id == rTarget->GetId()) return i;
+	//		++i;
+	//	}
 
-		i = -1;
-		assert(i != -1); // There is not a container like "r"
+	//	i = -1;
+	//	assert(i != -1); // There is not a container like "r"
 
-		return i;
-	}
-
-	void SwitchLoadOpen()
-	{
-		for (Container* c : containers) c->loadOpen = true;
-	}
+	//	return i;
+	//}
 
 private: // Variables
 

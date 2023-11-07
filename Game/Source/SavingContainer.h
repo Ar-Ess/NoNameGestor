@@ -35,7 +35,7 @@ public: // Functions
 
 		for (unsigned int i = 0; i < size; ++i)
 		{
-			ImGui::PushID(-id / ( i + 1 ));
+			ImGui::PushID(-id->Value() / ( i + 1 ));
 
 			if (i == 0) { if (ImGui::Button("+")) NewLabel("New Saving"); }
 			else ImGui::Dummy({ 38, 0 });

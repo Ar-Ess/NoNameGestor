@@ -60,18 +60,15 @@ bool EconomyScene::Draw(float dt)
 
 bool EconomyScene::CleanUp()
 {
+	pages.Clear();
 	return true;
 }
 
 void EconomyScene::NewFile()
 {
-	//openFiles.emplace_back(File{"New_File", nullptr});
-	openFileName = "New_File";
-	openFilePath.clear();
-
-	DeleteAllContainer();
-	DeleteAllLogs();
-
+	Page* p = new Page();
+	pages.Add(p);
+	p->Start(comboCurrency[currency]);
 }
 
 void EconomyScene::SaveAs()
@@ -632,43 +629,11 @@ void EconomyScene::ExportGestor(std::vector<Container*>* exporting)
 	file.close();
 }
 
-void EconomyScene::ExportLogs(unsigned int start, unsigned int end)
-{
-	std::fstream file;
-	std::string filePath = openFilePath;
-	if (filePath.empty()) filePath = "Exports\\";
-	filePath += openFileName;
-	filePath.erase(filePath.end() - 4, filePath.end());
-	filePath += "_Logs.txt";
-
-	file.open(filePath, std::ios::out);
-
-	assert(file.is_open()); // File is not open
-
-	for (unsigned int i = start; i != end + 1; ++i)
-	{
-		Log* log = logs[i];
-		file << log->GetName() << ": ";
-		char a = '+', b = '-';
-		char* sign = nullptr;
-		log->totalInstance > 0 ? sign = &a : sign = &b;
-
-		if (log->GetDate(0) != 0)
-			file << log->GetDate(0) << " / " << log->GetDate(1) << " / " << log->GetDate(2) << std::endl;
-		else
-			file << std::endl;
-
-		file << log->GetOldInstance() << " -> " << log->GetNewInstance() << " | " << *sign << log->totalInstance << std::endl << std::endl;
-	}
-
-	file.close();
-}
-
 bool EconomyScene::DrawMenuBar()
 {
 	if (ImGui::BeginMainMenuBar())
 	{
-		if (ImGui::BeginMenu("File"))
+		if (ImGui::BeginMenu("File", true))
 		{
 			if (ImGui::MenuItem("New File", "Ctrl + N"))
 				NewFile();
@@ -710,7 +675,7 @@ bool EconomyScene::DrawMenuBar()
 						{
 							ImGui::Text("  - ");
 							ImGui::SameLine();
-							ImGui::PushID(c->GetId());
+							ImGui::PushID(c->id->Value());
 							ImGui::PushItemFlag(ImGuiItemFlags_SelectableDontClosePopup, true);
 							ImGui::MenuItem(c->GetName(), "", &c->exporting);
 							ImGui::PopItemFlag();
@@ -791,7 +756,7 @@ bool EconomyScene::DrawMenuBar()
 					if (empty) ImGui::BeginDisabled();
 					if (ImGui::Selectable("  Export", false, ImGuiSelectableFlags_None, { 70, 14 }))
 					{
-						ExportLogs(from - 1, to - 1);
+						//ExportLogs(from - 1, to - 1);
 						from = 1;
 						to = size;
 					}
@@ -800,7 +765,7 @@ bool EconomyScene::DrawMenuBar()
 					ImGui::SameLine();
 					if (ImGui::Selectable("Export All", false, ImGuiSelectableFlags_None, { 70, 14 }))
 					{
-						ExportLogs(0, size - 1);
+						//ExportLogs(0, size - 1);
 						from = 1;
 						to = size;
 					}
@@ -1062,13 +1027,23 @@ bool EconomyScene::DrawMainWindow(bool* open)
 	{
 		if (ImGui::BeginTabBar("##FilesBar"))
 		{
-			pages.Iterate
+			index = 0;
+			unsigned int i = 0;
+			pages.Iterate<unsigned int*, unsigned int*>
 			(
-				[](Page* p)
+				&index,
+				&i,
+				[](Page* p, unsigned int* index, unsigned int* i)
 				{
-					if (!ImGui::BeginTabItem(p->name.c_str())) return;
-					p->Draw();
-					ImGui::EndTabItem();
+					ImGui::PushID(p->id->Value());
+					if (ImGui::BeginTabItem(p->name.c_str()))
+					{
+						p->Draw();
+						*index = *i;
+						ImGui::EndTabItem();
+					}
+					ImGui::PopID();
+					(*i)++;
 				}
 			);
 
@@ -1082,17 +1057,12 @@ bool EconomyScene::DrawMainWindow(bool* open)
 
 void EconomyScene::DrawGestorSystem()
 {
-	AddSpacing(3);
-
-	//totalContainer->Draw();
-
-	AddSpacing(2);
 
 	size_t size = containers.size();
 	for (unsigned int i = 0; i < size; ++i)
 	{
 		Container* r = containers[i];
-		ImGui::PushID(r->GetId() / ((i * size) + size * size));
+		ImGui::PushID(r->id->Value() / ((i * size) + size * size));
 		bool reordered = false;
 
 		bool hidden = r->hidden;
@@ -1116,7 +1086,7 @@ void EconomyScene::DrawGestorSystem()
 		{
 			if (ImGui::MenuItem("Delete"))
 			{
-				DeleteContainer(i);
+				//DeleteContainer(i);
 				ImGui::EndPopup();
 				ImGui::PopID();
 				break;
@@ -1129,7 +1099,7 @@ void EconomyScene::DrawGestorSystem()
 				if (totalResult >= 0)
 				{
 					//*totalContainer->GetMoneyPtr() = totalResult;
-					DeleteContainer(i);
+					//DeleteContainer(i);
 					ImGui::EndPopup();
 					ImGui::PopID();
 					break;
@@ -1150,7 +1120,7 @@ void EconomyScene::DrawGestorSystem()
 		{
 			if (ImGui::BeginDragDropSource())
 			{
-				intptr_t id = r->GetId();
+				intptr_t id = 0; // r->GetId();
 				ImGui::SetDragDropPayload("Container", &id, sizeof(intptr_t));
 				ImGui::Text(r->GetName());
 				ImGui::EndDragDropSource();
@@ -1160,7 +1130,7 @@ void EconomyScene::DrawGestorSystem()
 				const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Container");
 				if (payload)
 				{
-					MoveContainer(ReturnContainerIndex(*((intptr_t*)payload->Data)), i);
+					//MoveContainer(ReturnContainerIndex(*((intptr_t*)payload->Data)), i);
 					reordered = true;
 				}
 				ImGui::EndDragDropTarget();
@@ -1181,34 +1151,6 @@ void EconomyScene::DrawGestorSystem()
 	AddSpacing(0);
 
 	//unasignedContainer->Draw();
-}
-
-void EconomyScene::DrawLogSystem(bool checkMismatch)
-{
-	if (checkMismatch) CheckLogMismatch();
-
-	AddSpacing(1);
-
-	int logsLeft = maxLogs - logs.size();
-	if (logsLeft < 5 && logsLeft > 0)
-	{
-		ImGui::TextColored(ImVec4{ 1.0f, 1.0f, 1.0f, 0.4f }, "Warning! You are %d logs from the maximum log size.", logsLeft); ImGui::SameLine();
-		AddHelper("Overcoming this maximum will delete automatically\nthe last log. Upgrade the maximum log amount\nor export the logs in a file.\n[File > Export > Logs]");
-	}
-	else if (logsLeft == 0)
-	{
-		ImGui::TextColored(ImVec4{ 1.0f, 1.0f, 1.0f, 0.4f }, "Warning! You are %d logs from the maximum log size.", logsLeft); ImGui::SameLine();
-		AddHelper("Overcoming this maximum will delete automatically\nthe last log. Upgrade the maximum log amount\nor export the logs in a file.\n[File > Export > Logs]");
-	}
-	
-	AddSpacing(2);
-	AddSeparator();
-
-	std::vector<Log*>::reverse_iterator it;
-	int i = 0;
-	for (it = logs.rbegin(); it != logs.rend(); ++it) (*it)->Draw(comboCurrency[currency], ++i);
-
-	AddSeparator();
 }
 
 bool EconomyScene::DrawToolbarWindow(bool* open)
@@ -1256,7 +1198,7 @@ bool EconomyScene::DrawToolbarWindow(bool* open)
 			action = true;
 		}
 
-		if (action) SwitchLoadOpen();
+		//if (action) SwitchLoadOpen();
 	}
 	ImGui::End();
 

@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include "ContainerEnum.h"
+#include "Framework/ID.h"
 
 static float textFieldSize = 150.0f;
 
@@ -17,8 +18,8 @@ public: // Functions
 	virtual ~Container() 
 	{
 		name.clear();
-		name.shrink_to_fit();
 		namePtr = nullptr;
+		delete id;
 	}
 
 	virtual void Start(const char* currency) {}
@@ -54,11 +55,6 @@ public: // Functions
 	ContainerType GetType() const
 	{
 		return type;
-	}
-
-	intptr_t GetId() const
-	{
-		return id;
 	}
 
 	float GetMoney() const
@@ -157,7 +153,7 @@ protected: // Functions
 		this->open = open;
 		this->unified = unified;
 		this->totalMoneyPtr = totalMoneyPtr;
-		id = reinterpret_cast<int>(this);
+		id = new ID();
 
 	}
 
@@ -178,6 +174,8 @@ protected: // Functions
 
 public: // Variables
 
+	ID* id = nullptr; // Do not add the header, when having cpp, forward declare and header on cpp
+
 	bool hidden = false;
 	bool unified = true;
 	bool open = false;
@@ -191,7 +189,6 @@ protected: // Variables
 	float money = 0.0f;
 	std::string* namePtr = nullptr; //-TODO: quan carregem fitxer, mirar si esta unified o no i asignar nom corresponent
 	std::string name;
-	std::intptr_t id = 0;
 	ContainerType type = ContainerType::NO_CONTAINER;
 	std::string format;
 

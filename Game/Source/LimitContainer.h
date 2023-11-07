@@ -35,7 +35,7 @@ public: // Functions
 
 		for (unsigned int i = 0; i < size; ++i)
 		{
-			ImGui::PushID(id * -1 * i);
+			ImGui::PushID(id->Value() * -1 * i);
 
 			if (i == 0) { if (ImGui::Button("+")) NewLabel("New Limit"); }
 			else ImGui::Dummy({ 38, 0 });

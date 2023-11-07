@@ -1,5 +1,6 @@
 #include "Input.h"
 #include "SDL/include/SDL.h"
+#include "imgui/imgui_impl_sdl.h"
 #include "Window.h"
 
 Input::Input(Window* window) : Module()
@@ -23,6 +24,7 @@ bool Input::Start()
 {
 	LOG("Init SDL input event system");
 	bool ret = true;
+	SDL_Init(0);
 
 	if(SDL_InitSubSystem(SDL_INIT_EVENTS) < 0)
 	{
@@ -45,6 +47,7 @@ bool Input::Update(float dt)
 
 	while(SDL_PollEvent(&event) != 0)
 	{
+		ImGui_ImplSDL2_ProcessEvent(&event);
 		switch(event.type)
 		{
 		case SDL_QUIT: windowEvents[(int)EventWindow::WE_QUIT] = true; ret = false; break;

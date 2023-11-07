@@ -36,6 +36,11 @@ public:
 		return true;
 	}
 
+	intptr_t Value() const
+	{
+		return id;
+	}
+
 private:
 
 	intptr_t id = 0;

@@ -780,7 +780,7 @@ public:
         }
         else
         {
-            for (Node* iter = final; iter != nullptr; iter = iter->prev)
+            for (Node* iter = finalNode; iter != nullptr; iter = iter->prev)
                 function(iter->value);
         }
     }
@@ -797,7 +797,7 @@ public:
         }
         else
         {
-            for (Node* iter = final; iter != nullptr; iter = iter->prev)
+            for (Node* iter = finalNode; iter != nullptr; iter = iter->prev)
                 if (!function(iter->value)) return;
         }
     }
@@ -815,7 +815,7 @@ public:
         }
         else
         {
-            for (Node* iter = final; iter != nullptr; iter = iter->prev)
+            for (Node* iter = finalNode; iter != nullptr; iter = iter->prev)
                 function(iter->value, t1);
         }
     }
@@ -833,7 +833,7 @@ public:
         }
         else
         {
-            for (Node* iter = final; iter != nullptr; iter = iter->prev)
+            for (Node* iter = finalNode; iter != nullptr; iter = iter->prev)
                 if (!function(iter->value, t1)) return;
         }
     }
@@ -851,7 +851,7 @@ public:
         }
         else
         {
-            for (Node* iter = final; iter != nullptr; iter = iter->prev)
+            for (Node* iter = finalNode; iter != nullptr; iter = iter->prev)
                 function(iter->value, t1, t2);
         }
     }
@@ -869,7 +869,7 @@ public:
         }
         else
         {
-            for (Node* iter = final; iter != nullptr; iter = iter->prev)
+            for (Node* iter = finalNode; iter != nullptr; iter = iter->prev)
                 if (!function(iter->value, t1, t2)) return;
         }
     }
@@ -887,7 +887,7 @@ public:
         }
         else
         {
-            for (Node* iter = final; iter != nullptr; iter = iter->prev)
+            for (Node* iter = finalNode; iter != nullptr; iter = iter->prev)
                 function(iter->value, t1, t2, t3);
         }
     }
@@ -905,7 +905,7 @@ public:
         }
         else
         {
-            for (Node* iter = final; iter != nullptr; iter = iter->prev)
+            for (Node* iter = finalNode; iter != nullptr; iter = iter->prev)
                 if (!function(iter->value, t1, t2, t3)) return;
         }
     }
@@ -923,7 +923,7 @@ public:
         }
         else
         {
-            for (Node* iter = final; iter != nullptr; iter = iter->prev)
+            for (Node* iter = finalNode; iter != nullptr; iter = iter->prev)
                 function(iter->value, t1, t2, t3, t4);
         }
     }
@@ -941,7 +941,7 @@ public:
         }
         else
         {
-            for (Node* iter = final; iter != nullptr; iter = iter->prev)
+            for (Node* iter = finalNode; iter != nullptr; iter = iter->prev)
                 if (!function(iter->value, t1, t2, t3, t4)) return;
         }
     }
@@ -952,18 +952,18 @@ private:
     {
         if (index < 0 || index >= size) return nullptr;
         if (index == 0) return start;
-        if (index == size - 1) return final;
+        if (index == size - 1) return finalNode;
         unsigned int middle = size / 2 + size % 2;
 
         Node* ret = nullptr;
-        if (index - medium < 0)
+        if (index - middle < 0)
         {
             ret = start;
             for (unsigned int i = 0; i < index; ++i) ret = ret->post;
         }
         else
         {
-            ret = final;
+            ret = finalNode;
             for (unsigned int i = 0; i < (size - index - 1); ++i) ret = ret->prev;
         }
 
