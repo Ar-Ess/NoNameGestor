@@ -172,7 +172,7 @@
     <ClInclude Include="Source\LogHeader.h" />
     <ClInclude Include="Source\MovementLog.h" />
     <ClInclude Include="Source\ContainerHeader.h" />
-    <ClInclude Include="Source\MethodsEnum.h" />
+    <ClInclude Include="Source\Page.h" />
     <ClInclude Include="Source\SavingContainer.h" />
     <ClInclude Include="Source\UnasignedContainer.h" />
     <ClInclude Include="Source\Container.h" />

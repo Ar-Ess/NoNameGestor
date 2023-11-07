@@ -164,7 +164,6 @@ protected: // Functions
 	void SetFormat(const char* form, const char* currency)
 	{
 		format.clear();
-		format.shrink_to_fit();
 		format += form;
 		format += currency;
 	}

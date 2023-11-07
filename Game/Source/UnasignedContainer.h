@@ -20,39 +20,6 @@ public: // Functions
 		SetFormat("%.2f ", currency);
 	}
 
-	void Update() override
-	{
-		if (*showFutureMoney && *allowFutureCover && futureMoney > 0 && actualMoney < 0)
-		{
-			float debt = -actualMoney;
-			if (debt <= futureMoney)
-			{
-				futureMoney -= debt;
-				actualMoney = 0;
-			}
-			else
-			{
-				actualMoney += futureMoney;
-				futureMoney = 0;
-			}
-		}
-
-		if (*showArrearMoney && *allowArrearsFill && arrearMoney < 0 && actualMoney > 0)
-		{
-			float debt = -arrearMoney;
-			if (debt <= actualMoney)
-			{
-				actualMoney -= debt;
-				arrearMoney = 0;
-			}
-			else
-			{
-				arrearMoney += actualMoney;
-				actualMoney = 0;
-			}
-		}
-	}
-
 	void Draw() override
 	{
 		if (!*showFutureMoney && !*showArrearMoney && !*showConstantMoney)

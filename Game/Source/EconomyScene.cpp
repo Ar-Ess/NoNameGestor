@@ -1,19 +1,17 @@
 #include "EconomyScene.h"
 #include <windows.h>
 #include <iostream>
+#include "Page.h"
 
-#define VERSION "v1.1"
-#define EXTENSION ".nng"
+#define VERSION "v1.0"
+//#define EXTENSION ".nng"
 #include "External/ImGuiFileDialog/ImGuiFileDialog.h"
 #include "imgui/imgui_internal.h"
 
 EconomyScene::EconomyScene()
 {
-	this->input = input;
-	this->file = new FileManager(EXTENSION);
-
-	totalContainer = new TotalContainer("Total Money", &logs, &dateFormatType, &maxLogs);
-	unasignedContainer = new UnasignedContainer("Unasigned Money", &showFutureUnasigned, &allowFutureCovering, &showArrearUnasigned, &allowArrearsFill, &showConstantTotal);
+	pages.Add(new Page());
+	index = 0;
 
 	openFileName = "New_File";
 	openFileName += EXTENSION;
@@ -27,54 +25,14 @@ EconomyScene::~EconomyScene()
 
 bool EconomyScene::Start()
 {
-	totalContainer->Start(comboCurrency[currency]);
-	unasignedContainer->Start(comboCurrency[currency]);
-	for (Container* r : containers) r->Start(comboCurrency[currency]);
+	pages.At(index)->Start(comboCurrency[currency]);
 
 	return true;
 }
 
 bool EconomyScene::Update(float dt)
 {
-	UpdateShortcuts();
-
-	if ((int)method > 0) SetMethod();
-
-	if (ctrl &&  shft && d) demoWindow = !demoWindow;
-	if (ctrl &&  shft && p) preferencesWindow = !preferencesWindow;
-	if (ctrl && !shft && s) Save();
-	if (ctrl &&  shft && s) SaveAs();
-	if (ctrl && !shft && l) Load();
-	if (ctrl && !shft && n) NewFile();
-
-	totalContainer->Update();
-	float totalMoney = totalContainer->GetMoney();
-	float futureMoney = 0;
-	float arrearMoney = 0;
-	float constMoney = 0;
-
-	for (Container* r : containers)
-	{
-		if (r->hidden) continue;
-
-		r->Update();
-
-		switch (r->GetType())
-		{
-
-		case ContainerType::FUTURE: futureMoney += r->GetMoney(); break;
-		case ContainerType::ARREAR: arrearMoney -= r->GetMoney(); break;
-		case ContainerType::CONSTANT:
-			for (int i = 0; i < ((ConstContainer*)r)->GetSize(); ++i) constMoney += ((ConstContainer*)r)->GetLabelLimit(i);
-		case ContainerType::FILTER:
-		case ContainerType::LIMIT:
-		case ContainerType::SAVING:
-		default: totalMoney -= r->GetMoney(); break;
-		}
-	}
-
-	unasignedContainer->SetMoney(totalMoney + futureMoney + arrearMoney, totalMoney, futureMoney, arrearMoney, constMoney);
-	unasignedContainer->Update();
+	pages.At(index)->Update();
 
 	return true;
 }
@@ -114,7 +72,6 @@ void EconomyScene::NewFile()
 	DeleteAllContainer();
 	DeleteAllLogs();
 
-	totalContainer->SetMoney(0.0f);
 }
 
 void EconomyScene::SaveAs()
@@ -192,8 +149,8 @@ void EconomyScene::Save()
 
 void EconomyScene::InternalSave(const char* path)
 {
-	float total = totalContainer->GetMoney();
-	float unasigned = unasignedContainer->GetMoney();
+	float total = 0; // totalContainer->GetMoney();
+	float unasigned = 0; // unasignedContainer->GetMoney();
 
 	file->OpenFile(path).
 		// Preferences
@@ -563,7 +520,7 @@ void EconomyScene::LoadInternal(const char* path)
 		}
 	}
 
-	totalContainer->SetMoney(total);
+	//totalContainer->SetMoney(total);
 	UpdateCurrency();
 }
 
@@ -896,22 +853,6 @@ bool EconomyScene::DrawMenuBar()
 
 			ImGui::EndMenu();
 		}
-		if (ImGui::BeginMenu("Methods"))
-		{
-			if (ImGui::MenuItem("Harv Eker"))
-				method = Method::MTHD_HARV_EKER;
-
-			if (ImGui::MenuItem("50/30/20 Rule"))
-				method = Method::MTHD_50_30_20;
-
-			if (ImGui::MenuItem("Pareto"))
-				method = Method::MTHD_PARETO;
-
-			if (ImGui::MenuItem("50/15/5 Rule"))
-				method = Method::MTHD_50_15_5;
-
-			ImGui::EndMenu();
-		}
 		if (ImGui::BeginMenu("About"))
 		{
 			ImGui::Text("No Name Gestor %s", VERSION); ImGui::SameLine();
@@ -1119,23 +1060,17 @@ bool EconomyScene::DrawMainWindow(bool* open)
 
 	if (ImGui::Begin("##MainWindow", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar))
 	{
-		ImGui::Text(openFileName.c_str());
-		AddSeparator(1);
-		AddSpacing(1);
-
-		if (ImGui::BeginTabBar("##SystemBar"))
+		if (ImGui::BeginTabBar("##FilesBar"))
 		{
-			if (ImGui::BeginTabItem("Gestor "))
-			{
-				DrawGestorSystem();
-				ImGui::EndTabItem();
-			}
-
-			if (ImGui::BeginTabItem("  Log  "))
-			{
-				DrawLogSystem(ImGui::IsItemDeactivated());
-				ImGui::EndTabItem();
-			}
+			pages.Iterate
+			(
+				[](Page* p)
+				{
+					if (!ImGui::BeginTabItem(p->name.c_str())) return;
+					p->Draw();
+					ImGui::EndTabItem();
+				}
+			);
 
 			ImGui::EndTabBar();
 		}
@@ -1149,7 +1084,7 @@ void EconomyScene::DrawGestorSystem()
 {
 	AddSpacing(3);
 
-	totalContainer->Draw();
+	//totalContainer->Draw();
 
 	AddSpacing(2);
 
@@ -1190,10 +1125,10 @@ void EconomyScene::DrawGestorSystem()
 			{
 				int dif = 1;
 				r->GetType() == ContainerType::FUTURE ? dif = 1 : dif = -1;
-				float totalResult = totalContainer->GetMoney() + (r->GetMoney() * dif);
+				float totalResult = 0;//totalContainer->GetMoney() + (r->GetMoney() * dif);
 				if (totalResult >= 0)
 				{
-					*totalContainer->GetMoneyPtr() = totalResult;
+					//*totalContainer->GetMoneyPtr() = totalResult;
 					DeleteContainer(i);
 					ImGui::EndPopup();
 					ImGui::PopID();
@@ -1245,7 +1180,7 @@ void EconomyScene::DrawGestorSystem()
 
 	AddSpacing(0);
 
-	unasignedContainer->Draw();
+	//unasignedContainer->Draw();
 }
 
 void EconomyScene::DrawLogSystem(bool checkMismatch)
@@ -1328,22 +1263,10 @@ bool EconomyScene::DrawToolbarWindow(bool* open)
 	return ret;
 }
 
-void EconomyScene::UpdateShortcuts()
-{
-	//ctrl = input->GetKey(SDL_SCANCODE_LCTRL) == KeyState::KEY_REPEAT;
-	//shft = input->GetKey(SDL_SCANCODE_LSHIFT) == KeyState::KEY_REPEAT;
-
-	//d    = input->GetKey(SDL_SCANCODE_D) == KeyState::KEY_DOWN;
-	//p    = input->GetKey(SDL_SCANCODE_P) == KeyState::KEY_DOWN;
-	//s    = input->GetKey(SDL_SCANCODE_S) == KeyState::KEY_DOWN;
-	//l    = input->GetKey(SDL_SCANCODE_L) == KeyState::KEY_DOWN;
-	//n    = input->GetKey(SDL_SCANCODE_N) == KeyState::KEY_DOWN;
-}
-
 void EconomyScene::UpdateCurrency()
 {
-	totalContainer->SetCurrency(comboCurrency[currency]);
-	unasignedContainer->SetCurrency(comboCurrency[currency]);
+	//totalContainer->SetCurrency(comboCurrency[currency]);
+	//unasignedContainer->SetCurrency(comboCurrency[currency]);
 	for (Container* r : containers) r->SetCurrency(comboCurrency[currency]);
 }
 
@@ -1351,16 +1274,16 @@ void EconomyScene::CreateContainer(ContainerType container, const char* name, bo
 {
 	bool unified = createContainerUnified;
 
-	switch (container)
-	{
-	case ContainerType::FILTER  : containers.emplace_back((Container*)(new FilterContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
-	case ContainerType::LIMIT   : containers.emplace_back((Container*)(new  LimitContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
-	case ContainerType::FUTURE  : containers.emplace_back((Container*)(new FutureContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
-	case ContainerType::ARREAR  : containers.emplace_back((Container*)(new ArrearContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
-	case ContainerType::CONSTANT: containers.emplace_back((Container*)(new  ConstContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
-	case ContainerType::SAVING  : containers.emplace_back((Container*)(new SavingContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
-	default: break;
-	}
+	//switch (container)
+	//{
+	//case ContainerType::FILTER  : containers.emplace_back((Container*)(new FilterContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
+	//case ContainerType::LIMIT   : containers.emplace_back((Container*)(new  LimitContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
+	//case ContainerType::FUTURE  : containers.emplace_back((Container*)(new FutureContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
+	//case ContainerType::ARREAR  : containers.emplace_back((Container*)(new ArrearContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
+	//case ContainerType::CONSTANT: containers.emplace_back((Container*)(new  ConstContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
+	//case ContainerType::SAVING  : containers.emplace_back((Container*)(new SavingContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
+	//default: break;
+	//}
 
 	containers.back()->SetCurrency(comboCurrency[currency]);
 }
@@ -1389,70 +1312,10 @@ void EconomyScene::CheckLogMismatch()
 		prev = logs[i];
 	}
 
-	if (!logs.empty() && (logs.back()->GetNewInstance() - totalContainer->GetMoney()) > 0.001f)
-	{
-		CreateInformative(logs.back()->GetNewInstance(), "Unlogged movement");
-	}
-}
-
-void EconomyScene::SetMethod()
-{
-	float money = totalContainer->GetMoney();
-
-	switch (method)
-	{
-	case Method::MTHD_PARETO:
-	{
-		CreateContainer(ContainerType::FILTER, "Pareto", false, false);
-		FilterContainer* fC = (FilterContainer*)containers.back();
-		fC->ClearLabels();
-		fC->NewLabel("Available 80%", money * 0.8f);
-		fC->NewLabel("Savings 20%", money * 0.2f);
-		break;
-	}
-
-	case Method::MTHD_50_15_5:
-	{
-		CreateContainer(ContainerType::FILTER, "50 / 15 / 5", false, false);
-		FilterContainer* fC = (FilterContainer*)containers.back();
-		fC->ClearLabels();
-		fC->NewLabel("Essential 50%", money * 0.5f);
-		fC->NewLabel("Future 15%", money * 0.15f);
-		fC->NewLabel("Unexpected 5%", money * 0.05f);
-		fC->NewLabel("Free Assign 30%", money * 0.3f);
-		break;
-	}
-
-	case Method::MTHD_50_30_20:
-	{
-		CreateContainer(ContainerType::FILTER, "50 / 30 / 20", false, false);
-		FilterContainer* fC = (FilterContainer*)containers.back();
-		fC->ClearLabels();
-		fC->NewLabel("Primary 50%", money * 0.5f);
-		fC->NewLabel("Leisure 30%", money * 0.3f);
-		fC->NewLabel("Savings 20%", money * 0.2f);
-		break;
-	}
-
-	case Method::MTHD_HARV_EKER:
-	{
-		CreateContainer(ContainerType::FILTER, "HARV EKER", false, false);
-		FilterContainer* fC = (FilterContainer*)containers.back();
-		fC->ClearLabels();
-		fC->NewLabel("Primary 55%", money * 0.55f);
-		fC->NewLabel("Education 10%", money * 0.1f);
-		fC->NewLabel("Leisure 10%", money * 0.1f);
-		fC->NewLabel("Donations 5%", money * 0.05f);
-		fC->NewLabel("Invest 10%", money * 0.1f);
-		fC->NewLabel("Savings 10%", money * 0.1f);
-		break;
-	}
-
-	default:
-		break;
-	}
-
-	method = Method::MTHD_NO;
+	//if (!logs.empty() && (logs.back()->GetNewInstance() - totalContainer->GetMoney()) > 0.001f)
+	//{
+	//	CreateInformative(logs.back()->GetNewInstance(), "Unlogged movement");
+	//}
 }
 
 // Old Loads -------------------------------------------
@@ -1628,7 +1491,7 @@ void EconomyScene::Loadv1_0()
 		containers.back()->loadOpen = true;
 	}
 
-	totalContainer->SetMoney(total);
+	//totalContainer->SetMoney(total);
 	UpdateCurrency();
 
 }

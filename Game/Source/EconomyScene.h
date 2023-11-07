@@ -2,13 +2,19 @@
 
 #include "Framework/Scene.h"
 #include "Framework/Defs.h"
-#include <vector>
+#include "Framework/Array.h"
+
 #include "imgui/imgui.h"
+
+class Page;
+
+//--------
+#include <vector>
 #include "FileManager.h"
 #include "Chrono.h"
 
 #include "ContainerHeader.h"
-#include "MethodsEnum.h"
+//-------
 
 class EconomyScene : public Scene
 {
@@ -23,7 +29,13 @@ public:
 
 	bool CleanUp();
 
-private: // Functions
+private:
+
+	Array<Page*> pages;
+	unsigned int index = 0;
+
+// ===============================================================
+private: // Functions --------------------------------------------
 
 	void NewFile();
 	void SaveAs();
@@ -47,7 +59,6 @@ private: // Functions
 
 	bool DrawToolbarWindow(bool* open);
 
-	void UpdateShortcuts();
 	void UpdateCurrency();
 
 	void CreateContainer(ContainerType container, const char* name = "New Container", bool hidden = false, bool open = true);
@@ -156,8 +167,6 @@ private: // Functions
 		for (Container* c : containers) c->loadOpen = true;
 	}
 
-	void SetMethod();
-
 private: // Variables
 
 	// General
@@ -168,8 +177,6 @@ private: // Variables
 	bool preferencesWindow = false;
 
 	// Gestor
-	TotalContainer* totalContainer = nullptr;
-	UnasignedContainer* unasignedContainer = nullptr;
 	std::vector<Container*> containers;
 
 	//  Logs
@@ -202,9 +209,6 @@ private: // Variables
 
 	std::string openFileName;
 	std::string openFilePath;
-
-	// Others
-	Method method = Method::MTHD_NO;
 
 	Chrono chrono;
 	bool openToolbarPopup = false;
