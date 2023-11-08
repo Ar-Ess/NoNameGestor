@@ -6,7 +6,12 @@ class FutureContainer : public Container
 {
 public: // Functions
 
-	FutureContainer(const char* name, bool hidden, bool open, bool unified, float* totalMoneyPtr) : Container(name, hidden, open, unified, totalMoneyPtr, ContainerType::FUTURE)
+	FutureContainer() : Container("New Future", false, true, true, ContainerType::FUTURE)
+	{
+		NewLabel("New Future");
+	}
+
+	FutureContainer(const char* name, bool hidden, bool open, bool unified) : Container(name, hidden, open, unified, ContainerType::FUTURE)
 	{
 		NewLabel("New Future");
 	}

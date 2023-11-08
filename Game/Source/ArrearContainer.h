@@ -6,7 +6,12 @@ class ArrearContainer : public Container
 {
 public: // Functions
 
-	ArrearContainer(const char* name, bool hidden, bool open, bool unified, float* totalMoneyPtr) : Container(name, hidden, open, unified, totalMoneyPtr, ContainerType::ARREAR)
+	ArrearContainer() : Container("New Arrear", false, true, true, ContainerType::ARREAR)
+	{
+		NewLabel("New Arrear");
+	}
+
+	ArrearContainer(const char* name, bool hidden, bool open, bool unified) : Container(name, hidden, open, unified, ContainerType::ARREAR)
 	{
 		NewLabel("New Arrear");
 	}

@@ -6,7 +6,7 @@ class SavingContainer : public Container
 {
 public: // Functions
 
-	SavingContainer(const char* name, bool hidden, bool open, bool unified, float* totalMoneyPtr) : Container(name, hidden, open, unified, totalMoneyPtr, ContainerType::SAVING)
+	SavingContainer(const char* name, bool hidden, bool open, bool unified) : Container(name, hidden, open, unified, ContainerType::SAVING)
 	{
 		NewLabel("New Saving");
 	}

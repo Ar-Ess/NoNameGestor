@@ -174,9 +174,7 @@
     <ClInclude Include="Source\ContainerHeader.h" />
     <ClInclude Include="Source\Page.h" />
     <ClInclude Include="Source\SavingContainer.h" />
-    <ClInclude Include="Source\UnasignedContainer.h" />
     <ClInclude Include="Source\Container.h" />
-    <ClInclude Include="Source\TotalContainer.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />

@@ -504,37 +504,25 @@ bool EconomyScene::DrawToolbarWindow(bool* open)
 
 		if (ImGui::Button("FILTER"))
 		{
-			//CreateContainer(ContainerType::FILTER);
+			pages.At(index)->CreateContainer(ContainerType::FILTER);
 			action = true;
 		}
 
 		if (ImGui::Button("LIMIT "))
 		{
-			//CreateContainer(ContainerType::LIMIT);
+			pages.At(index)->CreateContainer(ContainerType::LIMIT);
 			action = true;
 		}
 
 		if (ImGui::Button("FUTURE"))
 		{
-			//CreateContainer(ContainerType::FUTURE);
+			pages.At(index)->CreateContainer(ContainerType::FUTURE);
 			action = true;
 		}
 
 		if (ImGui::Button("ARREAR"))
 		{
-			//CreateContainer(ContainerType::ARREAR);
-			action = true;
-		}
-
-		if (ImGui::Button("CONST "))
-		{
-			//CreateContainer(ContainerType::CONSTANT);
-			action = true;
-		}
-
-		if (ImGui::Button("SAVING"))
-		{
-			//CreateContainer(ContainerType::SAVING);
+			pages.At(index)->CreateContainer(ContainerType::ARREAR);
 			action = true;
 		}
 

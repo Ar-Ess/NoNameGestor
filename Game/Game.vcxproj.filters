@@ -152,12 +152,6 @@
     <ClInclude Include="Source\LimitContainer.h">
       <Filter>Gestor\Container\Containers</Filter>
     </ClInclude>
-    <ClInclude Include="Source\TotalContainer.h">
-      <Filter>Gestor\Container\Constant</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\UnasignedContainer.h">
-      <Filter>Gestor\Container\Constant</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Log.h">
       <Filter>Gestor\Container\Log</Filter>
     </ClInclude>
@@ -286,9 +280,6 @@
     </Filter>
     <Filter Include="Gestor\Container\Containers">
       <UniqueIdentifier>{94b32f97-c41f-46ee-ba41-9f19f773e979}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Gestor\Container\Constant">
-      <UniqueIdentifier>{7185b72b-3ea1-4c81-97a7-299824278e03}</UniqueIdentifier>
     </Filter>
     <Filter Include="Gestor\Container\Log">
       <UniqueIdentifier>{0fccce2a-200b-4e1b-8029-40ff21d90263}</UniqueIdentifier>

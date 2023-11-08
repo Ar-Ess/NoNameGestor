@@ -1,5 +1,6 @@
 #include "Page.h"
 #include "Container.h"
+#include "ContainerHeader.h"
 
 Page::Page()
 {
@@ -72,11 +73,6 @@ void Page::Draw()
 
 		ImGui::Dummy({ 20, 0 }); ImGui::SameLine();
 
-		//if (showContainerType)
-		//{
-		//	ImGui::Text(r->GetTypeString());
-		//	ImGui::SameLine();
-		//}
 		ImGui::PushItemWidth(textFieldSize);
 		ImGui::InputText("##LabelName", c->GetString()); ImGui::PopItemWidth(); ImGui::SameLine();
 
@@ -93,7 +89,7 @@ void Page::Draw()
 				ImGui::PopID();
 				break;
 			}
-			if (c->GetType() != ContainerType::CONSTANT && ImGui::MenuItem("Process"))
+			if (ImGui::MenuItem("Process"))
 			{
 				int dif = 1;
 				c->GetType() == ContainerType::FUTURE ? dif = 1 : dif = -1;
@@ -154,6 +150,33 @@ void Page::Draw()
 
 	ImGui::Text("Balance:"); ImGui::SameLine();
 	ImGui::Text(format.c_str(), money);
+}
+
+void Page::CreateContainer(ContainerType type)
+{
+	Container* c = nullptr;
+
+	switch (type)
+	{
+	case ContainerType::NO_CONTAINER:
+		return;
+	case ContainerType::FILTER:
+		c = new FilterContainer();
+		break;
+	case ContainerType::LIMIT:
+		c = new LimitContainer();
+		break;
+	case ContainerType::FUTURE:
+		c = new FutureContainer();
+		break;
+	case ContainerType::ARREAR:
+		c = new ArrearContainer();
+		break;
+	default:
+		break;
+	}
+
+	containers.PushBack(c);
 }
 
 void Page::SetFormat(const char* form, const char* currency)

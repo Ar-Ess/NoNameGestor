@@ -2,6 +2,7 @@
 #include <string>
 #include "Framework/Vector.h"
 #include <assert.h>
+#include "ContainerEnum.h"
 
 #define EXTENSION ".nng"
 
@@ -13,14 +14,13 @@ class Page
 public:
 
 	Page();
-
 	~Page();
 
 	void Start(const char* currency);
-
 	void Update();
-
 	void Draw();
+
+	void CreateContainer(ContainerType type);
 
 private:
 

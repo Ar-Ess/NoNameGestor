@@ -46,7 +46,6 @@ public: // Functions
 		case ContainerType::LIMIT :   return "LIMIT ";
 		case ContainerType::FUTURE:   return "FUTURE";
 		case ContainerType::ARREAR:   return "ARREAR";
-		case ContainerType::CONSTANT: return "CONST ";
 		case ContainerType::SAVING:   return "SAVING";
 		}
 		return "NO CONTAINER";
@@ -143,7 +142,7 @@ public: // Functions
 
 protected: // Functions
 
-	Container(const char* name, bool hidden, bool open, bool unified, float* totalMoneyPtr, ContainerType type) 
+	Container(const char* name, bool hidden, bool open, bool unified, ContainerType type) 
 	{
 		this->money = 0;
 		this->name = name;
@@ -152,9 +151,7 @@ protected: // Functions
 		this->hidden = hidden;
 		this->open = open;
 		this->unified = unified;
-		this->totalMoneyPtr = totalMoneyPtr;
 		id = new ID();
-
 	}
 
 	void SetFormat(const char* form, const char* currency)

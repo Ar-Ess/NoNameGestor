@@ -6,7 +6,12 @@ class LimitContainer : public Container
 {
 public: // Functions
 
-	LimitContainer(const char* name, bool hidden, bool open, bool unified, float* totalMoneyPtr) : Container(name, hidden, open, unified, totalMoneyPtr,  ContainerType::LIMIT)
+	LimitContainer() : Container("New Limit", false, true, true, ContainerType::LIMIT)
+	{
+		NewLabel("New Limit");
+	}
+
+	LimitContainer(const char* name, bool hidden, bool open, bool unified) : Container(name, hidden, open, unified, ContainerType::LIMIT)
 	{
 		NewLabel("New Limit");
 	}
