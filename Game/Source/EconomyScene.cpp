@@ -12,11 +12,6 @@ EconomyScene::EconomyScene()
 {
 	pages.Add(new Page());
 	index = 0;
-
-	openFileName = "New_File";
-	openFileName += EXTENSION;
-	openFilePath.clear();
-
 }
 
 EconomyScene::~EconomyScene()
@@ -50,9 +45,6 @@ bool EconomyScene::Draw(float dt)
 
 	if (demoWindow) ImGui::ShowDemoWindow();
 
-	if (saving) Save();
-	if (loading) Load();
-
 	return ret;
 }
 
@@ -78,7 +70,7 @@ bool EconomyScene::DrawFileDialog(bool* vError, const char* v, std::string* path
 		if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
 		{
 			// action if OK
-			if (ImGuiFileDialog::Instance()->IsOk() == true && file->Exists(ImGuiFileDialog::Instance()->GetFilePathName().c_str(), false))
+			if (ImGuiFileDialog::Instance()->IsOk() == true /*&& fileManager->FileExists(ImGuiFileDialog::Instance()->GetFilePathName().c_str(), false)*/)
 			{
 				*path = ImGuiFileDialog::Instance()->GetCurrentPath() + "\\";
 				*name = ImGuiFileDialog::Instance()->GetCurrentFileName();
@@ -86,12 +78,12 @@ bool EconomyScene::DrawFileDialog(bool* vError, const char* v, std::string* path
 				ImGuiFileDialog::Instance()->Close();
 
 				// Check if the version file is the same as the program version
-				std::string checkPath = *path;
+				/*std::string checkPath = *path;
 				checkPath += *name;
 				checkPath.erase(checkPath.end() - *format, checkPath.end());
 				file->ViewFile(checkPath.c_str()).
 					Read("version").AsString(version);
-				*vError = !SameString(v, version);
+				*vError = !SameString(v, version);*/
 				return true;
 			}
 			else
@@ -409,8 +401,8 @@ bool EconomyScene::DrawPreferencesWindow(bool* open)
 		ImGui::Spacing();
 
 		ImGui::Text("Currency:");
-		if (ImGui::Combo("##Currency", &currency, comboCurrency, 5))
-			UpdateCurrency();
+		//if (ImGui::Combo("##Currency", &currency, comboCurrency, 5))
+		//	UpdateCurrency();
 
 		ImGui::Spacing();
 
@@ -451,34 +443,6 @@ bool EconomyScene::DrawPreferencesWindow(bool* open)
 
 				ImGui::Helper("Creates all containers unified by default", "?"); ImGui::SameLine();
 				ImGui::Checkbox("Create Container Unified Default", &createContainerUnified);
-
-				ImGui::EndTabItem();
-			}
-
-			if (ImGui::BeginTabItem(" Log  "))
-			{
-				ImGui::Spacing();
-				ImGui::Text("Date Format:");
-				static bool otherDate = !dateFormatType;
-				if (ImGui::Checkbox("d/m/y", &dateFormatType))
-				{
-					dateFormatType = true;
-					otherDate = false;
-				}
-				ImGui::SameLine();
-				if (ImGui::Checkbox("m/d/y", &otherDate))
-				{
-					dateFormatType = false;
-					otherDate = true;
-				}
-
-				ImGui::Spacing();
-
-				ImGui::Text("Maximum Ammount of Logs:");
-				ImGui::PushItemWidth(180);
-				ImGui::SliderInt("##MALSlider", &maxLogs, 5, 40, "%d Logs", ImGuiSliderFlags_AlwaysClamp);
-				ImGui::PopItemWidth();
-				ImGui::Text("5                       40");
 
 				ImGui::EndTabItem();
 			}
@@ -579,11 +543,4 @@ bool EconomyScene::DrawToolbarWindow(bool* open)
 	ImGui::End();
 
 	return ret;
-}
-
-void EconomyScene::UpdateCurrency()
-{
-	//totalContainer->SetCurrency(comboCurrency[currency]);
-	//unasignedContainer->SetCurrency(comboCurrency[currency]);
-	//for (Container* r : containers) r->SetCurrency(comboCurrency[currency]);
 }
