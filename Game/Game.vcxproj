@@ -119,10 +119,10 @@
     <ClCompile Include="Source\InformativeLog.cpp" />
     <ClCompile Include="Source\Log.cpp" />
     <ClCompile Include="Source\MovementLog.cpp" />
+    <ClCompile Include="Source\Page.cpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Source\ArrearContainer.h" />
     <ClInclude Include="Source\Chrono.h" />
-    <ClInclude Include="Source\ConstContainer.h" />
     <ClInclude Include="Source\ContainerEnum.h" />
     <ClInclude Include="Source\EconomyScene.h" />
     <ClInclude Include="Source\External\ImGuiFileDialog\ImGuiFileDialog.h" />

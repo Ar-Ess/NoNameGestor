@@ -81,6 +81,9 @@
     <ClCompile Include="Source\Framework\ProgressManager.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Page.cpp">
+      <Filter>Gestor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\EconomyScene.h">
@@ -168,9 +171,6 @@
       <Filter>Gestor\Container\Log</Filter>
     </ClInclude>
     <ClInclude Include="Source\SavingContainer.h">
-      <Filter>Gestor\Container\Containers</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ConstContainer.h">
       <Filter>Gestor\Container\Containers</Filter>
     </ClInclude>
     <ClInclude Include="Source\ContainerEnum.h">

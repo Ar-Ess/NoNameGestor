@@ -1356,6 +1356,14 @@ void ImGui::Spacing()
     ItemSize(ImVec2(0, 0));
 }
 
+void ImGui::Spacing(int spaces)
+{
+    ImGuiWindow* window = GetCurrentWindow();
+    if (window->SkipItems)
+        return;
+    for (unsigned int i = 0; i < spaces * 2; i++) ItemSize(ImVec2(0, 0));
+}
+
 void ImGui::Dummy(const ImVec2& size)
 {
     ImGuiWindow* window = GetCurrentWindow();
@@ -1476,6 +1484,19 @@ void ImGui::Separator()
     ImGuiSeparatorFlags flags = (window->DC.LayoutType == ImGuiLayoutType_Horizontal) ? ImGuiSeparatorFlags_Vertical : ImGuiSeparatorFlags_Horizontal;
     flags |= ImGuiSeparatorFlags_SpanAllColumns; // NB: this only applies to legacy Columns() api as they relied on Separator() a lot.
     SeparatorEx(flags);
+}
+
+void ImGui::Separator(int separators)
+{
+    ImGuiContext& g = *GImGui;
+    ImGuiWindow* window = g.CurrentWindow;
+    if (window->SkipItems)
+        return;
+
+    // Those flags should eventually be overridable by the user
+    ImGuiSeparatorFlags flags = (window->DC.LayoutType == ImGuiLayoutType_Horizontal) ? ImGuiSeparatorFlags_Vertical : ImGuiSeparatorFlags_Horizontal;
+    flags |= ImGuiSeparatorFlags_SpanAllColumns; // NB: this only applies to legacy Columns() api as they relied on Separator() a lot.
+    for (unsigned int i = 0; i < separators; i++) SeparatorEx(flags);
 }
 
 // Using 'hover_visibility_delay' allows us to hide the highlight and mouse cursor for a short time, which can be convenient to reduce visual noise.
