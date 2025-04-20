@@ -21,14 +21,14 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -102,12 +102,9 @@
     <ClCompile Include="Source\External\imgui\imgui_stdlib.cpp" />
     <ClCompile Include="Source\External\imgui\imgui_tables.cpp" />
     <ClCompile Include="Source\External\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="Source\InformativeLog.cpp" />
-    <ClCompile Include="Source\Log.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\App.cpp" />
     <ClCompile Include="Source\Input.cpp" />
-    <ClCompile Include="Source\MovementLog.cpp" />
     <ClCompile Include="Source\PerfTimer.cpp" />
     <ClCompile Include="Source\Render.cpp" />
     <ClCompile Include="Source\Scene.cpp" />
@@ -133,16 +130,10 @@
     <ClInclude Include="Source\FileManager.h" />
     <ClInclude Include="Source\FilterContainer.h" />
     <ClInclude Include="Source\FutureContainer.h" />
-    <ClInclude Include="Source\InformativeLog.h" />
     <ClInclude Include="Source\Label.h" />
     <ClInclude Include="Source\LimitContainer.h" />
-    <ClInclude Include="Source\Log.h" />
-    <ClInclude Include="Source\LogHeader.h" />
-    <ClInclude Include="Source\MovementLog.h" />
     <ClInclude Include="Source\Multibool.h" />
     <ClInclude Include="Source\ContainerHeader.h" />
-    <ClInclude Include="Source\MethodsEnum.h" />
-    <ClInclude Include="Source\SavingContainer.h" />
     <ClInclude Include="Source\UnasignedContainer.h" />
     <ClInclude Include="Source\PerfTimer.h" />
     <ClInclude Include="Source\Point.h" />

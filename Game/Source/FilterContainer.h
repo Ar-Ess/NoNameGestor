@@ -50,16 +50,6 @@ public: // Functions
 
 				ImGui::SameLine();
 
-				if (ImGui::Button(" > "))
-				{
-					*totalMoneyPtr -= GetLabelMoney(i);
-					DeleteLabel(i);
-					if (labels.empty()) NewLabel("New Filter");
-					ImGui::PopID();
-					break;
-				}
-				ImGui::SameLine();
-
 				ImGui::PushItemWidth(textFieldSize);
 				ImGui::InputText("##FilterName", &labels[i]->name);
 				ImGui::PopItemWidth(); ImGui::SameLine();
@@ -68,7 +58,7 @@ public: // Functions
 
 
 			ImGui::PushItemWidth(width);
-			ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, 340282000000000000000000000000000000000.0f, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
+			ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, MAX_MONEY, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
 			ImGui::PopItemWidth();
 
 			ImGui::PopID();

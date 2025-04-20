@@ -8,6 +8,8 @@
 #include <vector>
 #include "ContainerEnum.h"
 
+#define MAX_MONEY 340282000000000000000000000000000000000.0f
+
 static float textFieldSize = 150.0f;
 
 class Container
@@ -46,7 +48,6 @@ public: // Functions
 		case ContainerType::FUTURE:   return "FUTURE";
 		case ContainerType::ARREAR:   return "ARREAR";
 		case ContainerType::CONSTANT: return "CONST ";
-		case ContainerType::SAVING:   return "SAVING";
 		}
 		return "NO CONTAINER";
 	}
@@ -121,28 +122,6 @@ public: // Functions
 			namePtr = &labels[0]->name;
 		else
 			namePtr = &name;
-		/*if (nameBackup.empty())
-		{
-			if (!unified)
-				return;
-			else
-			{
-				nameBackup = name.c_str();
-				name.clear();
-				name = labels[0]->name.c_str();
-			}	
-		}
-		else
-		{
-			if (!unified)
-			{
-				name.clear();
-				name = nameBackup.c_str();
-				nameBackup.clear();
-			}
-			else
-				nameBackup.clear();
-		}*/
 	}
 
 protected: // Functions

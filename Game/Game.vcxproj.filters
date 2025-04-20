@@ -57,15 +57,6 @@
     <ClCompile Include="Source\LogFunction.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Log.cpp">
-      <Filter>Container\Log</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\InformativeLog.cpp">
-      <Filter>Container\Log\Logs</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\MovementLog.cpp">
-      <Filter>Container\Log\Logs</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\App.h" />
@@ -141,9 +132,6 @@
     <ClInclude Include="Source\External\imgui\imstb_truetype.h">
       <Filter>External\ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="Source\MethodsEnum.h">
-      <Filter>Enums</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Label.h">
       <Filter>Container\Containers</Filter>
     </ClInclude>
@@ -176,21 +164,6 @@
     </ClInclude>
     <ClInclude Include="Source\LogFunction.h">
       <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Log.h">
-      <Filter>Container\Log</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\InformativeLog.h">
-      <Filter>Container\Log\Logs</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\MovementLog.h">
-      <Filter>Container\Log\Logs</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\LogHeader.h">
-      <Filter>Container\Log</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\SavingContainer.h">
-      <Filter>Container\Containers</Filter>
     </ClInclude>
     <ClInclude Include="Source\ConstContainer.h">
       <Filter>Container\Containers</Filter>
@@ -232,12 +205,6 @@
     </Filter>
     <Filter Include="Container\Constant">
       <UniqueIdentifier>{7185b72b-3ea1-4c81-97a7-299824278e03}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Container\Log">
-      <UniqueIdentifier>{0fccce2a-200b-4e1b-8029-40ff21d90263}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Container\Log\Logs">
-      <UniqueIdentifier>{37af4f78-067a-417b-bb63-ba4d7e60a1c1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

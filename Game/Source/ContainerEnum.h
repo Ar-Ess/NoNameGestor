@@ -9,6 +9,5 @@ enum class ContainerType
 	LIMIT,
 	FUTURE,
 	ARREAR,
-	CONSTANT,
-	SAVING
+	CONSTANT
 }; // NoPizzaBros

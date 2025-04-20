@@ -8,8 +8,6 @@
 #include "Chrono.h"
 
 #include "ContainerHeader.h"
-#include "LogHeader.h"
-#include "MethodsEnum.h"
 
 class EconomyScene
 {
@@ -36,7 +34,6 @@ private: // Functions
 	bool DrawFileDialog(bool* vError, const char* v, std::string* path, std::string* name, size_t* format, bool* closed);
 	bool ErrorPopup(bool* open, const char* title, const char* description);
 	void ExportGestor(std::vector<Container*>* exporting);
-	void ExportLogs(uint start, uint end);
 
 	bool DrawMenuBar();
 	bool DrawDocking();
@@ -44,7 +41,6 @@ private: // Functions
 	bool DrawPreferencesWindow(bool* open);
 	bool DrawMainWindow(bool* open);
 		void DrawGestorSystem();
-		void DrawLogSystem(bool checkMismatch);
 
 	bool DrawToolbarWindow(bool* open);
 
@@ -52,24 +48,6 @@ private: // Functions
 	void UpdateCurrency();
 
 	void CreateContainer(ContainerType container, const char* name = "New Container", bool hidden = false, bool open = true);
-
-	void CreateInformative(float oldInstance, const char* information)
-	{
-		logs.emplace_back(new InformativeLog(oldInstance, totalContainer->GetMoney(), information));
-		CheckLogLeaking();
-	}
-
-	void CheckLogLeaking()
-	{
-		if (logs.size() > maxLogs)
-		{
-			Log* erase = logs.front();
-			logs.erase(logs.begin());
-			RELEASE(erase);
-		}
-	}
-
-	void CheckLogMismatch();
 
 	// Input from 0 (smallest spacing) to whatever you need
 	void AddSpacing(unsigned int spaces = 1)
@@ -116,12 +94,6 @@ private: // Functions
 		containers.clear();
 	}
 
-	void DeleteAllLogs()
-	{
-		for (Log* l : logs) RELEASE(l);
-		logs.clear();
-	}
-
 	void MoveContainer(suint index, suint position)
 	{
 		if (index == position) return;
@@ -157,15 +129,12 @@ private: // Functions
 		for (Container* c : containers) c->loadOpen = true;
 	}
 
-	void SetMethod();
-
 private: // Variables
 
 	// General
 	Input* input = nullptr;
 	FileManager* file = nullptr;
 
-	bool demoWindow = false;
 	bool preferencesWindow = false;
 
 	// Gestor
@@ -173,13 +142,9 @@ private: // Variables
 	UnasignedContainer* unasignedContainer = nullptr;
 	std::vector<Container*> containers;
 
-	//  Logs
-	std::vector<Log*> logs;
-
 	// Shortcuts
-	bool ctrl = false, shft = false, d = false, 
-		 p    = false, s    = false, l = false,
-		 n    = false;
+	bool ctrl = false, shft = false, n = false, 
+		 p    = false, s    = false, l = false;
 
 	// Preferences
 	bool showContainerType = true;
@@ -189,12 +154,9 @@ private: // Variables
 	bool allowArrearsFill = false;
 	bool showConstantTotal = false;
 	bool createContainerUnified = true;
-	bool dateFormatType = true;
 
 	int currency = 0;
 	const char* comboCurrency[5] = { "EUR", "USD", "COP", "ARS", "PEN"};
-
-	int maxLogs = 30;
 
 	// Save & Load
 	bool saving = false, loading = false, savingAs = false;
@@ -203,9 +165,6 @@ private: // Variables
 
 	std::string openFileName;
 	std::string openFilePath;
-
-	// Others
-	Method method = Method::MTHD_NO;
 
 	Chrono chrono;
 	bool openToolbarPopup = false;
