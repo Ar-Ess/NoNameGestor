@@ -144,9 +144,6 @@
     <ClInclude Include="Source\ContainerHeader.h">
       <Filter>Container</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ArrearContainer.h">
-      <Filter>Container\Containers</Filter>
-    </ClInclude>
     <ClInclude Include="Source\FilterContainer.h">
       <Filter>Container\Containers</Filter>
     </ClInclude>
@@ -164,9 +161,6 @@
     </ClInclude>
     <ClInclude Include="Source\LogFunction.h">
       <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ConstContainer.h">
-      <Filter>Container\Containers</Filter>
     </ClInclude>
     <ClInclude Include="Source\ContainerEnum.h">
       <Filter>Enums</Filter>

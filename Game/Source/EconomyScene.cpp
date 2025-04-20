@@ -51,11 +51,7 @@ bool EconomyScene::Update()
 
 		switch (r->GetType())
 		{
-
 		case ContainerType::FUTURE: futureMoney += r->GetMoney(); break;
-		case ContainerType::ARREAR: arrearMoney -= r->GetMoney(); break;
-		case ContainerType::CONSTANT:
-			for (int i = 0; i < ((ConstContainer*)r)->GetSize(); ++i) constMoney += ((ConstContainer*)r)->GetLabelLimit(i);
 		case ContainerType::FILTER:
 		case ContainerType::LIMIT:
 		default: totalMoney -= r->GetMoney(); break;
@@ -208,22 +204,6 @@ void EconomyScene::InternalSave(const char* path)
 
 		switch (r->GetType())
 		{
-		case ContainerType::CONSTANT:
-		{
-			ConstContainer* cC = (ConstContainer*)r;
-			int size = cC->GetSize();
-			file->EditFile(path).
-				Write("size").Number(size);
-
-			for (int i = 0; i < size; ++i)
-			{
-				file->EditFile(path)
-					.Write("name").String(cC->GetLabelName(i))
-					.Write("limit").Number(cC->GetLabelLimit(i))
-					.Write("money").Number(cC->GetLabelMoney(i));
-			}
-			break;
-		}
 		case ContainerType::LIMIT:
 		{
 			LimitContainer* lPR = (LimitContainer*)r;
@@ -242,22 +222,6 @@ void EconomyScene::InternalSave(const char* path)
 		}
 		case ContainerType::FILTER:
 		case ContainerType::FUTURE:
-		case ContainerType::ARREAR:
-		{
-			Container* c = r;
-			int size = c->GetSize();
-			file->EditFile(path).
-				Write("size").Number(size);
-
-			for (int i = 0; i < size; ++i)
-			{
-				file->EditFile(path)
-					.Write("name").String(c->GetLabelName(i))
-					.Write("money").Number(c->GetLabelMoney(i));
-			}
-			break;
-		}
-
 		default:
 			break;
 		}
@@ -355,37 +319,6 @@ void EconomyScene::LoadInternal(const char* path)
 
 		switch ((ContainerType)type)
 		{
-		case ContainerType::CONSTANT:
-		{
-			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
-			ConstContainer* cC = (ConstContainer*)containers.back();
-			cC->ClearLabels();
-			cC->unified = unified;
-			cC->loadOpen = true;
-
-			int lSize = 0;
-			int futurePositionToRead = positionToRead + xAspects;
-
-			file->ViewFile(path, futurePositionToRead).
-				Read("size").AsInt(lSize);
-
-			added++;
-
-			for (suint i = 0; i < lSize; ++i)
-			{
-				std::string cName;
-				float cMoney, cLimit;  //Change depending on "vars top"\/
-				file->ViewFile(path, (futurePositionToRead + 1) + (i * 3)).
-					Read("name").AsString(cName). // "Vars on top"
-					Read("limit").AsFloat(cLimit).
-					Read("money").AsFloat(cMoney);
-
-				cC->NewLabel(cName.c_str(), cMoney, cLimit);
-
-				added += 3; // Change depending on how many "vars on top"
-			}
-			break;
-		}
 		case ContainerType::LIMIT:
 		{
 			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
@@ -419,37 +352,6 @@ void EconomyScene::LoadInternal(const char* path)
 		}
 		case ContainerType::FILTER:
 		case ContainerType::FUTURE:
-		case ContainerType::ARREAR:
-		{
-			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
-			Container* c = containers.back();
-			c->ClearLabels();
-			c->unified = unified;
-			c->loadOpen = true;
-
-			int fSize = 0;
-			int futurePositionToRead = positionToRead + xAspects;
-
-			file->ViewFile(path, futurePositionToRead).
-				Read("size").AsInt(fSize);
-
-			added++;
-
-			for (suint i = 0; i < fSize; ++i)
-			{
-				std::string fName;
-				float fMoney;
-				file->ViewFile(path, (futurePositionToRead + 1) + (i * 2)).
-					Read("name").AsString(fName). // Variables on top
-					Read("money").AsFloat(fMoney);
-
-				c->NewLabel(fName.c_str(), fMoney);
-
-				added += 2; // Change depending on how many variables on top
-			}
-
-			break;
-		}
 		default: break;
 		}
 
@@ -680,12 +582,6 @@ bool EconomyScene::DrawMenuBar()
 			if (ImGui::MenuItem("Future"))
 				CreateContainer(ContainerType::FUTURE);
 
-			if (ImGui::MenuItem("Arrear"))
-				CreateContainer(ContainerType::ARREAR);
-
-			if (ImGui::MenuItem("Const"))
-				CreateContainer(ContainerType::CONSTANT);
-
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("About"))
@@ -882,20 +778,6 @@ void EconomyScene::DrawGestorSystem()
 				ImGui::PopID();
 				break;
 			}
-			if (r->GetType() != ContainerType::CONSTANT && ImGui::MenuItem("Process"))
-			{
-				int dif = 1;
-				r->GetType() == ContainerType::FUTURE ? dif = 1 : dif = -1;
-				float totalResult = totalContainer->GetMoney() + (r->GetMoney() * dif);
-				if (totalResult >= 0)
-				{
-					*totalContainer->GetMoneyPtr() = totalResult;
-					DeleteContainer(i);
-					ImGui::EndPopup();
-					ImGui::PopID();
-					break;
-				}
-			}
 			if (r->GetSize() <= 1 && ImGui::MenuItem("Unify", "", &r->unified)) r->SwapNames();
 			ImGui::MenuItem("Hide", "", &r->hidden);
 			ImGui::EndPopup();
@@ -971,18 +853,6 @@ bool EconomyScene::DrawToolbarWindow(bool* open)
 			action = true;
 		}
 
-		if (ImGui::Button("ARREAR"))
-		{
-			CreateContainer(ContainerType::ARREAR);
-			action = true;
-		}
-
-		if (ImGui::Button("CONST "))
-		{
-			CreateContainer(ContainerType::CONSTANT);
-			action = true;
-		}
-
 		if (action) SwitchLoadOpen();
 	}
 	ImGui::End();
@@ -1032,8 +902,6 @@ void EconomyScene::CreateContainer(ContainerType container, const char* name, bo
 	case ContainerType::FILTER  : containers.emplace_back((Container*)(new FilterContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
 	case ContainerType::LIMIT   : containers.emplace_back((Container*)(new  LimitContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
 	case ContainerType::FUTURE  : containers.emplace_back((Container*)(new FutureContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
-	case ContainerType::ARREAR  : containers.emplace_back((Container*)(new ArrearContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
-	case ContainerType::CONSTANT: containers.emplace_back((Container*)(new  ConstContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
 	default: break;
 	}
 
@@ -1170,36 +1038,6 @@ void EconomyScene::Loadv1_0()
 					Read("money").AsFloat(fMoney);
 
 				fR->NewLabel(fName.c_str(), fMoney);
-
-				added += 2;
-			}
-
-			break;
-		}
-
-		case ContainerType::ARREAR:
-		{
-			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
-			ArrearContainer* aR = (ArrearContainer*)containers.back();
-			aR->ClearLabels();
-
-			int fSize = 0; //                           \/ Change depending on X aspects amount
-			int futurePositionToRead = positionToRead + 5;
-
-			file->ViewFile(path.c_str(), futurePositionToRead).
-				Read("size").AsInt(fSize);
-
-			added++;
-
-			for (suint i = 0; i < fSize; ++i)
-			{
-				std::string fName;
-				float fMoney;
-				file->ViewFile(path.c_str(), (futurePositionToRead + 1) + (i * 2)).
-					Read("name").AsString(fName).
-					Read("money").AsFloat(fMoney);
-
-				aR->NewLabel(fName.c_str(), fMoney);
 
 				added += 2;
 			}

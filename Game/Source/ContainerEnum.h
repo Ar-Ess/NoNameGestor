@@ -7,7 +7,5 @@ enum class ContainerType
 	UNASIGNED_MONEY,
 	FILTER,
 	LIMIT,
-	FUTURE,
-	ARREAR,
-	CONSTANT
+	FUTURE
 }; // NoPizzaBros

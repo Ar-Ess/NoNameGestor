@@ -46,8 +46,6 @@ public: // Functions
 		case ContainerType::FILTER:   return "FILTER";
 		case ContainerType::LIMIT :   return "LIMIT ";
 		case ContainerType::FUTURE:   return "FUTURE";
-		case ContainerType::ARREAR:   return "ARREAR";
-		case ContainerType::CONSTANT: return "CONST ";
 		}
 		return "NO CONTAINER";
 	}
