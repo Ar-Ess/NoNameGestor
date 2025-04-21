@@ -28,7 +28,6 @@ private: // Functions
 	void InternalSave(const char* path);
 	void Load();
 	void LoadInternal(const char* path);
-	bool DrawFileDialog(bool* vError, const char* v, std::string* path, std::string* name, size_t* format, bool* closed);
 	void ExportGestor(std::vector<Container*>* exporting);
 
 	bool DrawMenuBar();
@@ -84,16 +83,11 @@ private: // Variables
 
 	// Shortcuts
 	bool ctrl = false, shft = false, n = false, 
-		 p    = false, s    = false, l = false;
+		 p    = false, s    = false, o = false;
 
 	// Preferences
 	bool showContainerType = true;
 	bool showFutureUnasigned = false;
-	bool allowFutureCovering = false;
-	bool showArrearUnasigned = false;
-	bool allowArrearsFill = false;
-	bool showConstantTotal = false;
-	bool createContainerUnified = true;
 
 	int currency = 0;
 	const char* comboCurrency[5] = { "EUR", "USD", "COP", "ARS", "PEN"};
@@ -108,6 +102,9 @@ private: // Variables
 
 	Chrono chrono;
 	bool openToolbarPopup = false;
+	int focusedGestor = 0;
+
+	ImFont* bigFont = nullptr;
 
 };
 

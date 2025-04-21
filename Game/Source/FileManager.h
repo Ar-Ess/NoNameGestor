@@ -192,6 +192,53 @@ private:
 				return *editor;
 			}
 
+			Editor AsInt(unsigned int& number)
+			{
+				if (access == Access::ERROR) return *editor;
+
+				std::fstream file;
+
+				file.open(name, std::ios::in);
+
+				assert(file.is_open()); // File is not open
+
+				if (editor->jumpLines > 0) editor->InternalJumpLines(&file);
+
+				bool variableExists = false;
+				while (!file.eof())
+				{
+					std::string line;
+					std::getline(file, line, ' ');
+					if (editor->InternalSameString(variable, line))
+					{
+						variableExists = true;
+						line.clear();
+						break;
+					}
+					line.clear();
+
+					std::getline(file, line, '\n');
+					line.clear();
+				}
+
+				// The variable inputted does not exist in the document
+				assert(variableExists);
+
+				double value = 0.0;
+				file >> value;
+
+				int n = int(ceil(value));
+
+				// The variable to read is not unsigned, please input an int instead of an unsigned int
+				assert(n >= 0);
+
+				number = n;
+
+				file.close();
+
+				return *editor;
+			}
+
 			Editor AsFloat(float& number)
 			{
 				if (access == Access::ERROR) return *editor;

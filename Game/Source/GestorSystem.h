@@ -5,9 +5,10 @@
 #include "ContainerEnum.h"
 
 class Container;
+class InputContainer;
 class TotalContainer;
-class UnasignedContainer;
 class FileManager;
+class ImFont;
 
 #include <string>
 
@@ -15,7 +16,7 @@ class GestorSystem
 {
 public:
 
-	GestorSystem(bool* showFutureUnasigned, bool* allowFutureCovering, bool* showArrearUnasigned, bool* allowArrearsFill, bool* showConstantTotal, bool* showContainerType);
+	GestorSystem(const char* name, bool* showFutureUnasigned, bool* showContainerType, ImFont* bigFont);
 
 	~GestorSystem();
 
@@ -54,16 +55,21 @@ private:
 
 	int ReturnContainerIndex(intptr_t id);
 
+	void AddClearInputText(const char* name, std::string* buffer);
 
 private:
 
+	InputContainer* inputContainer = nullptr;
 	TotalContainer* totalContainer = nullptr;
-	UnasignedContainer* unasignedContainer = nullptr;
 	std::vector<Container*> containers;
 
+	std::string name;
 	std::string format;
 
-	bool* showContainerType;
+	bool* showContainerType = nullptr;
+	std::intptr_t id = 0;
+
+	ImFont* bigFont = nullptr;
 
 };
 

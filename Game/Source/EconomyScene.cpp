@@ -14,12 +14,6 @@ EconomyScene::EconomyScene(Input* input)
 {
 	this->input = input;
 	this->file = new FileManager(EXTENSION);
-	
-	gestors.emplace_back(new GestorSystem(&showFutureUnasigned, &allowFutureCovering, &showArrearUnasigned, &allowArrearsFill, &showConstantTotal, &showContainerType));
-
-	openFileName = "New_File";
-	openFileName += EXTENSION;
-	openFilePath.clear();
 }
 
 EconomyScene::~EconomyScene()
@@ -28,7 +22,15 @@ EconomyScene::~EconomyScene()
 
 bool EconomyScene::Start()
 {
-	UpdateFormat();
+	ImFontConfig fontConfig;
+	fontConfig.SizePixels = 18.0f;
+	auto io = ImGui::GetIO();
+
+	io.Fonts->AddFontDefault();
+	bigFont = io.Fonts->AddFontFromFileTTF("Assets/Roboto-Regular.ttf", 20.f);
+	io.Fonts->Build();
+
+	NewFile();
 
 	return true;
 }
@@ -65,6 +67,10 @@ bool EconomyScene::Draw()
 
 bool EconomyScene::CleanUp()
 {
+	for (GestorSystem* gestor : gestors)
+		RELEASE(gestor);
+	gestors.clear();
+
 	return true;
 }
 
@@ -74,11 +80,11 @@ void EconomyScene::NewFile()
 	openFileName += EXTENSION;
 	openFilePath.clear();
 
-	for (GestorSystem* gestor : gestors)
-		RELEASE(gestor);
-	gestors.clear();
+	CleanUp();
 
-	gestors.emplace_back(new GestorSystem(&showFutureUnasigned, &allowFutureCovering, &showArrearUnasigned, &allowArrearsFill, &showConstantTotal, &showContainerType));
+	gestors.emplace_back(new GestorSystem("NewGestor", &showFutureUnasigned, &showContainerType, bigFont));
+
+	UpdateFormat();
 }
 
 void EconomyScene::SaveAs()
@@ -161,17 +167,12 @@ void EconomyScene::InternalSave(const char* path)
 		Write("version").String(VERSION).
 		Write("cnfSRT").Bool(showContainerType).
 		Write("cnfSFU").Bool(showFutureUnasigned).
-		Write("cnfAFC").Bool(allowFutureCovering).
-		Write("cnfSAU").Bool(showArrearUnasigned).
-		Write("cnfAAF").Bool(allowArrearsFill).
-		Write("cnfSCT").Bool(showConstantTotal).
-		Write("cnfCCU").Bool(createContainerUnified).
 		Write("cnfTFS").Number(textFieldSize).
-		Write("currency").Number(currency);
+		Write("currency").Number(currency).
+		Write("gestors").Number((int)gestors.size());
 
 	for (GestorSystem* gestor : gestors)
 		gestor->Save(file, path);
-
 }
 
 void EconomyScene::Load()
@@ -184,18 +185,36 @@ void EconomyScene::Load()
 	}
 
 	// Draw File Dialog
-	std::string path, name;
+	std::string path, name, version;
 	size_t format = 0;
 	bool closed = false;
-	if (!DrawFileDialog(&versionError, VERSION, &path, &name, &format, &closed)) return;
-	else
+	ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose a path", ".nng", ".");
+	if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
 	{
-		if (closed)
+		// action if OK
+		if (ImGuiFileDialog::Instance()->IsOk() == true && file->Exists(ImGuiFileDialog::Instance()->GetFilePathName().c_str(), false))
+		{
+			path = ImGuiFileDialog::Instance()->GetCurrentPath() + "\\";
+			name = ImGuiFileDialog::Instance()->GetCurrentFileName();
+			format = ImGuiFileDialog::Instance()->GetCurrentFilter().size();
+			ImGuiFileDialog::Instance()->Close();
+
+			// Check if the version file is the same as the program version
+			std::string checkPath = path;
+			checkPath += name;
+			checkPath.erase(checkPath.end() - format, checkPath.end());
+			file->ViewFile(checkPath.c_str()).
+				Read("version").AsString(version);
+			bool errorMissmatch = !SameString(VERSION, version);
+		}
+		// windows closed
+		else
 		{
 			loading = false;
-			return; // Return true
+			return;
 		}
 	}
+	else return;
 
 	// Load
 	loading = false;
@@ -211,63 +230,37 @@ void EconomyScene::Load()
 
 void EconomyScene::LoadInternal(const char* path)
 {
+	unsigned int size = 0;
+	CleanUp();
+
 	// Y aspects
 	file->ViewFile(path, 1).
 		// Preferences
 		//Read("version") // 0
 		Read("cnfSRT").AsBool(showContainerType). // 1
 		Read("cnfSFU").AsBool(showFutureUnasigned). // 2
-		Read("cnfAFC").AsBool(allowFutureCovering). // 3
-		Read("cnfSAU").AsBool(showArrearUnasigned). // 4
-		Read("cnfAAF").AsBool(allowArrearsFill). // 5
-		Read("cnfSCT").AsBool(showConstantTotal). // 6
-		Read("cnfCCU").AsBool(createContainerUnified). // 7
-		Read("cnfTFS").AsFloat(textFieldSize). // 8
-		Read("currency").AsInt(currency); // 9
+		Read("cnfTFS").AsFloat(textFieldSize). // 3
+		Read("currency").AsInt(currency). // 4
+		Read("gestors").AsInt(size); // 5
 
-	// The following line to read is 10
-	int jumplines = 10; // Update if more preferences added on top /\ 
+	// The following line to read is 6
+	int jumplines = 6; // Update if more preferences added on top /\
 
-	for (GestorSystem* gestor : gestors)
-		gestor->Load(file, path, jumplines);
+	for (unsigned int i = 0; i < size; ++i)
+	{
+		std::string name;
+		file->ViewFile(path, jumplines).
+			Read("name").AsString(name);
+
+		jumplines++;
+
+		GestorSystem* g = new GestorSystem(name.c_str(), &showFutureUnasigned, &showContainerType, bigFont);
+		gestors.emplace_back(g);
+
+		g->Load(file, path, jumplines);
+	}
 
 	UpdateFormat();
-}
-
-bool EconomyScene::DrawFileDialog(bool* vError, const char* v, std::string* path, std::string* name, size_t* format, bool* closed)
-{
-	if (!*vError)
-	{
-		std::string version;
-		ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose a path", ".nng", ".");
-		if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
-		{
-			// action if OK
-			if (ImGuiFileDialog::Instance()->IsOk() == true && file->Exists(ImGuiFileDialog::Instance()->GetFilePathName().c_str(), false))
-			{
-				*path = ImGuiFileDialog::Instance()->GetCurrentPath() + "\\";
-				*name = ImGuiFileDialog::Instance()->GetCurrentFileName();
-				*format = ImGuiFileDialog::Instance()->GetCurrentFilter().size();
-				ImGuiFileDialog::Instance()->Close();
-
-				// Check if the version file is the same as the program version
-				std::string checkPath = *path;
-				checkPath += *name;
-				checkPath.erase(checkPath.end() - *format, checkPath.end());
-				file->ViewFile(checkPath.c_str()).
-					Read("version").AsString(version);
-				*vError = !SameString(v, version);
-				return true;
-			}
-			else
-			{
-				ImGuiFileDialog::Instance()->Close();
-				*closed = true;
-				return true; // Return true
-			}
-		}
-		else return false; // Return false
-	}
 }
 
 void EconomyScene::ExportGestor(std::vector<Container*>* exporting)
@@ -316,14 +309,15 @@ bool EconomyScene::DrawMenuBar()
 
 			ImGui::Separator();
 
+			if (ImGui::MenuItem("Open", "Ctrl + O"))
+				Load();
+
 			if (ImGui::MenuItem("Save", "Ctrl + S"))
 				Save();
 
 			if (ImGui::MenuItem("Save As", "Ctrl + Shft + S"))
 				SaveAs();
 
-			if (ImGui::MenuItem("Load", "Ctrl + L"))
-				Load();
 
 			ImGui::Separator();
 
@@ -398,7 +392,7 @@ bool EconomyScene::DrawMenuBar()
 			//ImGui::MenuItem("Duplicate", "Ctrl + D");
 			ImGui::EndMenu();
 		}*/
-		if (ImGui::BeginMenu("Create"))
+		if (ImGui::BeginMenu("New"))
 		{
 			if (ImGui::MenuItem("Filter"))
 				gestors[0]->CreateContainer(ContainerType::FILTER);
@@ -408,6 +402,14 @@ bool EconomyScene::DrawMenuBar()
 
 			if (ImGui::MenuItem("Future"))
 				gestors[0]->CreateContainer(ContainerType::FUTURE);
+
+			AddSeparator(1);
+
+			if (ImGui::MenuItem("Gestor"))
+			{
+				gestors.emplace_back(new GestorSystem("New Gestor", &showFutureUnasigned, &showContainerType, bigFont));
+				UpdateFormat();
+			}
 
 			ImGui::EndMenu();
 		}
@@ -492,33 +494,10 @@ bool EconomyScene::DrawPreferencesWindow(bool* open)
 				AddHelper("Shows the unsigned money in terms\nof future income.", "?"); ImGui::SameLine();
 				ImGui::Checkbox("Show Unasigned Future Money ", &showFutureUnasigned);
 
-				if (showFutureUnasigned)
-				{
-					ImGui::Dummy(ImVec2{ 6, 0 }); ImGui::SameLine();
-					AddHelper("Allows future money to cover\nactual money whenever it goes\nin negative numbers.\nIMPORTANT:\nUse this option if you know for sure\nyou'll receive the future income.", "?"); ImGui::SameLine();
-					ImGui::Checkbox("Allow Future Money Covering ", &allowFutureCovering);
-				}
-
-				AddHelper("Shows the unsigned money in terms\nof arrears outcome.", "?"); ImGui::SameLine();
-				ImGui::Checkbox("Show Unasigned Arrears Money ", &showArrearUnasigned);
-
-				if (showArrearUnasigned)
-				{
-					ImGui::Dummy(ImVec2{ 6, 0 }); ImGui::SameLine();
-					AddHelper("Allows unasigned actual money to fill\nunasigned arrears whenever they exist.", "?"); ImGui::SameLine();
-					ImGui::Checkbox("Allow Arrears Money Filling", &allowArrearsFill);
-				}
-
-				AddHelper("Shows the total money in terms\nof constant outcome.", "?"); ImGui::SameLine();
-				ImGui::Checkbox("Show Total Constrant Money ", &showConstantTotal);
-
 				AddHelper("Enlarges the size of the text\nlabels of each container.", "?"); ImGui::SameLine();
 				ImGui::PushItemWidth(textFieldSize);
 				ImGui::DragFloat("Text Fiend Size", &textFieldSize, 0.1f, 1.0f, 1000.0f, "%f pts", ImGuiSliderFlags_AlwaysClamp);
 				ImGui::PopItemWidth();
-
-				AddHelper("Creates all containers unified by default", "?"); ImGui::SameLine();
-				ImGui::Checkbox("Create Container Unified Default", &createContainerUnified);
 
 				ImGui::EndTabItem();
 			}
@@ -540,14 +519,46 @@ bool EconomyScene::DrawMainWindow(bool* open)
 	if (ImGui::Begin("##MainWindow", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar))
 	{
 		ImGui::Text(openFileName.c_str());
+		unsigned int size = gestors.size();
 
-		if (ImGui::BeginTable("##systemtable", 2, ImGuiTableFlags_BordersInner | ImGuiTableFlags_Resizable))
+		if (ImGui::BeginTable("##systemtable", size, ImGuiTableFlags_BordersInner | ImGuiTableFlags_Resizable))
 		{
-			for (GestorSystem* gestor : gestors)
+			//for (int i = 0; i < size; ++i)
+			//	ImGui::TableSetupColumn(std::to_string(i));
+			//ImGui::TableHeadersRow();
+
+			// Captura la posició Y de l'inici de la taula
+			float tableHeight = (ImGui::GetWindowPos().y + ImGui::GetWindowHeight()) - ImGui::GetCursorScreenPos().y;
+			ImVec2 mousePos = ImGui::GetMousePos();
+
+			for (unsigned int i = 0; i < size; ++i)
 			{
+				GestorSystem* gestor = gestors[i];
 				ImGui::TableNextColumn();
+
+				ImVec2 cellMin = ImGui::GetCursorScreenPos();
+				ImVec2 cellMax = ImVec2(cellMin.x + ImGui::GetColumnWidth(), cellMin.y + tableHeight);
+
+				// Detectem si el clic ha estat dins la zona
+				bool mouseInside =
+					mousePos.x >= cellMin.x && mousePos.x <= cellMax.x &&
+					mousePos.y >= cellMin.y && mousePos.y <= cellMax.y;
+
+				if (mouseInside && ImGui::IsMouseClicked(0))
+					focusedGestor = i;
+
+				if (focusedGestor == i) {
+					ImGui::GetWindowDrawList()->AddLine(
+						ImVec2(cellMin.x, cellMin.y - 2),
+						ImVec2(cellMax.x, cellMin.y - 2),
+						IM_COL32(80, 140, 255, 200),
+						2.0f
+					);
+				}
+
 				gestor->Draw();
 			}
+
 			ImGui::EndTable();
 		}
 	}
@@ -597,7 +608,7 @@ void EconomyScene::UpdateShortcuts()
 
 	p    = input->GetKey(SDL_SCANCODE_P) == KeyState::KEY_DOWN;
 	s    = input->GetKey(SDL_SCANCODE_S) == KeyState::KEY_DOWN;
-	l    = input->GetKey(SDL_SCANCODE_L) == KeyState::KEY_DOWN;
+	o    = input->GetKey(SDL_SCANCODE_O) == KeyState::KEY_DOWN;
 	n    = input->GetKey(SDL_SCANCODE_N) == KeyState::KEY_DOWN;
 
 	if (ctrl)
@@ -610,7 +621,7 @@ void EconomyScene::UpdateShortcuts()
 		else
 		{
 			if (s) Save();
-			if (l) Load();
+			if (o) Load();
 			if (n) NewFile();
 		}
 	}
@@ -621,8 +632,8 @@ void EconomyScene::UpdateFormat()
 	for (GestorSystem* system : gestors)
 		system->SetFormat("%.2f ", comboCurrency[currency]);
 
+	//inputContainer->SetCurrency(comboCurrency[currency]);
 	//totalContainer->SetCurrency(comboCurrency[currency]);
-	//unasignedContainer->SetCurrency(comboCurrency[currency]);
 	//for (Container* r : containers) r->SetCurrency(comboCurrency[currency]);
 }
 
@@ -759,7 +770,7 @@ void EconomyScene::UpdateFormat()
 //		containers.back()->loadOpen = true;
 //	}
 //
-//	totalContainer->SetMoney(total);
+//	inputContainer->SetMoney(total);
 //	UpdateFormat();
 //
 //}

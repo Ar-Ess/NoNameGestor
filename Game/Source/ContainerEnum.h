@@ -3,8 +3,8 @@
 enum class ContainerType
 {
 	NO_CONTAINER,
+	INPUT_MONEY,
 	TOTAL_MONEY,
-	UNASIGNED_MONEY,
 	FILTER,
 	LIMIT,
 	FUTURE

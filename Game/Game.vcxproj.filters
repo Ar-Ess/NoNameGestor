@@ -156,22 +156,22 @@
     <ClInclude Include="Source\LimitContainer.h">
       <Filter>Gestor\Containers</Filter>
     </ClInclude>
-    <ClInclude Include="Source\TotalContainer.h">
+    <ClInclude Include="Source\InputContainer.h">
       <Filter>Gestor\Constant</Filter>
     </ClInclude>
-    <ClInclude Include="Source\UnasignedContainer.h">
+    <ClInclude Include="Source\TotalContainer.h">
       <Filter>Gestor\Constant</Filter>
     </ClInclude>
     <ClInclude Include="Source\LogFunction.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ContainerEnum.h">
-      <Filter>Enums</Filter>
-    </ClInclude>
     <ClInclude Include="Source\GestorSystem.h">
       <Filter>Gestor</Filter>
     </ClInclude>
     <ClInclude Include="Source\Currency.h">
+      <Filter>Gestor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ContainerEnum.h">
       <Filter>Gestor</Filter>
     </ClInclude>
   </ItemGroup>
@@ -196,9 +196,6 @@
     </Filter>
     <Filter Include="Resources">
       <UniqueIdentifier>{63ac2d9c-ef6c-494e-859e-482e550faffb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Enums">
-      <UniqueIdentifier>{59aa71da-c797-4a88-9608-392729e3d4d6}</UniqueIdentifier>
     </Filter>
     <Filter Include="Gestor">
       <UniqueIdentifier>{c1522c6d-9e4e-459a-a5cc-2e1c63a70239}</UniqueIdentifier>

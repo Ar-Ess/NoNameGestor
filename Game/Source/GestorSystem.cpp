@@ -2,18 +2,21 @@
 #include "ContainerHeader.h"
 #include "FileManager.h"
 
-GestorSystem::GestorSystem(bool* showFutureUnasigned, bool* allowFutureCovering, bool* showArrearUnasigned, bool* allowArrearsFill, bool* showConstantTotal, bool* showContainerType)
+GestorSystem::GestorSystem(const char* name, bool* showFutureUnasigned, bool* showContainerType, ImFont* bigFont)
 {
-	totalContainer = new TotalContainer("Total Money", &format);
-	unasignedContainer = new UnasignedContainer("Unasigned Money", &format, showFutureUnasigned, allowFutureCovering, showArrearUnasigned, allowArrearsFill, showConstantTotal);
+	inputContainer = new InputContainer("Money", &format);
+	totalContainer = new TotalContainer("Total", &format, showFutureUnasigned);
 	this->showContainerType = showContainerType;
+	this->id = reinterpret_cast<int>(this);
+	this->name = name;
+	this->bigFont = bigFont;
 }
 
 GestorSystem::~GestorSystem()
 {
 	DeleteAllContainer();
+	RELEASE(inputContainer);
 	RELEASE(totalContainer);
-	RELEASE(unasignedContainer);
 }
 
 bool GestorSystem::Start()
@@ -23,11 +26,9 @@ bool GestorSystem::Start()
 
 bool GestorSystem::Update()
 {
-	totalContainer->Update();
-	float totalMoney = totalContainer->GetMoney();
+	inputContainer->Update();
+	float totalMoney = inputContainer->GetMoney();
 	float futureMoney = 0;
-	float arrearMoney = 0;
-	float constMoney = 0;
 
 	for (Container* r : containers)
 	{
@@ -44,17 +45,23 @@ bool GestorSystem::Update()
 		}
 	}
 
-	unasignedContainer->SetMoney(totalMoney + futureMoney + arrearMoney, totalMoney, futureMoney, arrearMoney, constMoney);
-	unasignedContainer->Update();
+	totalContainer->SetMoney(totalMoney, futureMoney);
+	totalContainer->Update();
 
 	return true;
 }
 
 bool GestorSystem::Draw()
 {
-	AddSpacing(3);
+	AddSpacing(1);
 
-	totalContainer->Draw();
+	ImGui::PushID(id);
+	AddClearInputText("##GestorName", &name);
+	ImGui::PopID();
+
+	AddSpacing(1);
+
+	inputContainer->Draw();
 
 	AddSpacing(2);
 
@@ -136,7 +143,7 @@ bool GestorSystem::Draw()
 
 	AddSpacing(0);
 
-	unasignedContainer->Draw();
+	totalContainer->Draw();
 
 	return true;
 }
@@ -144,7 +151,8 @@ bool GestorSystem::Draw()
 bool GestorSystem::Save(FileManager* file, const char* path)
 {
 	file->EditFile(path).
-		Write("containers").Number(totalContainer->GetMoney()).
+		Write("name").String(name.c_str()).
+		Write("containers").Number(inputContainer->GetMoney()).
 		Write("size").Number((int)containers.size());
 
 	for (Container* r : containers)
@@ -178,7 +186,20 @@ bool GestorSystem::Save(FileManager* file, const char* path)
 		case ContainerType::FILTER:
 		case ContainerType::FUTURE:
 		default:
+		{
+			Container* c = r;
+			int size = c->GetSize();
+			file->EditFile(path).
+				Write("size").Number(size);
+
+			for (unsigned int i = 0; i < size; ++i)
+			{
+				file->EditFile(path)
+					.Write("name").String(c->GetLabelName(i))
+					.Write("money").Number(c->GetLabelMoney(i));
+			}
 			break;
+		}
 		}
 	}
 
@@ -210,7 +231,7 @@ bool GestorSystem::Load(FileManager* file, const char* path, int& jumplines)
 		bool hidden = false, open = false, unified = true;
 		std::string name;
 
-		// X aspects
+		// Container Properties
 		file->ViewFile(path, positionToRead).
 			Read("name").AsString(name).
 			Read("type").AsInt(type).
@@ -219,7 +240,7 @@ bool GestorSystem::Load(FileManager* file, const char* path, int& jumplines)
 			Read("open").AsBool(open).
 			Read("unfd").AsBool(unified);
 
-		jumplinesCount += 6; // Adding X aspects to jumplines
+		jumplinesCount += containerPropertiesAmount; // Adding Container Properties to jumplines
 
 		switch ((ContainerType)type)
 		{
@@ -236,7 +257,6 @@ bool GestorSystem::Load(FileManager* file, const char* path, int& jumplines)
 				Read("size").AsInt(lSize);
 
 			jumplinesCount++; // Adding for this top properti "size", update if there is more
-
 			added++;
 
 			for (suint i = 0; i < lSize; ++i)
@@ -258,14 +278,44 @@ bool GestorSystem::Load(FileManager* file, const char* path, int& jumplines)
 		}
 		case ContainerType::FILTER:
 		case ContainerType::FUTURE:
-		default: break;
+		default:
+		{
+			Container* c = CreateContainer((ContainerType)type, name.c_str(), hidden, open, unified);
+			c->ClearLabels();
+			c->loadOpen = true;
+
+			int fSize = 0;
+			int futurePositionToRead = positionToRead + containerPropertiesAmount;
+
+			file->ViewFile(path, futurePositionToRead).
+				Read("size").AsInt(fSize);
+
+			jumplinesCount++; // Adding for this top properti "size", update if there is more
+			added++;
+
+			for (suint i = 0; i < fSize; ++i)
+			{
+				std::string fName;
+				float fMoney;
+				file->ViewFile(path, (futurePositionToRead + 1) + (i * 2)).
+					Read("name").AsString(fName). // Variables on top
+					Read("money").AsFloat(fMoney);
+
+				c->NewLabel(fName.c_str(), fMoney);
+
+				added += 2; // Change depending on how many variables on top
+				jumplinesCount += 2; // Adding for name & money property
+			}
+
+			break;
+		}
 		}
 
 	}
 
 	jumplines += jumplinesCount;
 
-	totalContainer->SetMoney(total);
+	inputContainer->SetMoney(total);
 
 	return true;
 }
@@ -280,7 +330,7 @@ void GestorSystem::SetFormat(const char* format, const char* currency)
 
 Container* GestorSystem::CreateContainer(ContainerType container, const char* name, bool hidden, bool open, bool unified)
 {
-	float* moneyPtr = totalContainer->GetMoneyPtr();
+	float* moneyPtr = inputContainer->GetMoneyPtr();
 
 	switch (container)
 	{
@@ -369,5 +419,32 @@ int GestorSystem::ReturnContainerIndex(intptr_t id)
 	assert(i != -1); // There is not a container like "r"
 
 	return i;
+}
+
+void GestorSystem::AddClearInputText(const char* name, std::string* buffer)
+{
+	// Guarda l'estat de l'estil actual
+	ImGui::PushFont(bigFont);
+	ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);  // Sense vora
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));  // Opcional: ajusta padding
+
+	// Colors transparents
+	ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0, 0, 0));          // Fons transparent
+	ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0, 0, 0, 0));   // Quan el cursor està a sobre
+	ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0, 0, 0, 0));    // Quan està actiu (editant)
+
+	ImGui::InputText(name, buffer);
+
+	ImVec2 min = ImGui::GetItemRectMin();
+	ImVec2 max = ImGui::GetItemRectMax();
+	float maxTextX = ImGui::CalcTextSize((*buffer).c_str()).x + min.x + 10;
+	float y = max.y + 1;
+	ImU32 color = ImGui::IsItemActive() ? IM_COL32(80, 140, 255, 255) : IM_COL32(160, 160, 160, 100);
+	ImGui::GetWindowDrawList()->AddLine(ImVec2(min.x, y), ImVec2(maxTextX, y), color, 1.5f);
+
+	// Torna a l'estil normal
+	ImGui::PopStyleColor(3);
+	ImGui::PopStyleVar(2);
+	ImGui::PopFont();
 }
 

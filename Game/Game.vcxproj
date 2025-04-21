@@ -135,7 +135,7 @@
     <ClInclude Include="Source\LimitContainer.h" />
     <ClInclude Include="Source\Multibool.h" />
     <ClInclude Include="Source\ContainerHeader.h" />
-    <ClInclude Include="Source\UnasignedContainer.h" />
+    <ClInclude Include="Source\TotalContainer.h" />
     <ClInclude Include="Source\PerfTimer.h" />
     <ClInclude Include="Source\Point.h" />
     <ClInclude Include="Source\Input.h" />
@@ -145,7 +145,7 @@
     <ClInclude Include="Source\Render.h" />
     <ClInclude Include="Source\Scene.h" />
     <ClInclude Include="Source\Timer.h" />
-    <ClInclude Include="Source\TotalContainer.h" />
+    <ClInclude Include="Source\InputContainer.h" />
     <ClInclude Include="Source\Window.h" />
     <ClInclude Include="Source\Defs.h" />
     <ClInclude Include="Source\LogFunction.h" />
