@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include "ContainerEnum.h"
+#include "Currency.h"
 
 #define MAX_MONEY 340282000000000000000000000000000000000.0f
 
@@ -18,9 +19,10 @@ public: // Functions
 
 	virtual ~Container() 
 	{
+		ClearLabels();
+
 		name.clear();
 		name.shrink_to_fit();
-		namePtr = nullptr;
 	}
 
 	virtual void Start(const char* currency) {}
@@ -109,11 +111,6 @@ public: // Functions
 		this->money = money;
 	}
 
-	virtual void SetCurrency(const char* currency)
-	{
-		SetFormat("%.2f ", currency);
-	}
-
 	void SwapNames()
 	{
 		if (unified)
@@ -124,7 +121,7 @@ public: // Functions
 
 protected: // Functions
 
-	Container(const char* name, bool hidden, bool open, bool unified, float* totalMoneyPtr, ContainerType type) 
+	Container(const char* name, bool hidden, bool open, bool unified, float* totalMoneyPtr, std::string* format, ContainerType type) 
 	{
 		this->money = 0;
 		this->name = name;
@@ -134,16 +131,8 @@ protected: // Functions
 		this->open = open;
 		this->unified = unified;
 		this->totalMoneyPtr = totalMoneyPtr;
+		this->format = format;
 		id = reinterpret_cast<int>(this);
-
-	}
-
-	void SetFormat(const char* form, const char* currency)
-	{
-		format.clear();
-		format.shrink_to_fit();
-		format += form;
-		format += currency;
 	}
 
 	void DeleteLabel(int index)
@@ -171,7 +160,7 @@ protected: // Variables
 	std::string name;
 	std::intptr_t id = 0;
 	ContainerType type = ContainerType::NO_CONTAINER;
-	std::string format;
+	std::string* format = nullptr;
 
 	unsigned int size = 0; //-TODO: Mirar si puc fer-ho amb size++/size-- en comptes d'igualar ->size()
 };

@@ -6,7 +6,7 @@ class FutureContainer : public Container
 {
 public: // Functions
 
-	FutureContainer(const char* name, bool hidden, bool open, bool unified, float* totalMoneyPtr) : Container(name, hidden, open, unified, totalMoneyPtr, ContainerType::FUTURE)
+	FutureContainer(const char* name, bool hidden, bool open, bool unified, float* totalMoneyPtr, std::string* format) : Container(name, hidden, open, unified, totalMoneyPtr, format, ContainerType::FUTURE)
 	{
 		NewLabel("New Future");
 	}
@@ -18,7 +18,6 @@ public: // Functions
 
 	void Start(const char* currency) override
 	{
-		SetFormat("%.2f ", currency);
 	}
 
 	void Update() override 
@@ -68,7 +67,7 @@ public: // Functions
 			else width += 50;
 
 			ImGui::PushItemWidth(width);
-			ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, 340282000000000000000000000000000000000.0f, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
+			ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, MAX_MONEY, (*format).c_str(), ImGuiSliderFlags_AlwaysClamp);
 			ImGui::PopItemWidth();
 
 			ImGui::PopID();

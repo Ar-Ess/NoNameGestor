@@ -6,7 +6,7 @@ class UnasignedContainer : public Container
 {
 public: // Functions
 
-	UnasignedContainer(const char* name, bool* showFutureMoney, bool* allowFutureCover, bool* showArrearMoney, bool* allowArrearsFill, bool* showConstantMoney) : Container(name, false, true, false, nullptr, ContainerType::UNASIGNED_MONEY)
+	UnasignedContainer(const char* name, std::string* format, bool* showFutureMoney, bool* allowFutureCover, bool* showArrearMoney, bool* allowArrearsFill, bool* showConstantMoney) : Container(name, false, true, false, nullptr, format, ContainerType::UNASIGNED_MONEY)
 	{
 		this->showFutureMoney = showFutureMoney;
 		this->allowFutureCover = allowFutureCover;
@@ -17,7 +17,6 @@ public: // Functions
 
 	void Start(const char* currency) override
 	{
-		SetFormat("%.2f ", currency);
 	}
 
 	void Update() override
@@ -59,7 +58,7 @@ public: // Functions
 		{
 			ImGui::Text(name.c_str()); ImGui::SameLine();
 			ImGui::Text(": "); ImGui::SameLine();
-			ImGui::Text(format.c_str(), money);
+			ImGui::Text((*format).c_str(), money);
 		}
 		else
 		{
@@ -70,21 +69,21 @@ public: // Functions
 			if (*showFutureMoney && !*showArrearMoney) add = arrearMoney;
 			if (!*showFutureMoney && *showArrearMoney) add = futureMoney;
 
-			ImGui::Text(format.c_str(), double(actualMoney) + add);
+			ImGui::Text((*format).c_str(), double(actualMoney) + add);
 			if (*showFutureMoney)
 			{
 				ImGui::Text("Unasigned Future Money: "); ImGui::SameLine();
-				ImGui::Text(format.c_str(), futureMoney);
+				ImGui::Text((*format).c_str(), futureMoney);
 			}
 			if (*showArrearMoney)
 			{
 				ImGui::Text("Unasigned Arrear Money: "); ImGui::SameLine();
-				ImGui::Text(format.c_str(), arrearMoney);
+				ImGui::Text((*format).c_str(), arrearMoney);
 			}
 			if (*showConstantMoney)
 			{
 				ImGui::Text("Total Constant Money: "); ImGui::SameLine();
-				ImGui::Text(format.c_str(), constMoney);
+				ImGui::Text((*format).c_str(), constMoney);
 			}
 		}
 	}

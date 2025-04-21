@@ -6,7 +6,7 @@ class FilterContainer : public Container
 {
 public: // Functions
 
-	FilterContainer(const char* name, bool hidden, bool open, bool unified, float* totalMoneyPtr) : Container(name, hidden, open, unified, totalMoneyPtr, ContainerType::FILTER)
+	FilterContainer(const char* name, bool hidden, bool open, bool unified, float* totalMoneyPtr, std::string* format) : Container(name, hidden, open, unified, totalMoneyPtr, format, ContainerType::FILTER)
 	{
 		NewLabel("New Filter");
 	}
@@ -18,7 +18,6 @@ public: // Functions
 
 	void Start(const char* currency) override
 	{
-		SetFormat("%.2f ", currency);
 	}
 
 	void Update() override 
@@ -58,7 +57,7 @@ public: // Functions
 
 
 			ImGui::PushItemWidth(width);
-			ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, MAX_MONEY, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
+			ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, MAX_MONEY, (*format).c_str(), ImGuiSliderFlags_AlwaysClamp);
 			ImGui::PopItemWidth();
 
 			ImGui::PopID();

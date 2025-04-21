@@ -6,7 +6,7 @@ class LimitContainer : public Container
 {
 public: // Functions
 
-	LimitContainer(const char* name, bool hidden, bool open, bool unified, float* totalMoneyPtr) : Container(name, hidden, open, unified, totalMoneyPtr,  ContainerType::LIMIT)
+	LimitContainer(const char* name, bool hidden, bool open, bool unified, float* totalMoneyPtr, std::string* format) : Container(name, hidden, open, unified, totalMoneyPtr, format, ContainerType::LIMIT)
 	{
 		NewLabel("New Limit");
 	}
@@ -18,7 +18,6 @@ public: // Functions
 
 	void Start(const char* currency) override
 	{
-		SetFormat("%.2f ", currency);
 	}
 
 	void Update() override 
@@ -68,7 +67,7 @@ public: // Functions
 
 			ImGui::BeginGroup();
 			ImGui::PushItemWidth(width);
-			ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, labels[i]->limit, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
+			ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, labels[i]->limit, (*format).c_str(), ImGuiSliderFlags_AlwaysClamp);
 			ImVec2 itemSize = ImGui::GetItemRectSize();
 			itemSize.y -= 15;
 			ImGui::PopItemWidth();
@@ -79,7 +78,7 @@ public: // Functions
 			ImGui::SameLine();
 
 			ImGui::Text("/"); ImGui::SameLine();
-			ImGui::Text(format.c_str(), labels[i]->limit); ImGui::SameLine();
+			ImGui::Text((*format).c_str(), labels[i]->limit); ImGui::SameLine();
 			if (ImGui::Button("Edit"))
 			{
 				editLimit = true;
@@ -103,7 +102,7 @@ public: // Functions
 		ImGui::SetNextWindowSize(ImVec2(140, 100));
 		if (ImGui::BeginPopupModal("Edit limit", nullptr, ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
 		{
-			ImGui::DragFloat("##Drag1", &labels[editLimitIndex]->tempLimit, 1.0f, 0.0f, 340282000000000000000000000000000000000.0f, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
+			ImGui::DragFloat("##Drag1", &labels[editLimitIndex]->tempLimit, 1.0f, 0.0f, MAX_MONEY, (*format).c_str(), ImGuiSliderFlags_AlwaysClamp);
 			if (ImGui::Button("Done"))
 			{
 				labels[editLimitIndex]->limit = labels[editLimitIndex]->tempLimit;

@@ -2,18 +2,20 @@
 #include <windows.h>
 #include <iostream>
 
-#define VERSION "v1.1"
+#define VERSION "v1.2"
 #define EXTENSION ".nng"
 #include "External/ImGuiFileDialog/ImGuiFileDialog.h"
 #include "imgui/imgui_internal.h"
+#include "ContainerHeader.h"
+#include "ContainerEnum.h"
+
 
 EconomyScene::EconomyScene(Input* input)
 {
 	this->input = input;
 	this->file = new FileManager(EXTENSION);
-
-	totalContainer = new TotalContainer("Total Money");
-	unasignedContainer = new UnasignedContainer("Unasigned Money", &showFutureUnasigned, &allowFutureCovering, &showArrearUnasigned, &allowArrearsFill, &showConstantTotal);
+	
+	gestors.emplace_back(new GestorSystem(&showFutureUnasigned, &allowFutureCovering, &showArrearUnasigned, &allowArrearsFill, &showConstantTotal, &showContainerType));
 
 	openFileName = "New_File";
 	openFileName += EXTENSION;
@@ -26,9 +28,7 @@ EconomyScene::~EconomyScene()
 
 bool EconomyScene::Start()
 {
-	totalContainer->Start(comboCurrency[currency]);
-	unasignedContainer->Start(comboCurrency[currency]);
-	for (Container* r : containers) r->Start(comboCurrency[currency]);
+	UpdateFormat();
 
 	return true;
 }
@@ -37,29 +37,8 @@ bool EconomyScene::Update()
 {
 	UpdateShortcuts();
 
-	totalContainer->Update();
-	float totalMoney = totalContainer->GetMoney();
-	float futureMoney = 0;
-	float arrearMoney = 0;
-	float constMoney = 0;
-
-	for (Container* r : containers)
-	{
-		if (r->hidden) continue;
-
-		r->Update();
-
-		switch (r->GetType())
-		{
-		case ContainerType::FUTURE: futureMoney += r->GetMoney(); break;
-		case ContainerType::FILTER:
-		case ContainerType::LIMIT:
-		default: totalMoney -= r->GetMoney(); break;
-		}
-	}
-
-	unasignedContainer->SetMoney(totalMoney + futureMoney + arrearMoney, totalMoney, futureMoney, arrearMoney, constMoney);
-	unasignedContainer->Update();
+	for (GestorSystem* gestor : gestors)
+		gestor->Update();
 
 	return true;
 }
@@ -75,9 +54,10 @@ bool EconomyScene::Draw()
 	ret = DrawMainWindow(&ret);
 	ret = DrawToolbarWindow(&ret);
 
+	//ImGui::ShowDemoWindow();
+
 	if (saving) Save();
 	if (loading) Load();
-	if (loadingV1_0) Loadv1_0();
 	if (savingAs) SaveAs();
 
 	return ret;
@@ -91,11 +71,14 @@ bool EconomyScene::CleanUp()
 void EconomyScene::NewFile()
 {
 	openFileName = "New_File";
+	openFileName += EXTENSION;
 	openFilePath.clear();
 
-	DeleteAllContainer();
+	for (GestorSystem* gestor : gestors)
+		RELEASE(gestor);
+	gestors.clear();
 
-	totalContainer->SetMoney(0.0f);
+	gestors.emplace_back(new GestorSystem(&showFutureUnasigned, &allowFutureCovering, &showArrearUnasigned, &allowArrearsFill, &showConstantTotal, &showContainerType));
 }
 
 void EconomyScene::SaveAs()
@@ -173,9 +156,6 @@ void EconomyScene::Save()
 
 void EconomyScene::InternalSave(const char* path)
 {
-	float total = totalContainer->GetMoney();
-	float unasigned = unasignedContainer->GetMoney();
-
 	file->OpenFile(path).
 		// Preferences
 		Write("version").String(VERSION).
@@ -187,45 +167,11 @@ void EconomyScene::InternalSave(const char* path)
 		Write("cnfSCT").Bool(showConstantTotal).
 		Write("cnfCCU").Bool(createContainerUnified).
 		Write("cnfTFS").Number(textFieldSize).
-		Write("currency").Number(currency).
-		// Generic File
-		Write("containers").Number(total).
-		Write("size").Number((int)containers.size());
+		Write("currency").Number(currency);
 
-	for (Container* r : containers)
-	{
-		file->EditFile(path).
-			Write("name").String(r->GetName()).
-			Write("type").Number((int)r->GetType()).
-			Write("money").Number(r->GetMoney()).
-			Write("hide").Bool(r->hidden).
-			Write("open").Bool(r->open).
-			Write("unfd").Bool(r->unified);
+	for (GestorSystem* gestor : gestors)
+		gestor->Save(file, path);
 
-		switch (r->GetType())
-		{
-		case ContainerType::LIMIT:
-		{
-			LimitContainer* lPR = (LimitContainer*)r;
-			int size = lPR->GetSize();
-			file->EditFile(path).
-				Write("size").Number(size);
-
-			for (int i = 0; i < size; ++i)
-			{
-				file->EditFile(path)
-					.Write("name").String(lPR->GetLabelName(i))
-					.Write("limit").Number(lPR->GetLabelLimit(i))
-					.Write("money").Number(lPR->GetLabelMoney(i));
-			}
-			break;
-		}
-		case ContainerType::FILTER:
-		case ContainerType::FUTURE:
-		default:
-			break;
-		}
-	}
 }
 
 void EconomyScene::Load()
@@ -251,13 +197,6 @@ void EconomyScene::Load()
 		}
 	}
 
-	// Version Error Popup
-	bool vErr = versionError;
-	if (ErrorPopup(&versionError,
-		"File version different from program's version",
-		"SOLUTION:\nRead the 'ReadMe.md' about how to load\nolder/newer files (Save & Load section).")) loading = false;
-	if (vErr) return;
-
 	// Load
 	loading = false;
 
@@ -272,93 +211,27 @@ void EconomyScene::Load()
 
 void EconomyScene::LoadInternal(const char* path)
 {
-	float total = 0;
-	int size = 0;
-
-	DeleteAllContainer();
-
 	// Y aspects
 	file->ViewFile(path, 1).
 		// Preferences
-	    //Read("version")
-		Read("cnfSRT").AsBool(showContainerType).
-		Read("cnfSFU").AsBool(showFutureUnasigned).
-		Read("cnfAFC").AsBool(allowFutureCovering).
-		Read("cnfSAU").AsBool(showArrearUnasigned).
-		Read("cnfAAF").AsBool(allowArrearsFill).
-		Read("cnfSCT").AsBool(showConstantTotal).
-		Read("cnfCCU").AsBool(createContainerUnified).
-		Read("cnfTFS").AsFloat(textFieldSize).
-		Read("currency").AsInt(currency).
-		// General Project
-		Read("containers").AsFloat(total).
-		Read("size").AsInt(size);
+		//Read("version") // 0
+		Read("cnfSRT").AsBool(showContainerType). // 1
+		Read("cnfSFU").AsBool(showFutureUnasigned). // 2
+		Read("cnfAFC").AsBool(allowFutureCovering). // 3
+		Read("cnfSAU").AsBool(showArrearUnasigned). // 4
+		Read("cnfAAF").AsBool(allowArrearsFill). // 5
+		Read("cnfSCT").AsBool(showConstantTotal). // 6
+		Read("cnfCCU").AsBool(createContainerUnified). // 7
+		Read("cnfTFS").AsFloat(textFieldSize). // 8
+		Read("currency").AsInt(currency); // 9
 
-	const int yAspects = 14; // Update if more preferences added
-	const int xAspects = 6; // Update if more properties added (X aspects below)
-	int added = 0;
+	// The following line to read is 10
+	int jumplines = 10; // Update if more preferences added on top /\ 
 
-	for (unsigned int i = 0; i < size; ++i)
-	{
-		int positionToRead = (i * xAspects) + yAspects + added;
-		int type = -1;
-		float money = 0;
-		bool hidden = false, open = false, unified = true;
-		std::string name;
+	for (GestorSystem* gestor : gestors)
+		gestor->Load(file, path, jumplines);
 
-		// X aspects
-		file->ViewFile(path, positionToRead).
-			Read("name").AsString(name).
-			Read("type").AsInt(type).
-			Read("money").AsFloat(money).
-			Read("hide").AsBool(hidden).
-			Read("open").AsBool(open).
-			Read("unfd").AsBool(unified);
-
-		const int xAspects = 6; // Update if more properties added
-
-		switch ((ContainerType)type)
-		{
-		case ContainerType::LIMIT:
-		{
-			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
-			LimitContainer* lC = (LimitContainer*)containers.back();
-			lC->ClearLabels();
-			lC->unified = unified;
-			lC->loadOpen = true;
-
-			int lSize = 0;
-			int futurePositionToRead = positionToRead + xAspects;
-
-			file->ViewFile(path, futurePositionToRead).
-				Read("size").AsInt(lSize);
-
-			added++;
-
-			for (suint i = 0; i < lSize; ++i)
-			{
-				std::string lName;
-				float lMoney, lLimit; //     Change depending on "vars on top" \/
-				file->ViewFile(path, (futurePositionToRead + 1) + (i * 3)).
-					Read("name").AsString(lName). // "Vars on top"
-					Read("limit").AsFloat(lLimit).
-					Read("money").AsFloat(lMoney);
-
-				lC->NewLabel(lName.c_str(), lMoney, lLimit);
-
-				added += 3; // Change depending on how many "vars on top"
-			}
-			break;
-		}
-		case ContainerType::FILTER:
-		case ContainerType::FUTURE:
-		default: break;
-		}
-
-	}
-
-	totalContainer->SetMoney(total);
-	UpdateCurrency();
+	UpdateFormat();
 }
 
 bool EconomyScene::DrawFileDialog(bool* vError, const char* v, std::string* path, std::string* name, size_t* format, bool* closed)
@@ -395,43 +268,6 @@ bool EconomyScene::DrawFileDialog(bool* vError, const char* v, std::string* path
 		}
 		else return false; // Return false
 	}
-}
-
-bool EconomyScene::ErrorPopup(bool* open, const char* title, const char* description)
-{
-	if (*open)
-	{
-		ImGui::OpenPopup("Error");
-		ImGui::SetNextWindowPos(ImVec2((1280 / 2) - 180, (720 / 2) - 90));
-		ImGui::SetNextWindowSize(ImVec2(360, 180));
-		if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
-		{
-			ImGui::Text(title);
-			AddSpacing();
-			AddSeparator(2);
-			AddSpacing(1);
-			ImGui::Text(description);
-			AddSpacing(2);
-			if (ImGui::Button("Documentation"))
-			{
-				ShellExecute(NULL, NULL, "https://github.com/Ar-Ess/NoNameGestor/blob/main/README.md", NULL, NULL, SW_SHOWNORMAL);
-				ImGui::EndPopup();
-				*open = false;
-				return true;
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("Okey"))
-			{
-				ImGui::EndPopup();
-				*open = false;
-				return true;
-			}
-		}
-		ImGui::EndPopup();
-		return false;
-	}
-
-	return false;
 }
 
 void EconomyScene::ExportGestor(std::vector<Container*>* exporting)
@@ -491,19 +327,10 @@ bool EconomyScene::DrawMenuBar()
 
 			ImGui::Separator();
 
-			if (ImGui::BeginMenu("Old Loads"))
-			{
-				if (ImGui::MenuItem("Load v1.0"))
-					Loadv1_0();
-
-				ImGui::EndMenu();
-			}
-
-			ImGui::Separator();
-
 			if (ImGui::BeginMenu("Export"))
 			{
-
+				// TODO: adapt this to accept different amounts of gestors
+				/*
 				bool empty = containers.empty();
 				bool selected = false;
 				if (!empty)
@@ -548,7 +375,7 @@ bool EconomyScene::DrawMenuBar()
 				if (ImGui::Selectable("Export All", false, ImGuiSelectableFlags_None, { 70, 14 }))
 					ExportGestor(&containers);
 				if (empty) ImGui::EndDisabled();
-
+				*/
 				ImGui::EndMenu();
 			}
 
@@ -574,13 +401,13 @@ bool EconomyScene::DrawMenuBar()
 		if (ImGui::BeginMenu("Create"))
 		{
 			if (ImGui::MenuItem("Filter"))
-				CreateContainer(ContainerType::FILTER);
+				gestors[0]->CreateContainer(ContainerType::FILTER);
 
 			if (ImGui::MenuItem("Limit"))
-				CreateContainer(ContainerType::LIMIT);
+				gestors[0]->CreateContainer(ContainerType::LIMIT);
 
 			if (ImGui::MenuItem("Future"))
-				CreateContainer(ContainerType::FUTURE);
+				gestors[0]->CreateContainer(ContainerType::FUTURE);
 
 			ImGui::EndMenu();
 		}
@@ -651,7 +478,7 @@ bool EconomyScene::DrawPreferencesWindow(bool* open)
 
 		ImGui::Text("Currency:");
 		if (ImGui::Combo("##Currency", &currency, comboCurrency, 5))
-			UpdateCurrency();
+			UpdateFormat();
 
 		ImGui::Spacing();
 
@@ -713,117 +540,20 @@ bool EconomyScene::DrawMainWindow(bool* open)
 	if (ImGui::Begin("##MainWindow", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar))
 	{
 		ImGui::Text(openFileName.c_str());
-		AddSeparator(1);
-		AddSpacing(1);
-		DrawGestorSystem();
 
-		//if (ImGui::BeginTabBar("##Gestor"))
-		//{
-		//	if (ImGui::BeginTabItem("Gestor "))
-		//	{
-		//		DrawGestorSystem();
-		//		ImGui::EndTabItem();
-		//	}
-		//	if (ImGui::BeginTabItem("  Log  "))
-		//	{
-		//		DrawLogSystem(ImGui::IsItemDeactivated());
-		//		ImGui::EndTabItem();
-		//	}
-		//	ImGui::EndTabBar();
-		//}
+		if (ImGui::BeginTable("##systemtable", 2, ImGuiTableFlags_BordersInner | ImGuiTableFlags_Resizable))
+		{
+			for (GestorSystem* gestor : gestors)
+			{
+				ImGui::TableNextColumn();
+				gestor->Draw();
+			}
+			ImGui::EndTable();
+		}
 	}
 	ImGui::End();
 
 	return ret;
-}
-
-void EconomyScene::DrawGestorSystem()
-{
-	AddSpacing(3);
-
-	totalContainer->Draw();
-
-	AddSpacing(2);
-
-	size_t size = containers.size();
-	for (suint i = 0; i < size; ++i)
-	{
-		Container* r = containers[i];
-		ImGui::PushID(r->GetId() / ((i * size) + size * size));
-		bool reordered = false;
-
-		bool hidden = r->hidden;
-		if (hidden) ImGui::BeginDisabled();
-
-		ImGui::Dummy({ 20, 0 }); ImGui::SameLine();
-
-		if (showContainerType)
-		{
-			ImGui::Text(r->GetTypeString());
-			ImGui::SameLine();
-		}
-		ImGui::PushItemWidth(textFieldSize);
-		ImGui::InputText("##LabelName", r->GetString()); ImGui::PopItemWidth(); ImGui::SameLine();
-
-		if (hidden) ImGui::EndDisabled();
-
-		if (ImGui::Button(":"))
-			ImGui::OpenPopup("Options Popup");
-		if (ImGui::BeginPopup("Options Popup"))
-		{
-			if (ImGui::MenuItem("Delete"))
-			{
-				DeleteContainer(i);
-				ImGui::EndPopup();
-				ImGui::PopID();
-				break;
-			}
-			if (r->GetSize() <= 1 && ImGui::MenuItem("Unify", "", &r->unified)) r->SwapNames();
-			ImGui::MenuItem("Hide", "", &r->hidden);
-			ImGui::EndPopup();
-		}
-		ImGui::SameLine();
-
-		if (r->loadOpen)
-		{
-			ImGui::SetNextItemOpen(r->open);
-			r->loadOpen = false;
-		}
-		if (r->open = ImGui::TreeNodeEx("[]", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding))
-		{
-			if (ImGui::BeginDragDropSource())
-			{
-				intptr_t id = r->GetId();
-				ImGui::SetDragDropPayload("Container", &id, sizeof(intptr_t));
-				ImGui::Text(r->GetName());
-				ImGui::EndDragDropSource();
-			}
-			if (ImGui::BeginDragDropTarget())
-			{
-				const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Container");
-				if (payload)
-				{
-					MoveContainer(ReturnContainerIndex(*((intptr_t*)payload->Data)), i);
-					reordered = true;
-				}
-				ImGui::EndDragDropTarget();
-			}
-
-			ImGui::Dummy({ 15, 0 }); ImGui::SameLine();
-			r->Draw();
-
-			ImGui::TreePop();
-		}
-		ImGui::PopID();
-
-		AddSpacing(0);
-
-		if (reordered) break;
-	}
-
-	AddSpacing(0);
-
-	unasignedContainer->Draw();
 }
 
 bool EconomyScene::DrawToolbarWindow(bool* open)
@@ -837,23 +567,23 @@ bool EconomyScene::DrawToolbarWindow(bool* open)
 
 		if (ImGui::Button("FILTER"))
 		{
-			CreateContainer(ContainerType::FILTER);
+			gestors[0]->CreateContainer(ContainerType::FILTER);
 			action = true;
 		}
 
 		if (ImGui::Button("LIMIT "))
 		{
-			CreateContainer(ContainerType::LIMIT);
+			gestors[0]->CreateContainer(ContainerType::LIMIT);
 			action = true;
 		}
 
 		if (ImGui::Button("FUTURE"))
 		{
-			CreateContainer(ContainerType::FUTURE);
+			gestors[0]->CreateContainer(ContainerType::FUTURE);
 			action = true;
 		}
 
-		if (action) SwitchLoadOpen();
+		if (action) gestors[0]->SwitchLoadOpen();
 	}
 	ImGui::End();
 
@@ -886,172 +616,150 @@ void EconomyScene::UpdateShortcuts()
 	}
 }
 
-void EconomyScene::UpdateCurrency()
+void EconomyScene::UpdateFormat()
 {
-	totalContainer->SetCurrency(comboCurrency[currency]);
-	unasignedContainer->SetCurrency(comboCurrency[currency]);
-	for (Container* r : containers) r->SetCurrency(comboCurrency[currency]);
-}
+	for (GestorSystem* system : gestors)
+		system->SetFormat("%.2f ", comboCurrency[currency]);
 
-void EconomyScene::CreateContainer(ContainerType container, const char* name, bool hidden, bool open)
-{
-	bool unified = createContainerUnified;
-
-	switch (container)
-	{
-	case ContainerType::FILTER  : containers.emplace_back((Container*)(new FilterContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
-	case ContainerType::LIMIT   : containers.emplace_back((Container*)(new  LimitContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
-	case ContainerType::FUTURE  : containers.emplace_back((Container*)(new FutureContainer(name, hidden, open, unified, totalContainer->GetMoneyPtr()))); break;
-	default: break;
-	}
-
-	containers.back()->SetCurrency(comboCurrency[currency]);
+	//totalContainer->SetCurrency(comboCurrency[currency]);
+	//unasignedContainer->SetCurrency(comboCurrency[currency]);
+	//for (Container* r : containers) r->SetCurrency(comboCurrency[currency]);
 }
 
 // Old Loads -------------------------------------------
-void EconomyScene::Loadv1_0()
-{
-	// Load Logic
-	if (!loadingV1_0)
-	{
-		loadingV1_0 = true;
-		return;
-	}
-
-	// Draw File Dialog
-	std::string path, name;
-	size_t format = 0;
-	bool closed = false;
-	if (!DrawFileDialog(&versionError, "v1.0", &path, &name, &format, &closed)) return;
-	else
-	{
-		if (closed)
-		{
-			loadingV1_0 = false;
-			return; // Return true
-		}
-	}
-
-	// Version Error Popup
-	bool vErr = versionError;
-	if (ErrorPopup(&versionError,
-		"A v1.0 Loader can only load v1.0 files",
-		"SOLUTION:\nGo to File > Load. If an error occurs shows again,\nfollow the instructions of that error.\nThis method only loads v1.0 files.")) loadingV1_0 = false;
-	if (vErr) return;
-
-	// Load
-	loadingV1_0 = false;
-
-	openFileName = name;
-	openFilePath = path;
-
-	path += name;
-	path.erase(path.end() - format, path.end());
-
-	float total = 0;
-	int size = 0;
-
-	DeleteAllContainer();
-
-	// Y aspects
-	file->ViewFile(path.c_str(), 1).
-		// Preferences
-		Read("cnfSRT").AsBool(showContainerType).
-		Read("cnfSFU").AsBool(showFutureUnasigned).
-		Read("cnfAFC").AsBool(allowFutureCovering).
-		Read("cnfTFS").AsFloat(textFieldSize).
-		Read("currency").AsInt(currency).
-		// General Project
-		Read("total").AsFloat(total).
-		Read("size").AsInt(size);
-
-	int added = 0;
-
-	for (unsigned int i = 0; i < size; ++i)
-	{ //Change depednig X aspects \/   \/ Change it depending on how many Y aspects
-		int positionToRead = (i * 5) + 8 + added;
-		int type = -1;
-		float money = 0;
-		bool hidden = false, open = false;
-		std::string name;
-
-		// X aspects
-		file->ViewFile(path.c_str(), positionToRead).
-			Read("name").AsString(name).
-			Read("type").AsInt(type).
-			Read("money").AsFloat(money).
-			Read("hide").AsBool(hidden).
-			Read("open").AsBool(open);
-
-
-		switch ((ContainerType)type)
-		{
-		case ContainerType::FILTER:
-		{
-			CreateContainer((ContainerType)type, "Filter Name", hidden, open);
-			// Change: v1.1 -> v1.0 (Filters are plural forever)
-			FilterContainer* fR = (FilterContainer*)containers.back();
-			fR->ClearLabels();
-
-			fR->NewLabel(name.c_str(), money);
-
-			break;
-		}
-
-		case ContainerType::LIMIT:
-		{
-			float limit = 1;
-			file->ViewFile(path.c_str(), positionToRead + 4).
-				Read("limit").AsFloat(limit);
-
-			CreateContainer((ContainerType)type, "Limit Name", hidden, open);
-			// Change: v1.1 -> v1.0 (Limits are plural forever)
-			LimitContainer* lR = (LimitContainer*)containers.back();
-			lR->ClearLabels();
-
-			lR->NewLabel(name.c_str(), money, limit);
-			added++;
-
-			break;
-		}
-
-		case ContainerType::FUTURE:
-		{
-			CreateContainer((ContainerType)type, name.c_str(), hidden, open);
-			FutureContainer* fR = (FutureContainer*)containers.back();
-			fR->ClearLabels();
-
-			int fSize = 0; //                           \/ Change depending on X aspects amount
-			int futurePositionToRead = positionToRead + 5;
-
-			file->ViewFile(path.c_str(), futurePositionToRead).
-				Read("size").AsInt(fSize);
-
-			added++;
-
-			for (suint i = 0; i < fSize; ++i)
-			{
-				std::string fName;
-				float fMoney;
-				file->ViewFile(path.c_str(), (futurePositionToRead + 1) + (i * 2)).
-					Read("name").AsString(fName).
-					Read("money").AsFloat(fMoney);
-
-				fR->NewLabel(fName.c_str(), fMoney);
-
-				added += 2;
-			}
-
-			break;
-		}
-
-		default: break;
-		}
-
-		containers.back()->loadOpen = true;
-	}
-
-	totalContainer->SetMoney(total);
-	UpdateCurrency();
-
-}
+//void EconomyScene::Loadv1_0()
+//{
+//	// Load Logic
+//	if (!loadingV1_0)
+//	{
+//		loadingV1_0 = true;
+//		return;
+//	}
+//
+//	// Draw File Dialog
+//	std::string path, name;
+//	size_t format = 0;
+//	bool closed = false;
+//	if (!DrawFileDialog(&versionError, "v1.0", &path, &name, &format, &closed)) return;
+//	else
+//	{
+//		if (closed)
+//		{
+//			loadingV1_0 = false;
+//			return; // Return true
+//		}
+//	}
+//
+//	// Load
+//	loadingV1_0 = false;
+//
+//	openFileName = name;
+//	openFilePath = path;
+//
+//	path += name;
+//	path.erase(path.end() - format, path.end());
+//
+//	float total = 0;
+//	int size = 0;
+//
+//	DeleteAllContainer();
+//
+//	// Y aspects
+//	file->ViewFile(path.c_str(), 1).
+//		// Preferences
+//		Read("cnfSRT").AsBool(showContainerType).
+//		Read("cnfSFU").AsBool(showFutureUnasigned).
+//		Read("cnfAFC").AsBool(allowFutureCovering).
+//		Read("cnfTFS").AsFloat(textFieldSize).
+//		Read("currency").AsInt(currency).
+//		// General Project
+//		Read("total").AsFloat(total).
+//		Read("size").AsInt(size);
+//
+//	int added = 0;
+//
+//	for (unsigned int i = 0; i < size; ++i)
+//	{ //Change depednig X aspects \/   \/ Change it depending on how many Y aspects
+//		int positionToRead = (i * 5) + 8 + added;
+//		int type = -1;
+//		float money = 0;
+//		bool hidden = false, open = false;
+//		std::string name;
+//
+//		// X aspects
+//		file->ViewFile(path.c_str(), positionToRead).
+//			Read("name").AsString(name).
+//			Read("type").AsInt(type).
+//			Read("money").AsFloat(money).
+//			Read("hide").AsBool(hidden).
+//			Read("open").AsBool(open);
+//
+//
+//		switch ((ContainerType)type)
+//		{
+//		case ContainerType::FILTER:
+//		{
+//			FilterContainer* fR = (FilterContainer*)gestors[0]->CreateContainer((ContainerType)type, "Filter Name", hidden, open, createContainerUnified);
+//			// Change: v1.1 -> v1.0 (Filters are plural forever)
+//			fR->ClearLabels();
+//
+//			fR->NewLabel(name.c_str(), money);
+//
+//			break;
+//		}
+//
+//		case ContainerType::LIMIT:
+//		{
+//			float limit = 1;
+//			file->ViewFile(path.c_str(), positionToRead + 4).
+//				Read("limit").AsFloat(limit);
+//
+//			LimitContainer* lR = (LimitContainer*)gestors[0]->CreateContainer((ContainerType)type, "Limit Name", hidden, open, createContainerUnified);
+//			// Change: v1.1 -> v1.0 (Limits are plural forever)
+//			lR->ClearLabels();
+//
+//			lR->NewLabel(name.c_str(), money, limit);
+//			added++;
+//
+//			break;
+//		}
+//
+//		case ContainerType::FUTURE:
+//		{
+//			FutureContainer* fR = (FutureContainer*)gestors[0]->CreateContainer((ContainerType)type, name.c_str(), hidden, open, createContainerUnified);
+//			fR->ClearLabels();
+//
+//			int fSize = 0; //                           \/ Change depending on X aspects amount
+//			int futurePositionToRead = positionToRead + 5;
+//
+//			file->ViewFile(path.c_str(), futurePositionToRead).
+//				Read("size").AsInt(fSize);
+//
+//			added++;
+//
+//			for (suint i = 0; i < fSize; ++i)
+//			{
+//				std::string fName;
+//				float fMoney;
+//				file->ViewFile(path.c_str(), (futurePositionToRead + 1) + (i * 2)).
+//					Read("name").AsString(fName).
+//					Read("money").AsFloat(fMoney);
+//
+//				fR->NewLabel(fName.c_str(), fMoney);
+//
+//				added += 2;
+//			}
+//
+//			break;
+//		}
+//
+//		default: break;
+//		}
+//
+//		containers.back()->loadOpen = true;
+//	}
+//
+//	totalContainer->SetMoney(total);
+//	UpdateFormat();
+//
+//}

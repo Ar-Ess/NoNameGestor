@@ -1,13 +1,11 @@
 #ifndef __ECONOMY_SCENE_H__
 #define __ECONOMY_SCENE_H__
 
-#include <vector>
 #include "imgui/imgui.h"
 #include "Input.h"
 #include "FileManager.h"
 #include "Chrono.h"
-
-#include "ContainerHeader.h"
+#include "GestorSystem.h"
 
 class EconomyScene
 {
@@ -30,9 +28,7 @@ private: // Functions
 	void InternalSave(const char* path);
 	void Load();
 	void LoadInternal(const char* path);
-	void Loadv1_0();
 	bool DrawFileDialog(bool* vError, const char* v, std::string* path, std::string* name, size_t* format, bool* closed);
-	bool ErrorPopup(bool* open, const char* title, const char* description);
 	void ExportGestor(std::vector<Container*>* exporting);
 
 	bool DrawMenuBar();
@@ -40,14 +36,11 @@ private: // Functions
 
 	bool DrawPreferencesWindow(bool* open);
 	bool DrawMainWindow(bool* open);
-		void DrawGestorSystem();
 
 	bool DrawToolbarWindow(bool* open);
 
 	void UpdateShortcuts();
-	void UpdateCurrency();
-
-	void CreateContainer(ContainerType container, const char* name = "New Container", bool hidden = false, bool open = true);
+	void UpdateFormat();
 
 	// Input from 0 (smallest spacing) to whatever you need
 	void AddSpacing(unsigned int spaces = 1)
@@ -78,57 +71,6 @@ private: // Functions
 		}
 	}
 
-	void DeleteContainer(suint index)
-	{
-		assert(index >= 0 && index < containers.size());
-
-		Container* r = containers[index];
-		containers.erase(containers.begin() + index);
-		RELEASE(r);
-		SwitchLoadOpen();
-	}
-
-	void DeleteAllContainer()
-	{
-		for (Container* r : containers) RELEASE(r);
-		containers.clear();
-	}
-
-	void MoveContainer(suint index, suint position)
-	{
-		if (index == position) return;
-		suint size = containers.size();
-		assert(index >= 0 && index < size);
-		assert(position >= 0 && position < size);
-
-		Container* r = containers[index];
-		containers.erase(containers.begin() + index);
-
-		containers.insert(containers.begin() + position, r);
-	}
-
-	int ReturnContainerIndex(intptr_t id)
-	{
-		size_t size = containers.size();
-		int i = 0;
-		for (std::vector<Container*>::const_iterator it = containers.begin(); it != containers.end(); ++it)
-		{
-			Container* rTarget = (*it);
-			if (id == rTarget->GetId()) return i;
-			++i;
-		}
-
-		i = -1;
-		assert(i != -1); // There is not a container like "r"
-
-		return i;
-	}
-
-	void SwitchLoadOpen()
-	{
-		for (Container* c : containers) c->loadOpen = true;
-	}
-
 private: // Variables
 
 	// General
@@ -138,9 +80,7 @@ private: // Variables
 	bool preferencesWindow = false;
 
 	// Gestor
-	TotalContainer* totalContainer = nullptr;
-	UnasignedContainer* unasignedContainer = nullptr;
-	std::vector<Container*> containers;
+	std::vector<GestorSystem*> gestors;
 
 	// Shortcuts
 	bool ctrl = false, shft = false, n = false, 

@@ -57,6 +57,9 @@
     <ClCompile Include="Source\LogFunction.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Source\GestorSystem.cpp">
+      <Filter>Gestor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\App.h" />
@@ -133,37 +136,43 @@
       <Filter>External\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="Source\Label.h">
-      <Filter>Container\Containers</Filter>
+      <Filter>Gestor\Containers</Filter>
     </ClInclude>
     <ClInclude Include="Source\Chrono.h">
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="Source\Container.h">
-      <Filter>Container</Filter>
+      <Filter>Gestor</Filter>
     </ClInclude>
     <ClInclude Include="Source\ContainerHeader.h">
-      <Filter>Container</Filter>
+      <Filter>Gestor</Filter>
     </ClInclude>
     <ClInclude Include="Source\FilterContainer.h">
-      <Filter>Container\Containers</Filter>
+      <Filter>Gestor\Containers</Filter>
     </ClInclude>
     <ClInclude Include="Source\FutureContainer.h">
-      <Filter>Container\Containers</Filter>
+      <Filter>Gestor\Containers</Filter>
     </ClInclude>
     <ClInclude Include="Source\LimitContainer.h">
-      <Filter>Container\Containers</Filter>
+      <Filter>Gestor\Containers</Filter>
     </ClInclude>
     <ClInclude Include="Source\TotalContainer.h">
-      <Filter>Container\Constant</Filter>
+      <Filter>Gestor\Constant</Filter>
     </ClInclude>
     <ClInclude Include="Source\UnasignedContainer.h">
-      <Filter>Container\Constant</Filter>
+      <Filter>Gestor\Constant</Filter>
     </ClInclude>
     <ClInclude Include="Source\LogFunction.h">
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="Source\ContainerEnum.h">
       <Filter>Enums</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GestorSystem.h">
+      <Filter>Gestor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Currency.h">
+      <Filter>Gestor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -191,13 +200,13 @@
     <Filter Include="Enums">
       <UniqueIdentifier>{59aa71da-c797-4a88-9608-392729e3d4d6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Container">
+    <Filter Include="Gestor">
       <UniqueIdentifier>{c1522c6d-9e4e-459a-a5cc-2e1c63a70239}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Container\Containers">
+    <Filter Include="Gestor\Containers">
       <UniqueIdentifier>{94b32f97-c41f-46ee-ba41-9f19f773e979}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Container\Constant">
+    <Filter Include="Gestor\Constant">
       <UniqueIdentifier>{7185b72b-3ea1-4c81-97a7-299824278e03}</UniqueIdentifier>
     </Filter>
   </ItemGroup>

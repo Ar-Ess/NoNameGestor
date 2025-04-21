@@ -102,6 +102,7 @@
     <ClCompile Include="Source\External\imgui\imgui_stdlib.cpp" />
     <ClCompile Include="Source\External\imgui\imgui_tables.cpp" />
     <ClCompile Include="Source\External\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="Source\GestorSystem.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\App.cpp" />
     <ClCompile Include="Source\Input.cpp" />
@@ -113,6 +114,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="Source\Chrono.h" />
     <ClInclude Include="Source\ContainerEnum.h" />
+    <ClInclude Include="Source\Currency.h" />
     <ClInclude Include="Source\EconomyScene.h" />
     <ClInclude Include="Source\External\ImGuiFileDialog\ImGuiFileDialog.h" />
     <ClInclude Include="Source\External\ImGuiFileDialog\ImGuiFileDialogConfig.h" />
@@ -128,6 +130,7 @@
     <ClInclude Include="Source\FileManager.h" />
     <ClInclude Include="Source\FilterContainer.h" />
     <ClInclude Include="Source\FutureContainer.h" />
+    <ClInclude Include="Source\GestorSystem.h" />
     <ClInclude Include="Source\Label.h" />
     <ClInclude Include="Source\LimitContainer.h" />
     <ClInclude Include="Source\Multibool.h" />
