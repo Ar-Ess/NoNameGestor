@@ -16,7 +16,7 @@ class GestorSystem
 {
 public:
 
-	GestorSystem(const char* name, bool* showFutureUnasigned, bool* showContainerType, ImFont* bigFont);
+	GestorSystem(const char* name, bool* showFutureUnasigned, bool* showContainerType, std::string* openFileName, std::string* openFilePath, ImFont* bigFont);
 
 	~GestorSystem();
 
@@ -25,6 +25,10 @@ public:
 	bool Update();
 
 	bool Draw();
+
+	void DrawExport();
+
+	void ExportGestor(std::vector<Container*>* exporting);
 
 	bool Save(FileManager* file, const char* path);
 
@@ -65,6 +69,9 @@ private:
 
 	std::string name;
 	std::string format;
+
+	std::string* openFileName = nullptr;
+	std::string* openFilePath = nullptr;
 
 	bool* showContainerType = nullptr;
 	std::intptr_t id = 0;

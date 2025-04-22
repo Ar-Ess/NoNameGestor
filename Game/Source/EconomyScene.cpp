@@ -82,7 +82,7 @@ void EconomyScene::NewFile()
 
 	CleanUp();
 
-	gestors.emplace_back(new GestorSystem("NewGestor", &showFutureUnasigned, &showContainerType, bigFont));
+	gestors.emplace_back(new GestorSystem("New Gestor", &showFutureUnasigned, &showContainerType, &openFileName, &openFilePath, bigFont));
 
 	UpdateFormat();
 }
@@ -254,48 +254,13 @@ void EconomyScene::LoadInternal(const char* path)
 
 		jumplines++;
 
-		GestorSystem* g = new GestorSystem(name.c_str(), &showFutureUnasigned, &showContainerType, bigFont);
+		GestorSystem* g = new GestorSystem(name.c_str(), &showFutureUnasigned, &showContainerType, &openFileName, &openFilePath, bigFont);
 		gestors.emplace_back(g);
 
 		g->Load(file, path, jumplines);
 	}
 
 	UpdateFormat();
-}
-
-void EconomyScene::ExportGestor(std::vector<Container*>* exporting)
-{
-	std::fstream file;
-	std::string filePath = openFilePath;
-	if (filePath.empty()) filePath = "Exports\\";
-	filePath += openFileName;
-	filePath.erase(filePath.end() - 4, filePath.end());
-	filePath += "_Gestor.txt";
-
-	file.open(filePath, std::ios::out);
-
-	assert(file.is_open()); // File is not open
-
-	std::vector<Container*>::const_iterator it = exporting->begin();
-	for (it; it != exporting->end(); ++it)
-	{
-		file << (*it)->GetName() << ":";
-		if ((*it)->unified)
-		{
-			file << " " << (*it)->GetMoney() << " " << comboCurrency[currency] << std::endl << std::endl;
-		}
-		else
-		{
-			file << std::endl;
-			unsigned int size = (*it)->GetSize();
-			for (unsigned int i = 0; i < size; ++i)
-			{
-				file << " - " << (*it)->GetLabelName(i) << ": " << (*it)->GetLabelMoney(i) << " " << comboCurrency[currency] << std::endl << std::endl;
-			}
-		}
-	}
-
-	file.close();
 }
 
 bool EconomyScene::DrawMenuBar()
@@ -323,53 +288,9 @@ bool EconomyScene::DrawMenuBar()
 
 			if (ImGui::BeginMenu("Export"))
 			{
-				// TODO: adapt this to accept different amounts of gestors
-				/*
-				bool empty = containers.empty();
-				bool selected = false;
-				if (!empty)
-				{
-					ImGui::Text("Select the containers:");
-					AddSpacing(1);
-					for (Container* c : containers)
-					{
-						ImGui::Text("  - ");
-						ImGui::SameLine();
-						ImGui::PushID(c->GetId());
-						ImGui::PushItemFlag(ImGuiItemFlags_SelectableDontClosePopup, true);
-						ImGui::MenuItem(c->GetName(), "", &c->exporting);
-						ImGui::PopItemFlag();
-						ImGui::PopID();
-						if (!selected && c->exporting) selected = true;
-					}
-				}
-				else
-				{
-					ImGui::TextDisabled("No containers yet:");
-					AddSpacing(3);
-				}
-				AddSpacing(1);
-				AddSeparator();
-				if (!selected || empty) ImGui::BeginDisabled();
+				for (GestorSystem* gestor : gestors)
+					gestor->DrawExport();
 
-				if (ImGui::Selectable("  Export", false, ImGuiSelectableFlags_None, { 70, 14 }))
-				{
-					std::vector<Container*> toExport;
-					for (Container* c : containers)
-					{
-						if (!c->exporting) continue;
-						toExport.emplace_back(c);
-					}
-					ExportGestor(&toExport);
-				}
-				if (!selected && !empty) ImGui::EndDisabled();
-				ImGui::SameLine();
-				ImGui::Text("|");
-				ImGui::SameLine();
-				if (ImGui::Selectable("Export All", false, ImGuiSelectableFlags_None, { 70, 14 }))
-					ExportGestor(&containers);
-				if (empty) ImGui::EndDisabled();
-				*/
 				ImGui::EndMenu();
 			}
 
@@ -407,7 +328,7 @@ bool EconomyScene::DrawMenuBar()
 
 			if (ImGui::MenuItem("New Gestor") && gestors.size() < 4)
 			{
-				gestors.emplace_back(new GestorSystem("New Gestor", &showFutureUnasigned, &showContainerType, bigFont));
+				gestors.emplace_back(new GestorSystem("New Gestor", &showFutureUnasigned, &showContainerType, &openFileName, &openFilePath, bigFont));
 				UpdateFormat();
 			}
 
