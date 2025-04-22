@@ -392,20 +392,20 @@ bool EconomyScene::DrawMenuBar()
 			//ImGui::MenuItem("Duplicate", "Ctrl + D");
 			ImGui::EndMenu();
 		}*/
-		if (ImGui::BeginMenu("New"))
+		if (ImGui::BeginMenu("Create"))
 		{
-			if (ImGui::MenuItem("Filter"))
-				gestors[0]->CreateContainer(ContainerType::FILTER);
+			if (ImGui::MenuItem("New Filter"))
+				gestors[focusedGestor]->CreateContainer(ContainerType::FILTER);
 
-			if (ImGui::MenuItem("Limit"))
-				gestors[0]->CreateContainer(ContainerType::LIMIT);
+			if (ImGui::MenuItem("New Limit"))
+				gestors[focusedGestor]->CreateContainer(ContainerType::LIMIT);
 
-			if (ImGui::MenuItem("Future"))
-				gestors[0]->CreateContainer(ContainerType::FUTURE);
+			if (ImGui::MenuItem("New Future"))
+				gestors[focusedGestor]->CreateContainer(ContainerType::FUTURE);
 
 			AddSeparator(1);
 
-			if (ImGui::MenuItem("Gestor"))
+			if (ImGui::MenuItem("New Gestor"))
 			{
 				gestors.emplace_back(new GestorSystem("New Gestor", &showFutureUnasigned, &showContainerType, bigFont));
 				UpdateFormat();
@@ -578,23 +578,23 @@ bool EconomyScene::DrawToolbarWindow(bool* open)
 
 		if (ImGui::Button("FILTER"))
 		{
-			gestors[0]->CreateContainer(ContainerType::FILTER);
+			gestors[focusedGestor]->CreateContainer(ContainerType::FILTER);
 			action = true;
 		}
 
 		if (ImGui::Button("LIMIT "))
 		{
-			gestors[0]->CreateContainer(ContainerType::LIMIT);
+			gestors[focusedGestor]->CreateContainer(ContainerType::LIMIT);
 			action = true;
 		}
 
 		if (ImGui::Button("FUTURE"))
 		{
-			gestors[0]->CreateContainer(ContainerType::FUTURE);
+			gestors[focusedGestor]->CreateContainer(ContainerType::FUTURE);
 			action = true;
 		}
 
-		if (action) gestors[0]->SwitchLoadOpen();
+		if (action) gestors[focusedGestor]->SwitchLoadOpen();
 	}
 	ImGui::End();
 
@@ -636,141 +636,3 @@ void EconomyScene::UpdateFormat()
 	//totalContainer->SetCurrency(comboCurrency[currency]);
 	//for (Container* r : containers) r->SetCurrency(comboCurrency[currency]);
 }
-
-// Old Loads -------------------------------------------
-//void EconomyScene::Loadv1_0()
-//{
-//	// Load Logic
-//	if (!loadingV1_0)
-//	{
-//		loadingV1_0 = true;
-//		return;
-//	}
-//
-//	// Draw File Dialog
-//	std::string path, name;
-//	size_t format = 0;
-//	bool closed = false;
-//	if (!DrawFileDialog(&versionError, "v1.0", &path, &name, &format, &closed)) return;
-//	else
-//	{
-//		if (closed)
-//		{
-//			loadingV1_0 = false;
-//			return; // Return true
-//		}
-//	}
-//
-//	// Load
-//	loadingV1_0 = false;
-//
-//	openFileName = name;
-//	openFilePath = path;
-//
-//	path += name;
-//	path.erase(path.end() - format, path.end());
-//
-//	float total = 0;
-//	int size = 0;
-//
-//	DeleteAllContainer();
-//
-//	// Y aspects
-//	file->ViewFile(path.c_str(), 1).
-//		// Preferences
-//		Read("cnfSRT").AsBool(showContainerType).
-//		Read("cnfSFU").AsBool(showFutureUnasigned).
-//		Read("cnfAFC").AsBool(allowFutureCovering).
-//		Read("cnfTFS").AsFloat(textFieldSize).
-//		Read("currency").AsInt(currency).
-//		// General Project
-//		Read("total").AsFloat(total).
-//		Read("size").AsInt(size);
-//
-//	int added = 0;
-//
-//	for (unsigned int i = 0; i < size; ++i)
-//	{ //Change depednig X aspects \/   \/ Change it depending on how many Y aspects
-//		int positionToRead = (i * 5) + 8 + added;
-//		int type = -1;
-//		float money = 0;
-//		bool hidden = false, open = false;
-//		std::string name;
-//
-//		// X aspects
-//		file->ViewFile(path.c_str(), positionToRead).
-//			Read("name").AsString(name).
-//			Read("type").AsInt(type).
-//			Read("money").AsFloat(money).
-//			Read("hide").AsBool(hidden).
-//			Read("open").AsBool(open);
-//
-//
-//		switch ((ContainerType)type)
-//		{
-//		case ContainerType::FILTER:
-//		{
-//			FilterContainer* fR = (FilterContainer*)gestors[0]->CreateContainer((ContainerType)type, "Filter Name", hidden, open, createContainerUnified);
-//			// Change: v1.1 -> v1.0 (Filters are plural forever)
-//			fR->ClearLabels();
-//
-//			fR->NewLabel(name.c_str(), money);
-//
-//			break;
-//		}
-//
-//		case ContainerType::LIMIT:
-//		{
-//			float limit = 1;
-//			file->ViewFile(path.c_str(), positionToRead + 4).
-//				Read("limit").AsFloat(limit);
-//
-//			LimitContainer* lR = (LimitContainer*)gestors[0]->CreateContainer((ContainerType)type, "Limit Name", hidden, open, createContainerUnified);
-//			// Change: v1.1 -> v1.0 (Limits are plural forever)
-//			lR->ClearLabels();
-//
-//			lR->NewLabel(name.c_str(), money, limit);
-//			added++;
-//
-//			break;
-//		}
-//
-//		case ContainerType::FUTURE:
-//		{
-//			FutureContainer* fR = (FutureContainer*)gestors[0]->CreateContainer((ContainerType)type, name.c_str(), hidden, open, createContainerUnified);
-//			fR->ClearLabels();
-//
-//			int fSize = 0; //                           \/ Change depending on X aspects amount
-//			int futurePositionToRead = positionToRead + 5;
-//
-//			file->ViewFile(path.c_str(), futurePositionToRead).
-//				Read("size").AsInt(fSize);
-//
-//			added++;
-//
-//			for (suint i = 0; i < fSize; ++i)
-//			{
-//				std::string fName;
-//				float fMoney;
-//				file->ViewFile(path.c_str(), (futurePositionToRead + 1) + (i * 2)).
-//					Read("name").AsString(fName).
-//					Read("money").AsFloat(fMoney);
-//
-//				fR->NewLabel(fName.c_str(), fMoney);
-//
-//				added += 2;
-//			}
-//
-//			break;
-//		}
-//
-//		default: break;
-//		}
-//
-//		containers.back()->loadOpen = true;
-//	}
-//
-//	inputContainer->SetMoney(total);
-//	UpdateFormat();
-//
-//}
