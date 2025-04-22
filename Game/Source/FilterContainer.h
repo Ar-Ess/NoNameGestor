@@ -6,7 +6,7 @@ class FilterContainer : public Container
 {
 public: // Functions
 
-	FilterContainer(const char* name, bool hidden, bool open, bool unified, float* totalMoneyPtr, std::string* format) : Container(name, hidden, open, unified, totalMoneyPtr, format, ContainerType::FILTER)
+	FilterContainer(const char* name, bool hidden, bool open, bool unified, std::string* format) : Container(name, hidden, open, unified, format, ContainerType::FILTER)
 	{
 		NewLabel("New Filter");
 	}

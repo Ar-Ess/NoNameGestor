@@ -67,11 +67,6 @@ public: // Functions
 		return money;
 	}
 
-	float* GetMoneyPtr()
-	{
-		return &money;
-	}
-
 	unsigned int GetSize() const
 	{
 		return size;
@@ -121,7 +116,7 @@ public: // Functions
 
 protected: // Functions
 
-	Container(const char* name, bool hidden, bool open, bool unified, float* totalMoneyPtr, std::string* format, ContainerType type) 
+	Container(const char* name, bool hidden, bool open, bool unified, std::string* format, ContainerType type) 
 	{
 		this->money = 0;
 		this->name = name;
@@ -130,7 +125,6 @@ protected: // Functions
 		this->hidden = hidden;
 		this->open = open;
 		this->unified = unified;
-		this->totalMoneyPtr = totalMoneyPtr;
 		this->format = format;
 		id = reinterpret_cast<int>(this);
 	}
@@ -153,7 +147,6 @@ public: // Variables
 
 protected: // Variables
 
-	float* totalMoneyPtr = nullptr;
 	std::vector<Label*> labels;
 	float money = 0.0f;
 	std::string* namePtr = nullptr; //-TODO: quan carregem fitxer, mirar si esta unified o no i asignar nom corresponent

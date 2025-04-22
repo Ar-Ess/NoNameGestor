@@ -4,8 +4,8 @@
 
 GestorSystem::GestorSystem(const char* name, bool* showFutureUnasigned, bool* showContainerType, ImFont* bigFont)
 {
-	inputContainer = new InputContainer("Money", &format);
-	totalContainer = new TotalContainer("Total", &format, showFutureUnasigned);
+	inputContainer = new InputContainer("MONEY ", &format);
+	totalContainer = new TotalContainer("TOTAL ", &format, showFutureUnasigned);
 	this->showContainerType = showContainerType;
 	this->id = reinterpret_cast<int>(this);
 	this->name = name;
@@ -109,7 +109,9 @@ bool GestorSystem::Draw()
 			ImGui::SetNextItemOpen(r->open);
 			r->loadOpen = false;
 		}
-		if (r->open = ImGui::TreeNodeEx("[]", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding))
+
+		/*
+		if (r->open = ImGui::TreeNodeEx("[]", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_AllowItemOverlap))
 		{
 			if (ImGui::BeginDragDropSource())
 			{
@@ -129,19 +131,69 @@ bool GestorSystem::Draw()
 				ImGui::EndDragDropTarget();
 			}
 
-			ImGui::Dummy({ 15, 0 }); ImGui::SameLine();
+			ImGui::Dummy({ 10, 0 }); ImGui::SameLine();
 			r->Draw();
 
 			ImGui::TreePop();
 		}
+		*/
+
+		{
+			bool nodeOpen = r->open;
+
+			// Dibuixa la fletxeta com a botó
+			if (ImGui::ArrowButton("##arrow", nodeOpen ? ImGuiDir_Down : ImGuiDir_Right))
+			{
+				nodeOpen = !nodeOpen;
+				r->open = nodeOpen;
+			}
+
+			ImGui::SameLine();
+			
+			ImVec2 textSize = ImGui::CalcTextSize("[]");
+			ImVec2 textPos = ImGui::GetCursorScreenPos();
+			ImGui::InvisibleButton("##hoverZone", textSize);
+			bool hoveringText = ImGui::IsItemHovered();
+
+			ImGui::GetWindowDrawList()->AddText(textPos, ImGui::GetColorU32(ImGuiCol_Text), hoveringText ? "[ ]" : "[]");
+
+			// Drag & Drop source
+			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+			{
+				intptr_t id = r->GetId();
+				ImGui::SetDragDropPayload("Container", &id, sizeof(intptr_t));
+				ImGui::Text(r->GetName());
+				ImGui::EndDragDropSource();
+			}
+
+			// Drag & Drop target
+			if (ImGui::BeginDragDropTarget())
+			{
+				const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Container");
+				if (payload)
+				{
+					MoveContainer(ReturnContainerIndex(*((intptr_t*)payload->Data)), i);
+					reordered = true;
+				}
+				ImGui::EndDragDropTarget();
+			}
+
+			if (nodeOpen)
+			{
+				ImGui::Indent();
+				ImGui::Dummy({ 10, 0 }); ImGui::SameLine();
+				r->Draw();
+				ImGui::Unindent();
+			}
+		}
+
 		ImGui::PopID();
-
 		AddSpacing(0);
-
 		if (reordered) break;
 	}
 
-	AddSpacing(0);
+	AddSpacing(2);
+	AddSeparator();
 
 	totalContainer->Draw();
 
@@ -330,13 +382,11 @@ void GestorSystem::SetFormat(const char* format, const char* currency)
 
 Container* GestorSystem::CreateContainer(ContainerType container, const char* name, bool hidden, bool open, bool unified)
 {
-	float* moneyPtr = inputContainer->GetMoneyPtr();
-
 	switch (container)
 	{
-	case ContainerType::FILTER: containers.emplace_back((Container*)(new FilterContainer(name, hidden, open, unified, moneyPtr, &format))); break;
-	case ContainerType::LIMIT: containers.emplace_back((Container*)(new  LimitContainer(name, hidden, open, unified, moneyPtr, &format))); break;
-	case ContainerType::FUTURE: containers.emplace_back((Container*)(new FutureContainer(name, hidden, open, unified, moneyPtr, &format))); break;
+	case ContainerType::FILTER: containers.emplace_back((Container*)(new FilterContainer(name, hidden, open, unified, &format))); break;
+	case ContainerType::LIMIT:  containers.emplace_back((Container*)(new  LimitContainer(name, hidden, open, unified, &format))); break;
+	case ContainerType::FUTURE: containers.emplace_back((Container*)(new FutureContainer(name, hidden, open, unified, &format))); break;
 	default: break;
 	}
 

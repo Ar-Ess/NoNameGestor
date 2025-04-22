@@ -6,7 +6,7 @@ class TotalContainer : public Container
 {
 public: // Functions
 
-	TotalContainer(const char* name, std::string* format, bool* showFutureMoney) : Container(name, false, true, false, nullptr, format, ContainerType::TOTAL_MONEY)
+	TotalContainer(const char* name, std::string* format, bool* showFutureMoney) : Container(name, false, true, false, format, ContainerType::TOTAL_MONEY)
 	{
 		this->showFutureMoney = showFutureMoney;
 	}

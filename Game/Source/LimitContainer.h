@@ -6,7 +6,7 @@ class LimitContainer : public Container
 {
 public: // Functions
 
-	LimitContainer(const char* name, bool hidden, bool open, bool unified, float* totalMoneyPtr, std::string* format) : Container(name, hidden, open, unified, totalMoneyPtr, format, ContainerType::LIMIT)
+	LimitContainer(const char* name, bool hidden, bool open, bool unified, std::string* format) : Container(name, hidden, open, unified, format, ContainerType::LIMIT)
 	{
 		NewLabel("New Limit");
 	}
@@ -47,16 +47,6 @@ public: // Functions
 				if (size > 1) { if (ImGui::Button("X")) DeleteLabel(i); }
 				else ImGui::Dummy({ 15, 0 });
 
-				ImGui::SameLine();
-
-				if (ImGui::Button(" > "))
-				{
-					*totalMoneyPtr -= GetLabelMoney(i);
-					DeleteLabel(i);
-					if (labels.empty()) NewLabel("New Limit");
-					ImGui::PopID();
-					break;
-				}
 				ImGui::SameLine();
 
 				ImGui::PushItemWidth(textFieldSize);

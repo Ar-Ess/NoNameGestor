@@ -405,7 +405,7 @@ bool EconomyScene::DrawMenuBar()
 
 			AddSeparator(1);
 
-			if (ImGui::MenuItem("New Gestor"))
+			if (ImGui::MenuItem("New Gestor") && gestors.size() < 4)
 			{
 				gestors.emplace_back(new GestorSystem("New Gestor", &showFutureUnasigned, &showContainerType, bigFont));
 				UpdateFormat();
@@ -521,18 +521,16 @@ bool EconomyScene::DrawMainWindow(bool* open)
 		ImGui::Text(openFileName.c_str());
 		unsigned int size = gestors.size();
 
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(10.0f, 0.0f));
 		if (ImGui::BeginTable("##systemtable", size, ImGuiTableFlags_BordersInner | ImGuiTableFlags_Resizable))
 		{
-			//for (int i = 0; i < size; ++i)
-			//	ImGui::TableSetupColumn(std::to_string(i));
-			//ImGui::TableHeadersRow();
-
 			// Captura la posició Y de l'inici de la taula
 			float tableHeight = (ImGui::GetWindowPos().y + ImGui::GetWindowHeight()) - ImGui::GetCursorScreenPos().y;
 			ImVec2 mousePos = ImGui::GetMousePos();
 
 			for (unsigned int i = 0; i < size; ++i)
 			{
+
 				GestorSystem* gestor = gestors[i];
 				ImGui::TableNextColumn();
 
@@ -557,9 +555,11 @@ bool EconomyScene::DrawMainWindow(bool* open)
 				}
 
 				gestor->Draw();
+
 			}
 
 			ImGui::EndTable();
+			ImGui::PopStyleVar();
 		}
 	}
 	ImGui::End();

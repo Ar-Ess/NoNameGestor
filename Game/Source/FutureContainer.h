@@ -6,7 +6,7 @@ class FutureContainer : public Container
 {
 public: // Functions
 
-	FutureContainer(const char* name, bool hidden, bool open, bool unified, float* totalMoneyPtr, std::string* format) : Container(name, hidden, open, unified, totalMoneyPtr, format, ContainerType::FUTURE)
+	FutureContainer(const char* name, bool hidden, bool open, bool unified, std::string* format) : Container(name, hidden, open, unified, format, ContainerType::FUTURE)
 	{
 		NewLabel("New Future");
 	}
@@ -44,20 +44,9 @@ public: // Functions
 			float width = 100.0f;
 			if (!unified)
 			{
-
 				if (size > 1) { if (ImGui::Button("X")) DeleteLabel(i); }
 				else ImGui::Dummy({ 15, 0 });
 
-				ImGui::SameLine();
-
-				if (ImGui::Button(" > "))
-				{
-					*totalMoneyPtr += GetLabelMoney(i);
-					DeleteLabel(i);
-					if (labels.empty()) NewLabel("New Future");
-					ImGui::PopID();
-					break;
-				}
 				ImGui::SameLine();
 
 				ImGui::PushItemWidth(textFieldSize);
