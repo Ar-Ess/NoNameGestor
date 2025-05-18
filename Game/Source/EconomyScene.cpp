@@ -32,6 +32,16 @@ bool EconomyScene::Start()
 
 	NewFile();
 
+#ifdef DEBUG
+	rootPath = "/Assets";
+#else
+	char result[MAX_PATH];
+	GetModuleFileName(NULL, result, MAX_PATH);
+	rootPath = result; 
+	size_t index = rootPath.find("NoNameGestor.exe");
+	rootPath = rootPath.substr(0, index);
+#endif // DEBUG
+	m
 	return true;
 }
 
@@ -233,6 +243,8 @@ void EconomyScene::LoadInternal(const char* path)
 	unsigned int size = 0;
 	CleanUp();
 
+	AddPathToRecent();
+
 	// Y aspects
 	file->ViewFile(path, 1).
 		// Preferences
@@ -263,6 +275,11 @@ void EconomyScene::LoadInternal(const char* path)
 	UpdateFormat();
 }
 
+void EconomyScene::AddPathToRecent()
+{
+	//if (file->Exists(rootPath.c_str()))
+}
+
 bool EconomyScene::DrawMenuBar()
 {
 	if (ImGui::BeginMainMenuBar())
@@ -276,6 +293,21 @@ bool EconomyScene::DrawMenuBar()
 
 			if (ImGui::MenuItem("Open", "Ctrl + O"))
 				Load();
+
+			if (ImGui::BeginMenu("Open Recent"))
+			{
+				for (std::vector<std::string*>::iterator it = recentPaths.begin(); it <= recentPaths.end(); ++it)
+				{
+					if (!ImGui::MenuItem((*it)->c_str())) continue;
+
+					LoadInternal((*it)->c_str());
+					break;
+				}
+
+				ImGui::EndMenu();
+			}
+
+			ImGui::Separator();
 
 			if (ImGui::MenuItem("Save", "Ctrl + S"))
 				Save();

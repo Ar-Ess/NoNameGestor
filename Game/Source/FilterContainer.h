@@ -37,7 +37,7 @@ public: // Functions
 			ImGui::PushID(-id / ( i + 1 ));
 
 			if (i == 0) { if (ImGui::Button("+")) NewLabel("New Filter"); }
-			else ImGui::Dummy({ 38, 0 });
+			else ImGui::Dummy({ 34, 0 });
 
 			ImGui::SameLine();
 

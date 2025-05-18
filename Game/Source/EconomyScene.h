@@ -28,7 +28,7 @@ private: // Functions
 	void InternalSave(const char* path);
 	void Load();
 	void LoadInternal(const char* path);
-	void ExportGestor(std::vector<Container*>* exporting);
+	void AddPathToRecent();
 
 	bool DrawMenuBar();
 	bool DrawDocking();
@@ -75,6 +75,10 @@ private: // Variables
 	// General
 	Input* input = nullptr;
 	FileManager* file = nullptr;
+
+	// Path List
+	std::string rootPath;
+	std::vector<std::string*> recentPaths;
 
 	bool preferencesWindow = false;
 
