@@ -11,7 +11,7 @@ class EconomyScene
 {
 public:
 
-	EconomyScene(Input* input);
+	EconomyScene(Input* input, const char* openedFile = nullptr);
 	~EconomyScene();
 
 	bool Start();
@@ -28,7 +28,8 @@ private: // Functions
 	void InternalSave(const char* path);
 	void Load();
 	void LoadInternal(const char* path);
-	void AddPathToRecent();
+	void LoadRecentPaths();
+	void SaveRecentPath(const char* path);
 
 	bool DrawMenuBar();
 	bool DrawDocking();
@@ -109,6 +110,9 @@ private: // Variables
 	int focusedGestor = 0;
 
 	ImFont* bigFont = nullptr;
+
+	// Open File Directly
+	const char* openedFile = nullptr;
 
 };
 

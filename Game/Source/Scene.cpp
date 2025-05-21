@@ -3,12 +3,12 @@
 #include "LogFunction.h"
 #include "imgui/imgui.h"
 
-Scene::Scene(Render* render, Input* input, Window* window)
+Scene::Scene(Render* render, Input* input, Window* window, const char* openedFile)
 {
 	this->render = render;
 	this->input = input;
 	this->window = window;
-	this->economyScene = new EconomyScene(input);
+	this->economyScene = new EconomyScene(input, openedFile);
 }
 
 Scene::~Scene()

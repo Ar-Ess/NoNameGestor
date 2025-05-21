@@ -14,10 +14,13 @@ App::App(int argc, char* args[]) : argc(argc), args(args)
 {
 	PERF_START(ptimer);
 
+	const char* openedFile = nullptr;
+	if (argc > 1) openedFile = args[1];
+
 	win = new Window();
 	input = new Input(win);
 	render = new Render(win);
-	scene = new Scene(render, input, win);
+	scene = new Scene(render, input, win, openedFile);
 
 	AddModule(win);
 	AddModule(input);

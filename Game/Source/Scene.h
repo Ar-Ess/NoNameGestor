@@ -18,7 +18,7 @@ class Scene : public Module
 {
 public:
 
-	Scene(Render* render, Input* input, Window* window);
+	Scene(Render* render, Input* input, Window* window, const char* openedFile = nullptr);
 
 	virtual ~Scene();
 

@@ -3,6 +3,8 @@
 
 #include <fstream>
 #include <assert.h>
+#include <sstream>
+#include <vector>
 
 class FileManager
 {
@@ -577,6 +579,11 @@ public:
 			std::ofstream erase;
 			erase.open(name, std::ofstream::out | std::ofstream::trunc);
 			erase.close();
+		}
+		else
+		{
+			std::ofstream create(name);
+			create.close();
 		}
 
 		return Editor(name, Access::OPEN);

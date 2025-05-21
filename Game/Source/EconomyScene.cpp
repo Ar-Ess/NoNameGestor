@@ -4,16 +4,19 @@
 
 #define VERSION "v1.2"
 #define EXTENSION ".nng"
+#define RECENT_PATHS "/Config"
+#define EXTENSION_CONFIG ".cnfg"
 #include "External/ImGuiFileDialog/ImGuiFileDialog.h"
 #include "imgui/imgui_internal.h"
 #include "ContainerHeader.h"
 #include "ContainerEnum.h"
 
 
-EconomyScene::EconomyScene(Input* input)
+EconomyScene::EconomyScene(Input* input, const char* openedFile)
 {
 	this->input = input;
 	this->file = new FileManager(EXTENSION);
+	this->openedFile = openedFile;
 }
 
 EconomyScene::~EconomyScene()
@@ -30,10 +33,13 @@ bool EconomyScene::Start()
 	bigFont = io.Fonts->AddFontFromFileTTF("Assets/Roboto-Regular.ttf", 20.f);
 	io.Fonts->Build();
 
-	NewFile();
+	if (openedFile == nullptr)
+		NewFile();
+	else
+		LoadInternal(openedFile);
 
 #ifdef DEBUG
-	rootPath = "/Assets";
+	rootPath = "Assets";
 #else
 	char result[MAX_PATH];
 	GetModuleFileName(NULL, result, MAX_PATH);
@@ -41,7 +47,9 @@ bool EconomyScene::Start()
 	size_t index = rootPath.find("NoNameGestor.exe");
 	rootPath = rootPath.substr(0, index);
 #endif // DEBUG
-	m
+	
+	LoadRecentPaths();
+	
 	return true;
 }
 
@@ -233,7 +241,6 @@ void EconomyScene::Load()
 	openFilePath = path;
 
 	path += name;
-	path.erase(path.end() - format, path.end());
 
 	LoadInternal(path.c_str());
 }
@@ -243,7 +250,7 @@ void EconomyScene::LoadInternal(const char* path)
 	unsigned int size = 0;
 	CleanUp();
 
-	AddPathToRecent();
+	SaveRecentPath(path);
 
 	// Y aspects
 	file->ViewFile(path, 1).
@@ -275,9 +282,71 @@ void EconomyScene::LoadInternal(const char* path)
 	UpdateFormat();
 }
 
-void EconomyScene::AddPathToRecent()
+void EconomyScene::LoadRecentPaths()
 {
-	//if (file->Exists(rootPath.c_str()))
+	std::string path = rootPath.c_str();
+	path += RECENT_PATHS;
+
+	file->SetExtension(EXTENSION_CONFIG);
+
+	if (!file->Exists(path.c_str()))
+	{
+		file->OpenFile(path.c_str()).Write("count").Number(0);
+		return;
+	}
+
+	int count = 0;
+	file->ViewFile(path.c_str()).Read("count").AsInt(count);
+
+	for (unsigned int i = 0; i < count; ++i)
+	{
+		std::string variableName = "path_";
+		variableName += std::to_string(i);
+		std::string result;
+		file->ViewFile(path.c_str(), i + 1).Read(variableName.c_str()).AsString(result);
+		recentPaths.push_back(new std::string(result));
+	}
+
+	file->SetExtension(EXTENSION);
+}
+
+void EconomyScene::SaveRecentPath(const char* filePath)
+{
+	std::string* str = new std::string(filePath);
+
+	// Si el path ja existeix a la llista
+	for (std::vector<std::string*>::iterator it = recentPaths.begin(); it < recentPaths.end(); ++it)
+	{
+		if (SameString(*(*it), *str))
+			recentPaths.erase(it);
+	}
+
+	recentPaths.insert(recentPaths.begin(), str);
+
+	if (recentPaths.size() >= 20)
+	{
+		delete recentPaths.back();
+		recentPaths.pop_back();
+	}
+	
+	std::string path = rootPath.c_str();
+	path += RECENT_PATHS;
+
+	file->SetExtension(EXTENSION_CONFIG);
+
+	file->OpenFile(path.c_str()).Write("count").Number((int)recentPaths.size());
+
+	int i = 0; 
+	for (std::vector<std::string*>::iterator it = recentPaths.begin(); it < recentPaths.end(); ++it)
+	{
+		std::string newVariableName = "path_";
+		newVariableName += std::to_string(i);
+
+		file->EditFile(path.c_str()).Write(newVariableName.c_str()).String((*it)->c_str());
+		++i;
+	}
+
+	file->SetExtension(EXTENSION);
 }
 
 bool EconomyScene::DrawMenuBar()
@@ -296,13 +365,21 @@ bool EconomyScene::DrawMenuBar()
 
 			if (ImGui::BeginMenu("Open Recent"))
 			{
-				for (std::vector<std::string*>::iterator it = recentPaths.begin(); it <= recentPaths.end(); ++it)
+				bool thereIsRecentPaths = false;
+				for (std::vector<std::string*>::iterator it = recentPaths.begin(); it < recentPaths.end(); ++it)
 				{
+					thereIsRecentPaths = true;
 					if (!ImGui::MenuItem((*it)->c_str())) continue;
 
+					size_t a = (*it)->find_last_of('\\') + 1;
+					openFileName = (*it)->substr(a, (*it)->length());
+					openFilePath = (*it)->substr(0, a);
 					LoadInternal((*it)->c_str());
 					break;
 				}
+
+				if (!thereIsRecentPaths)
+					ImGui::Text("There is no recent files...");
 
 				ImGui::EndMenu();
 			}
