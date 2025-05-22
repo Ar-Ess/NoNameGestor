@@ -113,34 +113,6 @@ bool GestorSystem::Draw()
 			r->loadOpen = false;
 		}
 
-		/*
-		if (r->open = ImGui::TreeNodeEx("[]", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_AllowItemOverlap))
-		{
-			if (ImGui::BeginDragDropSource())
-			{
-				intptr_t id = r->GetId();
-				ImGui::SetDragDropPayload("Container", &id, sizeof(intptr_t));
-				ImGui::Text(r->GetName());
-				ImGui::EndDragDropSource();
-			}
-			if (ImGui::BeginDragDropTarget())
-			{
-				const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Container");
-				if (payload)
-				{
-					MoveContainer(ReturnContainerIndex(*((intptr_t*)payload->Data)), i);
-					reordered = true;
-				}
-				ImGui::EndDragDropTarget();
-			}
-
-			ImGui::Dummy({ 10, 0 }); ImGui::SameLine();
-			r->Draw();
-
-			ImGui::TreePop();
-		}
-		*/
-
 		{
 			bool nodeOpen = r->open;
 
@@ -150,6 +122,8 @@ bool GestorSystem::Draw()
 				nodeOpen = !nodeOpen;
 				r->open = nodeOpen;
 			}
+
+			bool showMoneySum = ImGui::IsItemHovered();
 
 			ImGui::SameLine();
 			
@@ -179,6 +153,12 @@ bool GestorSystem::Draw()
 					reordered = true;
 				}
 				ImGui::EndDragDropTarget();
+			}
+
+			if (showMoneySum)
+			{
+				ImGui::SameLine();
+				ImGui::Text(format.c_str(), r->GetMoney());
 			}
 
 			if (nodeOpen)

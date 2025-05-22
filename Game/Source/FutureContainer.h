@@ -37,7 +37,7 @@ public: // Functions
 			ImGui::PushID(id * -1 * i);
 
 			if (i == 0) { if (ImGui::Button("+")) NewLabel("New Future"); }
-			else ImGui::Dummy({ 38, 0 });
+			else ImGui::Dummy({ 33, 0 });
 
 			ImGui::SameLine();
 
