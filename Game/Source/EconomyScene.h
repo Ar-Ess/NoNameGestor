@@ -42,6 +42,8 @@ private: // Functions
 	void UpdateShortcuts();
 	void UpdateFormat();
 
+	void LoadFonts(bool addFullPath);
+
 	// Input from 0 (smallest spacing) to whatever you need
 	void AddSpacing(unsigned int spaces = 1)
 	{

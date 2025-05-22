@@ -191,14 +191,15 @@ const char* App::GetArgv(int index) const
 void App::FindDirectoryPath(bool setDirectory)
 {
 #ifdef DEBUG
-	 directoryPath = "Assets";
+	directoryPath = "Assets";
 #else
 	char result[MAX_PATH];
 	GetModuleFileName(NULL, result, MAX_PATH);
 	static std::string rootPath(result);
 	size_t index = rootPath.find("NoNameGestor.exe");
 	rootPath = rootPath.substr(0, index);
-	if (setDirectory) std::filesystem::current_path(std::filesystem::path(rootPath.c_str()));
+	if (setDirectory && !IsDebuggerPresent()) 
+		std::filesystem::current_path(std::filesystem::path(rootPath.c_str()));
 	directoryPath = rootPath.c_str();
 #endif // DEBUG
 }

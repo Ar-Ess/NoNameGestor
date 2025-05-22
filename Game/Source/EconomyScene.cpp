@@ -26,26 +26,18 @@ EconomyScene::~EconomyScene()
 
 bool EconomyScene::Start()
 {
-	ImFontConfig fontConfig;
-	fontConfig.SizePixels = 18.0f;
-	auto io = ImGui::GetIO();
-
-	io.Fonts->AddFontDefault();
+	LoadFonts(!(openedFile == nullptr || IsDebuggerPresent()));
 
 	if (openedFile == nullptr)
-	{
-		bigFont = io.Fonts->AddFontFromFileTTF("Assets/Roboto-Regular.ttf", 20.f);
 		NewFile();
-	}
 	else
 	{
-		std::string font(rootPath);
-		font += "Assets/Roboto-Regular.ttf";
-		bigFont = io.Fonts->AddFontFromFileTTF(font.c_str(), 20.f);
+		std::string openFile(openedFile);
+		size_t a = openFile.find_last_of('\\') + 1;
+		openFileName = openFile.substr(a, openFile.length());
+		openFilePath = openFile.substr(0, a);
 		LoadInternal(openedFile);
 	}
-	
-	io.Fonts->Build();
 	
 	LoadRecentPaths();
 	
@@ -664,4 +656,18 @@ void EconomyScene::UpdateFormat()
 	//inputContainer->SetCurrency(comboCurrency[currency]);
 	//totalContainer->SetCurrency(comboCurrency[currency]);
 	//for (Container* r : containers) r->SetCurrency(comboCurrency[currency]);
+}
+
+void EconomyScene::LoadFonts(bool addFullPath)
+{
+	ImFontConfig fontConfig;
+	fontConfig.SizePixels = 18.0f;
+	auto io = ImGui::GetIO();
+	io.Fonts->AddFontDefault();
+
+	std::string fontPath(addFullPath ? rootPath : "Assets/Roboto-Regular.ttf");
+	if (addFullPath) fontPath += "Assets/Roboto-Regular.ttf";
+
+	bigFont = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 20.f);
+	io.Fonts->Build();
 }
