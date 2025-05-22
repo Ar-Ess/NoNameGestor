@@ -12,11 +12,12 @@
 #include "ContainerEnum.h"
 
 
-EconomyScene::EconomyScene(Input* input, const char* openedFile)
+EconomyScene::EconomyScene(Input* input, const char* rootPath, const char* openedFile)
 {
 	this->input = input;
 	this->file = new FileManager(EXTENSION);
 	this->openedFile = openedFile;
+	this->rootPath = rootPath;
 }
 
 EconomyScene::~EconomyScene()
@@ -30,23 +31,21 @@ bool EconomyScene::Start()
 	auto io = ImGui::GetIO();
 
 	io.Fonts->AddFontDefault();
-	bigFont = io.Fonts->AddFontFromFileTTF("Assets/Roboto-Regular.ttf", 20.f);
-	io.Fonts->Build();
 
 	if (openedFile == nullptr)
+	{
+		bigFont = io.Fonts->AddFontFromFileTTF("Assets/Roboto-Regular.ttf", 20.f);
 		NewFile();
+	}
 	else
+	{
+		std::string font(rootPath);
+		font += "Assets/Roboto-Regular.ttf";
+		bigFont = io.Fonts->AddFontFromFileTTF(font.c_str(), 20.f);
 		LoadInternal(openedFile);
-
-#ifdef DEBUG
-	rootPath = "Assets";
-#else
-	char result[MAX_PATH];
-	GetModuleFileName(NULL, result, MAX_PATH);
-	rootPath = result; 
-	size_t index = rootPath.find("NoNameGestor.exe");
-	rootPath = rootPath.substr(0, index);
-#endif // DEBUG
+	}
+	
+	io.Fonts->Build();
 	
 	LoadRecentPaths();
 	
@@ -284,7 +283,7 @@ void EconomyScene::LoadInternal(const char* path)
 
 void EconomyScene::LoadRecentPaths()
 {
-	std::string path = rootPath.c_str();
+	std::string path(rootPath);
 	path += RECENT_PATHS;
 
 	file->SetExtension(EXTENSION_CONFIG);
@@ -329,7 +328,7 @@ void EconomyScene::SaveRecentPath(const char* filePath)
 		recentPaths.pop_back();
 	}
 	
-	std::string path = rootPath.c_str();
+	std::string path(rootPath);
 	path += RECENT_PATHS;
 
 	file->SetExtension(EXTENSION_CONFIG);

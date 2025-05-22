@@ -33,6 +33,8 @@ public:
 
 	const char* GetArgv(int index) const;
 
+	void FindDirectoryPath(bool setDirectory);
+
 	inline uint64 GetFrameCount() const
 	{
 		return frameCount;
@@ -62,8 +64,8 @@ public:
 private:
 
 	int argc = 0;
-
 	char** args = nullptr;
+	const char* directoryPath = nullptr;
 
 	std::vector<Module*> modules;
 

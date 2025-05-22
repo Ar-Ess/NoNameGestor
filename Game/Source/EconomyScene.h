@@ -11,7 +11,7 @@ class EconomyScene
 {
 public:
 
-	EconomyScene(Input* input, const char* openedFile = nullptr);
+	EconomyScene(Input* input, const char* rootPath, const char* openedFile = nullptr);
 	~EconomyScene();
 
 	bool Start();
@@ -78,7 +78,7 @@ private: // Variables
 	FileManager* file = nullptr;
 
 	// Path List
-	std::string rootPath;
+	const char* rootPath = nullptr;
 	std::vector<std::string*> recentPaths;
 
 	bool preferencesWindow = false;

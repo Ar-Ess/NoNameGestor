@@ -10,17 +10,24 @@
 #include "Defs.h"
 #include "LogFunction.h"
 
+#include <filesystem>
+#include <iostream>
+#include <windows.h>
+
 App::App(int argc, char* args[]) : argc(argc), args(args)
 {
 	PERF_START(ptimer);
 
 	const char* openedFile = nullptr;
-	if (argc > 1) openedFile = args[1];
+	if (GetArgc() > 1)
+		openedFile = GetArgv(1);
+
+	FindDirectoryPath(GetArgc() > 1);
 
 	win = new Window();
 	input = new Input(win);
 	render = new Render(win);
-	scene = new Scene(render, input, win, openedFile);
+	scene = new Scene(render, input, win, directoryPath, openedFile);
 
 	AddModule(win);
 	AddModule(input);
@@ -179,4 +186,19 @@ const char* App::GetArgv(int index) const
 		return args[index];
 	else
 		return NULL;
+}
+
+void App::FindDirectoryPath(bool setDirectory)
+{
+#ifdef DEBUG
+	 directoryPath = "Assets";
+#else
+	char result[MAX_PATH];
+	GetModuleFileName(NULL, result, MAX_PATH);
+	static std::string rootPath(result);
+	size_t index = rootPath.find("NoNameGestor.exe");
+	rootPath = rootPath.substr(0, index);
+	if (setDirectory) std::filesystem::current_path(std::filesystem::path(rootPath.c_str()));
+	directoryPath = rootPath.c_str();
+#endif // DEBUG
 }
