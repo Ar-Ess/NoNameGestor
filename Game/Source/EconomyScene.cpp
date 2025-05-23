@@ -1,6 +1,7 @@
 #include "EconomyScene.h"
 #include <windows.h>
 #include <iostream>
+#include <filesystem>
 
 #define VERSION "v1.2"
 #define EXTENSION ".nng"
@@ -169,6 +170,42 @@ void EconomyScene::Save()
 
 }
 
+void EconomyScene::Backup()
+{
+	std::string savePath(rootPath);
+	savePath += "Backups\\";
+
+	if (!std::filesystem::exists(savePath))
+		return;
+	if (!std::filesystem::is_directory(savePath))
+		return;
+
+	savePath += openFileName;
+	time_t now = time(0);
+	tm* ltm = localtime(&now);
+	std::string backupText("_Backup_");
+
+	backupText += std::to_string(ltm->tm_year + 1900) + "-";
+	int month = ltm->tm_mon + 1;
+	int day = ltm->tm_mday;
+	backupText += month < 10 ? "0" + std::to_string(month) + "-" : std::to_string(month) + "-";
+	backupText += day < 10 ? "0" + std::to_string(day) : std::to_string(day);
+	savePath.insert(savePath.length() - 4, backupText.c_str());
+
+
+	file->OpenFile(savePath.c_str()).
+		// Preferences
+		Write("version").String(VERSION).
+		Write("cnfSRT").Bool(showContainerType).
+		Write("cnfSFU").Bool(showFutureUnasigned).
+		Write("cnfTFS").Number(textFieldSize).
+		Write("currency").Number(currency).
+		Write("gestors").Number((int)gestors.size());
+
+	for (GestorSystem* gestor : gestors)
+		gestor->Save(file, savePath.c_str());
+}
+
 void EconomyScene::InternalSave(const char* path)
 {
 	file->OpenFile(path).
@@ -201,7 +238,7 @@ void EconomyScene::Load()
 	if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
 	{
 		// action if OK
-		if (ImGuiFileDialog::Instance()->IsOk() == true && file->Exists(ImGuiFileDialog::Instance()->GetFilePathName().c_str(), false))
+		if (ImGuiFileDialog::Instance()->IsOk() == true && file->Exists(ImGuiFileDialog::Instance()->GetFilePathName().c_str()))
 		{
 			path = ImGuiFileDialog::Instance()->GetCurrentPath() + "\\";
 			name = ImGuiFileDialog::Instance()->GetCurrentFileName();
@@ -280,7 +317,7 @@ void EconomyScene::LoadRecentPaths()
 
 	file->SetExtension(EXTENSION_CONFIG);
 
-	if (!file->Exists(path.c_str()))
+	if (!file->Exists(path.c_str(), true))
 	{
 		file->OpenFile(path.c_str()).Write("count").Number(0);
 		return;
@@ -382,6 +419,9 @@ bool EconomyScene::DrawMenuBar()
 
 			if (ImGui::MenuItem("Save As", "Ctrl + Shft + S"))
 				SaveAs();
+
+			if (ImGui::MenuItem("Backup"))
+				Backup();
 
 
 			ImGui::Separator();

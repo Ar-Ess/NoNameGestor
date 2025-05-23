@@ -26,6 +26,7 @@ private: // Functions
 	void SaveAs();
 	void Save();
 	void InternalSave(const char* path);
+	void Backup();
 	void Load();
 	void LoadInternal(const char* path);
 	void LoadRecentPaths();

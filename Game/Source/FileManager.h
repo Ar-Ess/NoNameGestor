@@ -607,7 +607,7 @@ public:
 		return Editor(name, Access::VIEW, jumpLines);
 	}
 
-	bool Exists(const char* name, bool addExtension = true) const
+	bool Exists(const char* name, bool addExtension = false) const
 	{
 		if (addExtension)
 		{
