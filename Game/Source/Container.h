@@ -9,9 +9,7 @@
 #include "ContainerEnum.h"
 #include "Currency.h"
 
-#define MAX_MONEY 340282000000000000000000000000000000000.0f
-
-static float textFieldSize = 150.0f;
+constexpr auto MAX_MONEY = 340282000000000000000000000000000000000.0f;
 
 class Container
 {
@@ -80,7 +78,7 @@ public: // Functions
 			SwapNames();
 		}
 		labels.push_back(new Label(name, money, limit));
-		size = labels.size();
+		size++;
 	}
 
 	void ClearLabels()
@@ -116,7 +114,7 @@ public: // Functions
 
 protected: // Functions
 
-	Container(const char* name, bool hidden, bool open, bool unified, std::string* format, ContainerType type) 
+	Container(const char* name, bool hidden, bool open, bool unified, std::string* format, float* textFieldSize, ContainerType type) 
 	{
 		this->money = 0;
 		this->name = name;
@@ -126,6 +124,7 @@ protected: // Functions
 		this->open = open;
 		this->unified = unified;
 		this->format = format;
+		this->textFieldSize = textFieldSize;
 		id = reinterpret_cast<int>(this);
 	}
 
@@ -134,7 +133,7 @@ protected: // Functions
 		labels[index]->name.clear();
 		labels[index]->name.shrink_to_fit();
 		labels.erase(labels.begin() + index);
-		size = labels.size();
+		size--;
 	}
 
 public: // Variables
@@ -154,6 +153,7 @@ protected: // Variables
 	std::intptr_t id = 0;
 	ContainerType type = ContainerType::NO_CONTAINER;
 	std::string* format = nullptr;
+	float* textFieldSize = nullptr;
 
-	unsigned int size = 0; //-TODO: Mirar si puc fer-ho amb size++/size-- en comptes d'igualar ->size()
+	unsigned int size = 0; //-DONE: Mirar si puc fer-ho amb size++/size-- en comptes d'igualar ->size()
 };

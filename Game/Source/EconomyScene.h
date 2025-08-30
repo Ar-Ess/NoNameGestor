@@ -32,13 +32,13 @@ private: // Functions
 	void LoadRecentPaths();
 	void SaveRecentPath(const char* path);
 
-	bool DrawMenuBar();
-	bool DrawDocking();
+	void DrawMenuBar(bool& ret);
+	void DrawDocking(bool& ret);
 
-	bool DrawPreferencesWindow(bool* open);
-	bool DrawMainWindow(bool* open);
+	void DrawPreferencesWindow(bool& ret);
+	void DrawMainWindow(bool& ret);
 
-	bool DrawToolbarWindow(bool* open);
+	void DrawToolbarWindow(bool& ret);
 
 	void UpdateShortcuts();
 	void UpdateFormat();
@@ -96,6 +96,7 @@ private: // Variables
 	// Preferences
 	bool showContainerType = true;
 	bool showFutureUnasigned = false;
+	float textFieldSize = 150.f;
 
 	int currency = 0;
 	const char* comboCurrency[5] = { "EUR", "USD", "COP", "ARS", "PEN"};
@@ -116,6 +117,8 @@ private: // Variables
 
 	// Open File Directly
 	const char* openedFile = nullptr;
+
+	std::string errorMessage;
 
 };
 

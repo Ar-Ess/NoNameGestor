@@ -16,7 +16,7 @@ class GestorSystem
 {
 public:
 
-	GestorSystem(const char* name, bool* showFutureUnasigned, bool* showContainerType, std::string* openFileName, std::string* openFilePath, ImFont* bigFont);
+	GestorSystem(const char* name, bool* showFutureUnasigned, bool* showContainerType, std::string* openFileName, std::string* openFilePath, ImFont* bigFont, float* textFieldSize, std::string* errorMessage);
 
 	~GestorSystem();
 
@@ -77,6 +77,9 @@ private:
 	std::intptr_t id = 0;
 
 	ImFont* bigFont = nullptr;
+
+	float* textFieldSize = nullptr;
+	std::string* errorMessage = nullptr;
 
 };
 

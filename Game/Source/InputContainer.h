@@ -6,7 +6,7 @@ class InputContainer : public Container
 {
 public: // Functions
 
-	InputContainer(const char* name, std::string* format) : Container(name, false, true, false, format, ContainerType::INPUT_MONEY)
+	InputContainer(const char* name, std::string* format) : Container(name, false, true, false, format, nullptr, ContainerType::INPUT_MONEY)
 	{
 	}
 

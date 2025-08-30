@@ -6,7 +6,7 @@ class FilterContainer : public Container
 {
 public: // Functions
 
-	FilterContainer(const char* name, bool hidden, bool open, bool unified, std::string* format) : Container(name, hidden, open, unified, format, ContainerType::FILTER)
+	FilterContainer(const char* name, bool hidden, bool open, bool unified, std::string* format, float* textFieldSize) : Container(name, hidden, open, unified, format, textFieldSize, ContainerType::FILTER)
 	{
 		NewLabel("New Filter");
 	}
@@ -49,7 +49,7 @@ public: // Functions
 
 				ImGui::SameLine();
 
-				ImGui::PushItemWidth(textFieldSize);
+				ImGui::PushItemWidth(*textFieldSize);
 				ImGui::InputText("##FilterName", &labels[i]->name);
 				ImGui::PopItemWidth(); ImGui::SameLine();
 			}

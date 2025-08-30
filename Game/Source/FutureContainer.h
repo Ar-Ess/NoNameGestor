@@ -6,7 +6,7 @@ class FutureContainer : public Container
 {
 public: // Functions
 
-	FutureContainer(const char* name, bool hidden, bool open, bool unified, std::string* format) : Container(name, hidden, open, unified, format, ContainerType::FUTURE)
+	FutureContainer(const char* name, bool hidden, bool open, bool unified, std::string* format, float* textFieldSize) : Container(name, hidden, open, unified, format, textFieldSize, ContainerType::FUTURE)
 	{
 		NewLabel("New Future");
 	}
@@ -49,7 +49,7 @@ public: // Functions
 
 				ImGui::SameLine();
 
-				ImGui::PushItemWidth(textFieldSize);
+				ImGui::PushItemWidth(*textFieldSize);
 				ImGui::InputText("##FutureName", &labels[i]->name);
 				ImGui::PopItemWidth(); ImGui::SameLine();
 			}

@@ -59,12 +59,12 @@ bool EconomyScene::Draw()
 {
 	bool ret = true;
 
-	ret = DrawDocking();
-	ret = DrawMenuBar();
+	DrawDocking(ret);
+	DrawMenuBar(ret);
 
-	ret = DrawPreferencesWindow(&preferencesWindow);
-	ret = DrawMainWindow(&ret);
-	ret = DrawToolbarWindow(&ret);
+	DrawPreferencesWindow(ret);
+	DrawMainWindow(ret);
+	DrawToolbarWindow(ret);
 
 	//ImGui::ShowDemoWindow();
 
@@ -92,7 +92,7 @@ void EconomyScene::NewFile()
 
 	CleanUp();
 
-	gestors.emplace_back(new GestorSystem("New Gestor", &showFutureUnasigned, &showContainerType, &openFileName, &openFilePath, bigFont));
+	gestors.emplace_back(new GestorSystem("New Gestor", &showFutureUnasigned, &showContainerType, &openFileName, &openFilePath, bigFont, &textFieldSize, &errorMessage));
 
 	UpdateFormat();
 }
@@ -175,10 +175,16 @@ void EconomyScene::Backup()
 	std::string savePath(rootPath);
 	savePath += "Backups\\";
 
-	if (!std::filesystem::exists(savePath))
+	if (!std::filesystem::exists(savePath) && !std::filesystem::create_directories(savePath))
+	{
+		errorMessage = std::string("Error: it was not possible to create Backups folder in: ") + rootPath + strerror(errno);
 		return;
-	if (!std::filesystem::is_directory(savePath))
+	}
+	else if (!std::filesystem::is_directory(savePath))
+	{
+		errorMessage = "Error: " + savePath + " is not a folder." + strerror(errno);
 		return;
+	}
 
 	savePath += openFileName;
 	time_t now = time(0);
@@ -301,7 +307,7 @@ void EconomyScene::LoadInternal(const char* path)
 
 		jumplines++;
 
-		GestorSystem* g = new GestorSystem(name.c_str(), &showFutureUnasigned, &showContainerType, &openFileName, &openFilePath, bigFont);
+		GestorSystem* g = new GestorSystem(name.c_str(), &showFutureUnasigned, &showContainerType, &openFileName, &openFilePath, bigFont, &textFieldSize, &errorMessage);
 		gestors.emplace_back(g);
 
 		g->Load(file, path, jumplines);
@@ -377,8 +383,37 @@ void EconomyScene::SaveRecentPath(const char* filePath)
 	file->SetExtension(EXTENSION);
 }
 
-bool EconomyScene::DrawMenuBar()
+void EconomyScene::DrawDocking(bool& ret)
 {
+	if (!ret) return;
+	ret = true;
+
+	ImGuiDockNodeFlags dockspace_flags = (ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_NoResize);
+	ImGuiViewport* viewport = ImGui::GetMainViewport();
+	ImGui::SetNextWindowPos(viewport->Pos);
+	ImGui::SetNextWindowSize(viewport->Size);
+	ImGui::SetNextWindowViewport(viewport->ID);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+
+	ImGui::Begin("Docking", (bool*)0, (ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus));
+
+	ImGui::PopStyleVar();
+
+	ImGuiIO& io = ImGui::GetIO();
+	if (io.ConfigFlags & (ImGuiConfigFlags_DockingEnable))
+	{
+		ImGuiID dockspaceId = ImGui::GetID("MyDockSpace");
+		ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), dockspace_flags);
+	}
+
+	ImGui::End();
+}
+
+void EconomyScene::DrawMenuBar(bool& ret)
+{
+	if (!ret) return;
+	ret = true;
+
 	if (ImGui::BeginMainMenuBar())
 	{
 		if (ImGui::BeginMenu("File"))
@@ -428,6 +463,10 @@ bool EconomyScene::DrawMenuBar()
 
 			if (ImGui::BeginMenu("Export"))
 			{
+				ImGui::Text("Select the gestor: ");
+				ImGui::Separator();
+				ImGui::Spacing();
+
 				for (GestorSystem* gestor : gestors)
 					gestor->DrawExport();
 
@@ -468,7 +507,7 @@ bool EconomyScene::DrawMenuBar()
 
 			if (ImGui::MenuItem("New Gestor") && gestors.size() < 4)
 			{
-				gestors.emplace_back(new GestorSystem("New Gestor", &showFutureUnasigned, &showContainerType, &openFileName, &openFilePath, bigFont));
+				gestors.emplace_back(new GestorSystem("New Gestor", &showFutureUnasigned, &showContainerType, &openFileName, &openFilePath, bigFont, &textFieldSize, &errorMessage));
 				UpdateFormat();
 			}
 
@@ -499,43 +538,16 @@ bool EconomyScene::DrawMenuBar()
 		}
 	}
 	ImGui::EndMainMenuBar();
-
-	return true;
 }
 
-bool EconomyScene::DrawDocking()
+void EconomyScene::DrawPreferencesWindow(bool& ret)
 {
-	bool ret = true;
+	if (!ret) return;
+	ret = true;
 
-	ImGuiDockNodeFlags dockspace_flags = (ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_NoResize);
-	ImGuiViewport* viewport = ImGui::GetMainViewport();
-	ImGui::SetNextWindowPos(viewport->Pos);
-	ImGui::SetNextWindowSize(viewport->Size);
-	ImGui::SetNextWindowViewport(viewport->ID);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+	if (!preferencesWindow) return;
 
-	ImGui::Begin("Docking", (bool*)0, (ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus));
-
-	ImGui::PopStyleVar();
-
-	ImGuiIO& io = ImGui::GetIO();
-	if (io.ConfigFlags & (ImGuiConfigFlags_DockingEnable))
-	{
-		ImGuiID dockspaceId = ImGui::GetID("MyDockSpace");
-		ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), dockspace_flags);
-	}
-
-	ImGui::End();
-
-	return ret;
-}
-
-bool EconomyScene::DrawPreferencesWindow(bool* open)
-{
-	bool ret = true;
-	if (!(*open)) return ret;
-
-	if (ImGui::Begin("Preferences", open, ImGuiWindowFlags_NoDocking))
+	if (ImGui::Begin("Preferences", &preferencesWindow, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse))
 	{
 		ImGui::Spacing();
 
@@ -568,14 +580,12 @@ bool EconomyScene::DrawPreferencesWindow(bool* open)
 
 	}
 	ImGui::End();
-
-	return ret;
 }
 
-bool EconomyScene::DrawMainWindow(bool* open)
+void EconomyScene::DrawMainWindow(bool& ret)
 {
-	bool ret = true;
-	if (!(*open)) return ret;
+	if (!ret) return;
+	ret = true;
 
 	if (ImGui::Begin("##MainWindow", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar))
 	{
@@ -591,7 +601,6 @@ bool EconomyScene::DrawMainWindow(bool* open)
 
 			for (unsigned int i = 0; i < size; ++i)
 			{
-
 				GestorSystem* gestor = gestors[i];
 				ImGui::TableNextColumn();
 
@@ -616,22 +625,21 @@ bool EconomyScene::DrawMainWindow(bool* open)
 				}
 
 				gestor->Draw();
-
 			}
 
 			ImGui::EndTable();
 			ImGui::PopStyleVar();
 		}
+
+		ImGui::TextColored(ImVec4(1, 0, 0, 1), errorMessage.c_str());
 	}
 	ImGui::End();
-
-	return ret;
 }
 
-bool EconomyScene::DrawToolbarWindow(bool* open)
+void EconomyScene::DrawToolbarWindow(bool& ret)
 {
-	bool ret = true;
-	if (!(*open)) return ret;
+	if (!ret) return;
+	ret = true;
 
 	if (ImGui::Begin("Toolbar", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar))
 	{
@@ -658,8 +666,6 @@ bool EconomyScene::DrawToolbarWindow(bool* open)
 		if (action) gestors[focusedGestor]->SwitchLoadOpen();
 	}
 	ImGui::End();
-
-	return ret;
 }
 
 void EconomyScene::UpdateShortcuts()

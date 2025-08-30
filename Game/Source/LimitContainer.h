@@ -6,7 +6,7 @@ class LimitContainer : public Container
 {
 public: // Functions
 
-	LimitContainer(const char* name, bool hidden, bool open, bool unified, std::string* format) : Container(name, hidden, open, unified, format, ContainerType::LIMIT)
+	LimitContainer(const char* name, bool hidden, bool open, bool unified, std::string* format, float* textFieldSize) : Container(name, hidden, open, unified, format, textFieldSize, ContainerType::LIMIT)
 	{
 		NewLabel("New Limit");
 	}
@@ -49,7 +49,7 @@ public: // Functions
 
 				ImGui::SameLine();
 
-				ImGui::PushItemWidth(textFieldSize);
+				ImGui::PushItemWidth(*textFieldSize);
 				ImGui::InputText("##LimitName", &labels[i]->name);
 				ImGui::PopItemWidth(); ImGui::SameLine();
 			}

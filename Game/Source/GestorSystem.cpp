@@ -2,8 +2,9 @@
 #include "ContainerHeader.h"
 #include "FileManager.h"
 #include <imgui/imgui_internal.h>
+#include <filesystem>
 
-GestorSystem::GestorSystem(const char* name, bool* showFutureUnasigned, bool* showContainerType, std::string* openFileName, std::string* openFilePath, ImFont* bigFont)
+GestorSystem::GestorSystem(const char* name, bool* showFutureUnasigned, bool* showContainerType, std::string* openFileName, std::string* openFilePath, ImFont* bigFont, float* textFieldSize, std::string* errorMessage)
 {
 	inputContainer = new InputContainer("MONEY ", &format);
 	totalContainer = new TotalContainer("TOTAL ", &format, showFutureUnasigned);
@@ -13,6 +14,8 @@ GestorSystem::GestorSystem(const char* name, bool* showFutureUnasigned, bool* sh
 	this->bigFont = bigFont;
 	this->openFileName = openFileName;
 	this->openFilePath = openFilePath;
+	this->textFieldSize = textFieldSize;
+	this->errorMessage = errorMessage;
 }
 
 GestorSystem::~GestorSystem()
@@ -85,7 +88,7 @@ bool GestorSystem::Draw()
 			ImGui::Text(r->GetTypeString());
 			ImGui::SameLine();
 		}
-		ImGui::PushItemWidth(textFieldSize);
+		ImGui::PushItemWidth(*textFieldSize);
 		ImGui::InputText("##LabelName", r->GetString()); ImGui::PopItemWidth(); ImGui::SameLine();
 
 		if (hidden) ImGui::EndDisabled();
@@ -186,7 +189,7 @@ bool GestorSystem::Draw()
 void GestorSystem::DrawExport()
 {
 	ImGui::PushID(id);
-	if (ImGui::BeginMenu(name.c_str()))
+	if (ImGui::BeginMenu(("> " + name).c_str()))
 	{
 		bool empty = containers.empty();
 		bool selected = false;
@@ -241,21 +244,51 @@ void GestorSystem::DrawExport()
 void GestorSystem::ExportGestor(std::vector<Container*>* exporting)
 {
 	std::fstream file;
-	std::string filePath = *openFilePath;
-	if (filePath.empty()) filePath = "Exports\\";
+	std::string filePath(*openFilePath);
+	if (filePath.empty())
+	{
+#ifdef DEBUG
+		// Estem en debug
+		filePath.clear();
+		filePath = "Exports\\";
+#else
+		*errorMessage = "To export this file, it must be saved first";
+		return;
+#endif // DEBUG
+	}
+	else
+	{
+		// Estem en release
+		filePath += "Exports\\";
+		if (!std::filesystem::exists(filePath) && !std::filesystem::create_directories(filePath))
+		{
+			*errorMessage = "Error: it was not possible to create Exports folder in: " + *openFilePath;
+			return;
+		}
+		else if (!std::filesystem::is_directory(filePath))
+		{
+			*errorMessage = "Error: " + *openFilePath + " is not a folder.";
+			return;
+		}
+	}
+
 	filePath += *openFileName;
 	filePath.erase(filePath.end() - 4, filePath.end());
 	filePath += "_Gestor.txt";
 
 	file.open(filePath, std::ios::out);
 
-	assert(file.is_open()); // File is not open
+	if (!file.is_open())
+	{
+		*errorMessage = "Error: File in " + filePath + " can't be opened. " + strerror(errno);
+		return;
+	}
 
 	std::vector<Container*>::const_iterator it = exporting->begin();
 	for (it; it != exporting->end(); ++it)
 	{
 		file << (*it)->GetName() << ":";
-		const char* currency = format.substr(5, format.size() - 5).c_str();
+		auto currency = format.substr(5, format.size() - 5).c_str();
 
 		if ((*it)->unified)
 		{
@@ -459,9 +492,9 @@ Container* GestorSystem::CreateContainer(ContainerType container, const char* na
 {
 	switch (container)
 	{
-	case ContainerType::FILTER: containers.emplace_back((Container*)(new FilterContainer(name, hidden, open, unified, &format))); break;
-	case ContainerType::LIMIT:  containers.emplace_back((Container*)(new  LimitContainer(name, hidden, open, unified, &format))); break;
-	case ContainerType::FUTURE: containers.emplace_back((Container*)(new FutureContainer(name, hidden, open, unified, &format))); break;
+	case ContainerType::FILTER: containers.emplace_back((Container*)(new FilterContainer(name, hidden, open, unified, &format, textFieldSize))); break;
+	case ContainerType::LIMIT:  containers.emplace_back((Container*)(new  LimitContainer(name, hidden, open, unified, &format, textFieldSize))); break;
+	case ContainerType::FUTURE: containers.emplace_back((Container*)(new FutureContainer(name, hidden, open, unified, &format, textFieldSize))); break;
 	default: break;
 	}
 
