@@ -1,0 +1,7 @@
+=================[BUGS]==================
+
+
+============[IMPLEMENTATIONS]============
+1. Que un fitxer puguis tenir diferents comptes de banc (FET)
+2. Que en aquesta pàgina principal, a part de les comptes de banc que puguis tenir, a la dreta hi hagi l'apartat dels "FUTURE". Crec que els "FUTURE" no han de ser individuals per banc, o a lo millor sí, però sobretot que puguin ser globals del document.
+3. Que hi hagi una altre pàgina a part de la secció aquesta de gestionar diners on es faci un plot en endavant dels diners que tens i a futur. S'ha de crear un tipus de filtre que es digui "CONST" i que impliqui uns diners constants al més. S'estableix aquests diners per més i després pots posar-ne més (no com el LIMIT que no pots posar més del que és). Després, aquesta altre pàgina de plot, et demanarà fins a quin pròxim mes ho vols plotejar, i et mostrarà aquest CONST fins a quin mes pots pagar o fins quan ho tens pressupostat. És una mena de plot de "Llibertat financera", on cada CONST creat tindrà el seu apartat i una barra mostrarà fins a quin mes pots pagar-ho.
