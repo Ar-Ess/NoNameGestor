@@ -5,9 +5,17 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -23,7 +31,20 @@
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -36,39 +57,76 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IntDir>$(SolutionDir)Build\$(Configuration)\Obj\</IntDir>
+    <IntDir>$(SolutionDir)Build\$(Configuration)\Obj</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)Build\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)Build\$(Configuration)</OutDir>
     <TargetName>NoNameGestor</TargetName>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)Build\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)Build\$(Configuration)\Obj\</IntDir>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>NoNameGestor</TargetName>
+    <OutDir>$(SolutionDir)Build\$(Configuration)</OutDir>
+    <IntDir>$(SolutionDir)Build\$(Configuration)\Obj</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)Build\$(Configuration)</OutDir>
+    <IntDir>$(SolutionDir)Build\$(Configuration)\Obj</IntDir>
+    <TargetName>NoNameGestor</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <TargetName>NoNameGestor</TargetName>
+    <OutDir>$(SolutionDir)Build\$(Configuration)</OutDir>
+    <IntDir>$(SolutionDir)Build\$(Configuration)\Obj</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WINDOWS_IGNORE_PACKING_MISMATCH;_CRT_SECURE_NO_WARNINGS;WIN32;_ITERATOR_DEBUG_LEVEL=0;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ShowIncludes>false</ShowIncludes>
-      <AdditionalIncludeDirectories>$(ProjectDir)Source\External</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)Source</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)Source\External\SDL\libx86</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Framework.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;winmm.lib;setupapi.lib;cfgmgr32.lib;version.lib;imm32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)Source\Framework\lib\$(Configuration)</AdditionalLibraryDirectories>
+      <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WINDOWS_IGNORE_PACKING_MISMATCH;_CRT_SECURE_NO_WARNINGS;WIN32;_ITERATOR_DEBUG_LEVEL=0;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ShowIncludes>false</ShowIncludes>
+      <AdditionalIncludeDirectories>$(ProjectDir)Source</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>Framework.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;winmm.lib;setupapi.lib;cfgmgr32.lib;version.lib;imm32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)Source\Framework\lib\$(Configuration)</AdditionalLibraryDirectories>
+      <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -81,77 +139,88 @@
       <UseFullPaths>false</UseFullPaths>
       <ShowIncludes>false</ShowIncludes>
       <PreprocessorDefinitions>WINDOWS_IGNORE_PACKING_MISMATCH;_CRT_SECURE_NO_WARNINGS;WIN32;_ITERATOR_DEBUG_LEVEL=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)Source\External</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)Source</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)Source\External\SDL\libx86</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Framework.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;winmm.lib;setupapi.lib;cfgmgr32.lib;version.lib;imm32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)Source\Framework\lib\$(Configuration)</AdditionalLibraryDirectories>
+      <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <UseFullPaths>false</UseFullPaths>
+      <ShowIncludes>false</ShowIncludes>
+      <PreprocessorDefinitions>WINDOWS_IGNORE_PACKING_MISMATCH;_CRT_SECURE_NO_WARNINGS;WIN32;_ITERATOR_DEBUG_LEVEL=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)Source</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>Framework.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;winmm.lib;setupapi.lib;cfgmgr32.lib;version.lib;imm32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)Source\Framework\lib\$(Configuration)</AdditionalLibraryDirectories>
+      <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Source\Chrono.cpp" />
-    <ClCompile Include="Source\EconomyScene.cpp" />
-    <ClCompile Include="Source\External\ImGuiFileDialog\ImGuiFileDialog.cpp" />
-    <ClCompile Include="Source\External\imgui\imgui.cpp" />
-    <ClCompile Include="Source\External\imgui\imgui_demo.cpp" />
-    <ClCompile Include="Source\External\imgui\imgui_draw.cpp" />
-    <ClCompile Include="Source\External\imgui\imgui_impl_sdl.cpp" />
-    <ClCompile Include="Source\External\imgui\imgui_impl_sdlrenderer.cpp" />
-    <ClCompile Include="Source\External\imgui\imgui_stdlib.cpp" />
-    <ClCompile Include="Source\External\imgui\imgui_tables.cpp" />
-    <ClCompile Include="Source\External\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="Source\GestorSystem.cpp" />
-    <ClCompile Include="Source\Main.cpp" />
-    <ClCompile Include="Source\App.cpp" />
-    <ClCompile Include="Source\Input.cpp" />
-    <ClCompile Include="Source\PerfTimer.cpp" />
-    <ClCompile Include="Source\Render.cpp" />
-    <ClCompile Include="Source\Scene.cpp" />
-    <ClCompile Include="Source\Timer.cpp" />
-    <ClCompile Include="Source\Window.cpp" />
+    <ClCompile Include="Source\NoNameGestor\External\ImGuiFileDialog\ImGuiFileDialog.cpp" />
+    <ClCompile Include="Source\NoNameGestor\External\imgui\imgui.cpp" />
+    <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_demo.cpp" />
+    <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_draw.cpp" />
+    <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_impl_sdl.cpp" />
+    <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_impl_sdlrenderer.cpp" />
+    <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_stdlib.cpp" />
+    <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_tables.cpp" />
+    <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Gestor\GestorSystem.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Main.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Scenes\EconomyScene.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Utils\Chrono.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Utils\LogFunction.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Utils\Timer.cpp" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="Source\Chrono.h" />
-    <ClInclude Include="Source\ContainerEnum.h" />
-    <ClInclude Include="Source\Currency.h" />
-    <ClInclude Include="Source\EconomyScene.h" />
-    <ClInclude Include="Source\External\ImGuiFileDialog\ImGuiFileDialog.h" />
-    <ClInclude Include="Source\External\ImGuiFileDialog\ImGuiFileDialogConfig.h" />
-    <ClInclude Include="Source\External\imgui\imconfig.h" />
-    <ClInclude Include="Source\External\imgui\imgui.h" />
-    <ClInclude Include="Source\External\imgui\imgui_impl_sdl.h" />
-    <ClInclude Include="Source\External\imgui\imgui_impl_sdlrenderer.h" />
-    <ClInclude Include="Source\External\imgui\imgui_internal.h" />
-    <ClInclude Include="Source\External\imgui\imgui_stdlib.h" />
-    <ClInclude Include="Source\External\imgui\imstb_rectpack.h" />
-    <ClInclude Include="Source\External\imgui\imstb_textedit.h" />
-    <ClInclude Include="Source\External\imgui\imstb_truetype.h" />
-    <ClInclude Include="Source\FileManager.h" />
-    <ClInclude Include="Source\FilterContainer.h" />
-    <ClInclude Include="Source\FutureContainer.h" />
-    <ClInclude Include="Source\GestorSystem.h" />
-    <ClInclude Include="Source\Label.h" />
-    <ClInclude Include="Source\LimitContainer.h" />
-    <ClInclude Include="Source\Multibool.h" />
-    <ClInclude Include="Source\ContainerHeader.h" />
-    <ClInclude Include="Source\TotalContainer.h" />
-    <ClInclude Include="Source\PerfTimer.h" />
-    <ClInclude Include="Source\Point.h" />
-    <ClInclude Include="Source\Input.h" />
-    <ClInclude Include="Source\App.h" />
-    <ClInclude Include="Source\Module.h" />
-    <ClInclude Include="Source\Container.h" />
-    <ClInclude Include="Source\Render.h" />
-    <ClInclude Include="Source\Scene.h" />
-    <ClInclude Include="Source\Timer.h" />
-    <ClInclude Include="Source\InputContainer.h" />
-    <ClInclude Include="Source\Window.h" />
-    <ClInclude Include="Source\Defs.h" />
-    <ClInclude Include="Source\LogFunction.h" />
-    <ClCompile Include="Source\LogFunction.cpp" />
+    <ClInclude Include="Source\NoNameGestor\Containers\Container.h" />
+    <ClInclude Include="Source\NoNameGestor\Containers\ContainerEnum.h" />
+    <ClInclude Include="Source\NoNameGestor\Containers\ContainerHeader.h" />
+    <ClInclude Include="Source\NoNameGestor\Containers\FilterContainer.h" />
+    <ClInclude Include="Source\NoNameGestor\Containers\FutureContainer.h" />
+    <ClInclude Include="Source\NoNameGestor\Containers\InputContainer.h" />
+    <ClInclude Include="Source\NoNameGestor\Containers\Label.h" />
+    <ClInclude Include="Source\NoNameGestor\Containers\LimitContainer.h" />
+    <ClInclude Include="Source\NoNameGestor\Containers\TotalContainer.h" />
+    <ClInclude Include="Source\NoNameGestor\External\ImGuiFileDialog\ImGuiFileDialog.h" />
+    <ClInclude Include="Source\NoNameGestor\External\ImGuiFileDialog\ImGuiFileDialogConfig.h" />
+    <ClInclude Include="Source\NoNameGestor\External\imgui\imconfig.h" />
+    <ClInclude Include="Source\NoNameGestor\External\imgui\imgui.h" />
+    <ClInclude Include="Source\NoNameGestor\External\imgui\imgui_impl_sdl.h" />
+    <ClInclude Include="Source\NoNameGestor\External\imgui\imgui_impl_sdlrenderer.h" />
+    <ClInclude Include="Source\NoNameGestor\External\imgui\imgui_internal.h" />
+    <ClInclude Include="Source\NoNameGestor\External\imgui\imgui_stdlib.h" />
+    <ClInclude Include="Source\NoNameGestor\External\imgui\imstb_rectpack.h" />
+    <ClInclude Include="Source\NoNameGestor\External\imgui\imstb_textedit.h" />
+    <ClInclude Include="Source\NoNameGestor\External\imgui\imstb_truetype.h" />
+    <ClInclude Include="Source\NoNameGestor\Gestor\Currency.h" />
+    <ClInclude Include="Source\NoNameGestor\Gestor\GestorSystem.h" />
+    <ClInclude Include="Source\NoNameGestor\Scenes\EconomyScene.h" />
+    <ClInclude Include="Source\NoNameGestor\Utils\Chrono.h" />
+    <ClInclude Include="Source\NoNameGestor\Utils\Defs.h" />
+    <ClInclude Include="Source\NoNameGestor\Utils\FileManager.h" />
+    <ClInclude Include="Source\NoNameGestor\Utils\Flag.h" />
+    <ClInclude Include="Source\NoNameGestor\Utils\LogFunction.h" />
+    <ClInclude Include="Source\NoNameGestor\Utils\Multibool.h" />
+    <ClInclude Include="Source\NoNameGestor\Utils\Point.h" />
+    <ClInclude Include="Source\NoNameGestor\Utils\Timer.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />

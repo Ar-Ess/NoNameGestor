@@ -1,178 +1,146 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="Source\Main.cpp" />
-    <ClCompile Include="Source\App.cpp" />
-    <ClCompile Include="Source\Input.cpp">
-      <Filter>Modules</Filter>
+    <ClCompile Include="Source\NoNameGestor\Main.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Gestor\GestorSystem.cpp">
+      <Filter>Gestor</Filter>
     </ClCompile>
-    <ClCompile Include="Source\PerfTimer.cpp">
-      <Filter>Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Timer.cpp">
-      <Filter>Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Render.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Window.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Scene.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\EconomyScene.cpp">
+    <ClCompile Include="Source\NoNameGestor\Scenes\EconomyScene.cpp">
       <Filter>Scenes</Filter>
     </ClCompile>
-    <ClCompile Include="Source\External\ImGuiFileDialog\ImGuiFileDialog.cpp">
+    <ClCompile Include="Source\NoNameGestor\Utils\Chrono.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Utils\LogFunction.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Utils\Timer.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_demo.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_draw.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_impl_sdl.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_impl_sdlrenderer.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_stdlib.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_tables.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_widgets.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\imgui\imgui.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\ImGuiFileDialog\ImGuiFileDialog.cpp">
       <Filter>External\ImGuiFileDialog</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\External\imgui\imgui.cpp">
-      <Filter>External\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\External\imgui\imgui_demo.cpp">
-      <Filter>External\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\External\imgui\imgui_draw.cpp">
-      <Filter>External\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\External\imgui\imgui_impl_sdl.cpp">
-      <Filter>External\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\External\imgui\imgui_impl_sdlrenderer.cpp">
-      <Filter>External\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\External\imgui\imgui_stdlib.cpp">
-      <Filter>External\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\External\imgui\imgui_tables.cpp">
-      <Filter>External\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\External\imgui\imgui_widgets.cpp">
-      <Filter>External\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Chrono.cpp">
-      <Filter>Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\LogFunction.cpp">
-      <Filter>Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\GestorSystem.cpp">
-      <Filter>Gestor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\App.h" />
-    <ClInclude Include="Source\Defs.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Input.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Module.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\PerfTimer.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Timer.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Render.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Window.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Scene.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Point.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Multibool.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\EconomyScene.h">
-      <Filter>Scenes</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\FileManager.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\External\ImGuiFileDialog\ImGuiFileDialog.h">
-      <Filter>External\ImGuiFileDialog</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\External\ImGuiFileDialog\ImGuiFileDialogConfig.h">
-      <Filter>External\ImGuiFileDialog</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Resources</Filter>
     </ClInclude>
-    <ClInclude Include="Source\External\imgui\imconfig.h">
-      <Filter>External\ImGui</Filter>
+    <ClInclude Include="Source\NoNameGestor\Containers\Container.h">
+      <Filter>Containers</Filter>
     </ClInclude>
-    <ClInclude Include="Source\External\imgui\imgui.h">
-      <Filter>External\ImGui</Filter>
+    <ClInclude Include="Source\NoNameGestor\Containers\FilterContainer.h">
+      <Filter>Containers</Filter>
     </ClInclude>
-    <ClInclude Include="Source\External\imgui\imgui_impl_sdl.h">
-      <Filter>External\ImGui</Filter>
+    <ClInclude Include="Source\NoNameGestor\Containers\FutureContainer.h">
+      <Filter>Containers</Filter>
     </ClInclude>
-    <ClInclude Include="Source\External\imgui\imgui_impl_sdlrenderer.h">
-      <Filter>External\ImGui</Filter>
+    <ClInclude Include="Source\NoNameGestor\Containers\InputContainer.h">
+      <Filter>Containers</Filter>
     </ClInclude>
-    <ClInclude Include="Source\External\imgui\imgui_internal.h">
-      <Filter>External\ImGui</Filter>
+    <ClInclude Include="Source\NoNameGestor\Containers\LimitContainer.h">
+      <Filter>Containers</Filter>
     </ClInclude>
-    <ClInclude Include="Source\External\imgui\imgui_stdlib.h">
-      <Filter>External\ImGui</Filter>
+    <ClInclude Include="Source\NoNameGestor\Containers\TotalContainer.h">
+      <Filter>Containers</Filter>
     </ClInclude>
-    <ClInclude Include="Source\External\imgui\imstb_rectpack.h">
-      <Filter>External\ImGui</Filter>
+    <ClInclude Include="Source\NoNameGestor\Containers\ContainerEnum.h">
+      <Filter>Containers</Filter>
     </ClInclude>
-    <ClInclude Include="Source\External\imgui\imstb_textedit.h">
-      <Filter>External\ImGui</Filter>
+    <ClInclude Include="Source\NoNameGestor\Containers\ContainerHeader.h">
+      <Filter>Containers</Filter>
     </ClInclude>
-    <ClInclude Include="Source\External\imgui\imstb_truetype.h">
-      <Filter>External\ImGui</Filter>
+    <ClInclude Include="Source\NoNameGestor\Containers\Label.h">
+      <Filter>Containers</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Label.h">
-      <Filter>Gestor\Containers</Filter>
+    <ClInclude Include="Source\NoNameGestor\Gestor\Currency.h">
+      <Filter>Gestor</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Chrono.h">
+    <ClInclude Include="Source\NoNameGestor\Gestor\GestorSystem.h">
+      <Filter>Gestor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Scenes\EconomyScene.h">
+      <Filter>Scenes</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Utils\Chrono.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Container.h">
-      <Filter>Gestor</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ContainerHeader.h">
-      <Filter>Gestor</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\FilterContainer.h">
-      <Filter>Gestor\Containers</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\FutureContainer.h">
-      <Filter>Gestor\Containers</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\LimitContainer.h">
-      <Filter>Gestor\Containers</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\InputContainer.h">
-      <Filter>Gestor\Constant</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\TotalContainer.h">
-      <Filter>Gestor\Constant</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\LogFunction.h">
+    <ClInclude Include="Source\NoNameGestor\Utils\Defs.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GestorSystem.h">
-      <Filter>Gestor</Filter>
+    <ClInclude Include="Source\NoNameGestor\Utils\FileManager.h">
+      <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Currency.h">
-      <Filter>Gestor</Filter>
+    <ClInclude Include="Source\NoNameGestor\Utils\Flag.h">
+      <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ContainerEnum.h">
-      <Filter>Gestor</Filter>
+    <ClInclude Include="Source\NoNameGestor\Utils\LogFunction.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Utils\Multibool.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Utils\Point.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Utils\Timer.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\imgui\imgui.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\imgui\imgui_impl_sdl.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\imgui\imgui_impl_sdlrenderer.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\imgui\imgui_internal.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\imgui\imgui_stdlib.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\imgui\imstb_rectpack.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\imgui\imstb_textedit.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\imgui\imstb_truetype.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\imgui\imconfig.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\ImGuiFileDialog\ImGuiFileDialog.h">
+      <Filter>External\ImGuiFileDialog</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\ImGuiFileDialog\ImGuiFileDialogConfig.h">
+      <Filter>External\ImGuiFileDialog</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -181,9 +149,6 @@
     </Filter>
     <Filter Include="Utils">
       <UniqueIdentifier>{2cad778a-d356-48b0-9fee-587f1bbb187e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Modules">
-      <UniqueIdentifier>{bfe4e094-9e73-4cb6-9027-deaaa69e9993}</UniqueIdentifier>
     </Filter>
     <Filter Include="External\ImGui">
       <UniqueIdentifier>{047f6aee-e865-47ae-9222-8217fb883406}</UniqueIdentifier>
@@ -197,14 +162,11 @@
     <Filter Include="Resources">
       <UniqueIdentifier>{63ac2d9c-ef6c-494e-859e-482e550faffb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Containers">
+      <UniqueIdentifier>{db8f1d18-9417-4e14-9eb0-3729cd04a42d}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Gestor">
-      <UniqueIdentifier>{c1522c6d-9e4e-459a-a5cc-2e1c63a70239}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Gestor\Containers">
-      <UniqueIdentifier>{94b32f97-c41f-46ee-ba41-9f19f773e979}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Gestor\Constant">
-      <UniqueIdentifier>{7185b72b-3ea1-4c81-97a7-299824278e03}</UniqueIdentifier>
+      <UniqueIdentifier>{d2f97dcd-31f7-4831-91d3-90cdf8b6a573}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
