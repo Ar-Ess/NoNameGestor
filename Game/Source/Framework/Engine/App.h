@@ -4,12 +4,50 @@
 #include "Framework/Utils/PerfTimer.h"
 #include "Framework/Data/Array.h"
 #include "Framework/Data/String.h"
+#include "Framework/Data/Flag.h"
 
 class App
 {
 public:
 
-	static int Run(int argc, char* args[]);
+	enum class ModuleType
+	{
+		WINDOW,
+		INPUT,
+		ASSETS,
+		AUDIO,
+		COROUTINE,
+		GUI,
+		SCENES,
+		RENDER,
+		PROGRESS
+	};
+
+	struct ModuleConfig
+	{
+		void Enable(ModuleType module) const;
+
+		void Disable(ModuleType module) const;
+
+		bool IsEnabled(ModuleType module) const;
+
+		int Count() const;
+
+	private:
+
+		mutable Flag moduleConfig = Flag::AllTrue;
+
+	};
+
+	using ModuleConfigurator = void(*)(ModuleConfig&);
+
+public:
+
+	// Main loop function of the app. Call this on your code main function.
+	// configurator is a ptr to a function that configures the modules.
+	// void ConfigModules(App::ModuleConfig& config) { config.Disable(App::ModuleType::AUDIO); }
+	// Leave nullptr to initialize all modules.
+	static int Run(int argc, char* args[], ModuleConfigurator configurator = nullptr);
 	
 	static void TargetFPS(unsigned int fps);
 	static unsigned int TargetFPS();
@@ -38,13 +76,17 @@ public:
 
 private:
 
-	App(int argc, char* args[]);
+	App(int argc, char* args[], const ModuleConfig& config);
 
 	bool Start();
 
 	bool Update();
 
 	bool CleanUp();
+
+	void GenerateAppPaths(int argc, char* args[]);
+
+	void ConfigureModules(const ModuleConfig& config);
 
 public:
 

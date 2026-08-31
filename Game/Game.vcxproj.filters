@@ -14,9 +14,6 @@
     <ClCompile Include="Source\NoNameGestor\Utils\LogFunction.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="Source\NoNameGestor\Utils\Timer.cpp">
-      <Filter>Utils</Filter>
-    </ClCompile>
     <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_demo.cpp">
       <Filter>External\ImGui</Filter>
     </ClCompile>
@@ -43,6 +40,15 @@
     </ClCompile>
     <ClCompile Include="Source\NoNameGestor\External\ImGuiFileDialog\ImGuiFileDialog.cpp">
       <Filter>External\ImGuiFileDialog</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Utils\FileManager.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Utils\ImGuiExtension.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Containers\Container.cpp">
+      <Filter>Containers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -88,9 +94,6 @@
     <ClInclude Include="Source\NoNameGestor\Utils\Chrono.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Source\NoNameGestor\Utils\Defs.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
     <ClInclude Include="Source\NoNameGestor\Utils\FileManager.h">
       <Filter>Utils</Filter>
     </ClInclude>
@@ -104,9 +107,6 @@
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="Source\NoNameGestor\Utils\Point.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\NoNameGestor\Utils\Timer.h">
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="Source\NoNameGestor\External\imgui\imgui.h">
@@ -141,6 +141,15 @@
     </ClInclude>
     <ClInclude Include="Source\NoNameGestor\External\ImGuiFileDialog\ImGuiFileDialogConfig.h">
       <Filter>External\ImGuiFileDialog</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Gestor\Configuration.h">
+      <Filter>Gestor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Utils\ImGuiExtension.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Gestor\Aggregate.h">
+      <Filter>Gestor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

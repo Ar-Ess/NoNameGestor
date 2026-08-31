@@ -174,6 +174,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\NoNameGestor\Containers\Container.cpp" />
     <ClCompile Include="Source\NoNameGestor\External\ImGuiFileDialog\ImGuiFileDialog.cpp" />
     <ClCompile Include="Source\NoNameGestor\External\imgui\imgui.cpp" />
     <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_demo.cpp" />
@@ -187,8 +188,9 @@
     <ClCompile Include="Source\NoNameGestor\Main.cpp" />
     <ClCompile Include="Source\NoNameGestor\Scenes\EconomyScene.cpp" />
     <ClCompile Include="Source\NoNameGestor\Utils\Chrono.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Utils\FileManager.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Utils\ImGuiExtension.cpp" />
     <ClCompile Include="Source\NoNameGestor\Utils\LogFunction.cpp" />
-    <ClCompile Include="Source\NoNameGestor\Utils\Timer.cpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Source\NoNameGestor\Containers\Container.h" />
     <ClInclude Include="Source\NoNameGestor\Containers\ContainerEnum.h" />
@@ -210,17 +212,18 @@
     <ClInclude Include="Source\NoNameGestor\External\imgui\imstb_rectpack.h" />
     <ClInclude Include="Source\NoNameGestor\External\imgui\imstb_textedit.h" />
     <ClInclude Include="Source\NoNameGestor\External\imgui\imstb_truetype.h" />
+    <ClInclude Include="Source\NoNameGestor\Gestor\Aggregate.h" />
+    <ClInclude Include="Source\NoNameGestor\Gestor\Configuration.h" />
     <ClInclude Include="Source\NoNameGestor\Gestor\Currency.h" />
     <ClInclude Include="Source\NoNameGestor\Gestor\GestorSystem.h" />
     <ClInclude Include="Source\NoNameGestor\Scenes\EconomyScene.h" />
     <ClInclude Include="Source\NoNameGestor\Utils\Chrono.h" />
-    <ClInclude Include="Source\NoNameGestor\Utils\Defs.h" />
     <ClInclude Include="Source\NoNameGestor\Utils\FileManager.h" />
     <ClInclude Include="Source\NoNameGestor\Utils\Flag.h" />
+    <ClInclude Include="Source\NoNameGestor\Utils\ImGuiExtension.h" />
     <ClInclude Include="Source\NoNameGestor\Utils\LogFunction.h" />
     <ClInclude Include="Source\NoNameGestor\Utils\Multibool.h" />
     <ClInclude Include="Source\NoNameGestor\Utils\Point.h" />
-    <ClInclude Include="Source\NoNameGestor\Utils\Timer.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />

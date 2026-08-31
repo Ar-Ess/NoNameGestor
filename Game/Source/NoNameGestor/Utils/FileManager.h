@@ -1,672 +1,718 @@
-#ifndef __FILE_MANAGER_H__
-#define __FILE_MANAGER_H__
+#pragma once
+
+#include "Framework/Data/String.h"
+#include "Framework/External/JSON/json.hpp"
 
 #include <fstream>
-#include <assert.h>
-#include <sstream>
-#include <vector>
-#include "NoNameGestor/Utils/Defs.h"
 
 class FileManager
 {
-private:
+// New File Manager
+public:
 
-	enum class Access
+	class FileNode
 	{
-		OPEN,
-		EDIT,
-		VIEW,
-		ERROR
-	};
-
-	struct Editor
-	{
-	private:
-
-		struct Variables
-		{
-			Variables(const char* name, const char* variable, Access access)
-			{
-				this->name = name;
-				this->variable = variable;
-				this->access = access;
-			}
-
-			Editor Number(double number)
-			{
-				if (access == Access::ERROR) return Editor(name, access);
-
-				std::fstream file;
-
-				file.open(name, std::ios::app | std::ios::ate);
-
-				assert(file.is_open()); // File is not open
-
-				file << variable << " " << number << "," << std::endl;
-
-				file.close();
-
-				return Editor(name, access);
-			}
-
-			Editor Number(float number)
-			{
-				if (access == Access::ERROR) return Editor(name, access);
-
-				std::fstream file;
-
-				file.open(name, std::ios::app | std::ios::ate);
-
-				assert(file.is_open()); // File is not open
-
-				file << variable << " " << number << "," << std::endl;
-
-				file.close();
-
-				return Editor(name, access);
-			}
-
-			Editor Number(int number)
-			{
-				if (access == Access::ERROR) return Editor(name, access);
-
-				std::fstream file;
-
-				file.open(name, std::ios::app | std::ios::ate);
-
-				assert(file.is_open()); // File is not open
-
-				file << variable << " " << number << "," << std::endl;
-
-				file.close();
-
-				return Editor(name, access);
-			}
-
-			Editor String(std::string string)
-			{
-				if (access == Access::ERROR) return Editor(name, access);
-
-				std::fstream file;
-
-				file.open(name, std::ios::app | std::ios::ate);
-
-				assert(file.is_open()); // File is not open
-
-				file << variable << " " << string.c_str() << "," << std::endl;
-
-				file.close();
-
-				return Editor(name, access);
-			}
-
-			Editor Bool(bool boolean)
-			{
-				if (access == Access::ERROR) return Editor(name, access);
-
-				std::fstream file;
-
-				file.open(name, std::ios::app | std::ios::ate);
-
-				assert(file.is_open()); // File is not open
-				int intBool = 0;
-				boolean ? intBool = 1 : intBool = 0;
-
-				file << variable << " " << intBool << "," << std::endl;
-
-				file.close();
-
-				return Editor(name, access);
-			}
-
-			Editor Date(int day, int month, int year)
-			{
-				if (access == Access::ERROR) return Editor(name, access);
-
-				std::fstream file;
-
-				file.open(name, std::ios::app | std::ios::ate);
-
-				assert(file.is_open()); // File is not open
-
-				file << variable << " " << day << " " << month << " " << year << "," << std::endl;
-
-				file.close();
-
-				return Editor(name, access);
-			}
-
-		private:
-
-			const char* name = nullptr;
-			const char* variable = nullptr;
-			Access access = Access::OPEN;
-		};
-
-		struct Returns
-		{
-			Returns(const char* name, const char* variable, Access access, Editor* editor)
-			{
-				this->name = name;
-				this->variable = variable;
-				this->access = access;
-				this->editor = editor;
-			}
-
-			Editor AsInt(int& number)
-			{
-				if (access == Access::ERROR) return *editor;
-
-				std::fstream file;
-
-				file.open(name, std::ios::in);
-
-				assert(file.is_open()); // File is not open
-
-				if (editor->jumpLines > 0) editor->InternalJumpLines(&file);
-
-				bool variableExists = false;
-				while (!file.eof())
-				{
-					std::string line;
-					std::getline(file, line, ' ');
-					if (editor->InternalSameString(variable, line))
-					{
-						variableExists = true;
-						line.clear();
-						break;
-					}
-					line.clear();
-
-					std::getline(file, line, '\n');
-					line.clear();
-				}
-
-				// The variable inputted does not exist in the document
-				assert(variableExists);
-
-				double value = 0.0;
-				file >> value;
-
-				number = int(ceil(value));
-
-				file.close();
-
-				return *editor;
-			}
-
-			Editor AsInt(unsigned int& number)
-			{
-				if (access == Access::ERROR) return *editor;
-
-				std::fstream file;
-
-				file.open(name, std::ios::in);
-
-				assert(file.is_open()); // File is not open
-
-				if (editor->jumpLines > 0) editor->InternalJumpLines(&file);
-
-				bool variableExists = false;
-				while (!file.eof())
-				{
-					std::string line;
-					std::getline(file, line, ' ');
-					if (editor->InternalSameString(variable, line))
-					{
-						variableExists = true;
-						line.clear();
-						break;
-					}
-					line.clear();
-
-					std::getline(file, line, '\n');
-					line.clear();
-				}
-
-				// The variable inputted does not exist in the document
-				assert(variableExists);
-
-				double value = 0.0;
-				file >> value;
-
-				int n = int(ceil(value));
-
-				// The variable to read is not unsigned, please input an int instead of an unsigned int
-				assert(n >= 0);
-
-				number = n;
-
-				file.close();
-
-				return *editor;
-			}
-
-			Editor AsFloat(float& number)
-			{
-				if (access == Access::ERROR) return *editor;
-
-				std::fstream file;
-
-				file.open(name, std::ios::in);
-
-				assert(file.is_open()); // File is not open
-
-				if (editor->jumpLines > 0) editor->InternalJumpLines(&file);
-
-				bool variableExists = false;
-				while (!file.eof())
-				{
-					std::string line;
-					std::getline(file, line, ' ');
-					if (editor->InternalSameString(variable, line))
-					{
-						variableExists = true;
-						line.clear();
-						break;
-					}
-					line.clear();
-
-					std::getline(file, line, '\n');
-					line.clear();
-				}
-
-				// The variable inputted does not exist in the document
-				assert(variableExists);
-
-				double value = 0.0;
-				file >> value;
-
-				number = float(value);
-
-				file.close();
-
-				return *editor;
-			}
-
-			Editor AsDouble(double& number)
-			{
-				if (access == Access::ERROR) return *editor;
-
-				std::fstream file;
-
-				file.open(name, std::ios::in);
-
-				assert(file.is_open()); // File is not open
-
-				if (editor->jumpLines > 0) editor->InternalJumpLines(&file);
-
-				bool variableExists = false;
-				while (!file.eof())
-				{
-					std::string line;
-					std::getline(file, line, ' ');
-					if (editor->InternalSameString(variable, line))
-					{
-						variableExists = true;
-						line.clear();
-						break;
-					}
-					line.clear();
-
-					std::getline(file, line, '\n');
-					line.clear();
-				}
-
-				// The variable inputted does not exist in the document
-				assert(variableExists);
-
-				double value = 0.0;
-				file >> value;
-
-				number = value;
-
-				file.close();
-
-				return *editor;
-			}
-
-			Editor AsString(std::string& string)
-			{
-				if (access == Access::ERROR) return *editor;
-
-				std::fstream file;
-
-				file.open(name, std::ios::in);
-
-				assert(file.is_open()); // File is not open
-
-				if (editor->jumpLines > 0) editor->InternalJumpLines(&file);
-
-				bool variableExists = false;
-				while (!file.eof())
-				{
-					std::string line;
-					std::getline(file, line, ' ');
-					if (editor->InternalSameString(variable, line))
-					{
-						variableExists = true;
-						line.clear();
-						break;
-					}
-					line.clear();
-					line.shrink_to_fit();
-
-					std::getline(file, line, '\n');
-					line.clear();
-				}
-
-				// The variable inputted does not exist in the document
-				assert(variableExists);
-
-				std::getline(file, string, ',');
-
-				file.close();
-
-				return *editor;
-			}
-
-			Editor AsBool(bool& boolean)
-			{
-				if (access == Access::ERROR) return *editor;
-
-				std::fstream file;
-
-				file.open(name, std::ios::in);
-
-				assert(file.is_open()); // File is not open
-
-				if (editor->jumpLines > 0) editor->InternalJumpLines(&file);
-
-				bool variableExists = false;
-				while (!file.eof())
-				{
-					std::string line;
-					std::getline(file, line, ' ');
-					if (editor->InternalSameString(variable, line))
-					{
-						variableExists = true;
-						line.clear();
-						break;
-					}
-					line.clear();
-
-					std::getline(file, line, '\n');
-					line.clear();
-				}
-
-				// The variable inputted in the function Read("variable") does not exist in the document
-				assert(variableExists);
-
-				int value = 0.0;
-				file >> value;
-
-				boolean = bool(value);
-
-				file.close();
-
-				return *editor;
-			}
-
-			Editor AsDate(int& day, int& month, int& year)
-			{
-				if (access == Access::ERROR) return *editor;
-
-				std::fstream file;
-
-				file.open(name, std::ios::in);
-
-				assert(file.is_open()); // File is not open
-
-				if (editor->jumpLines > 0) editor->InternalJumpLines(&file);
-
-				bool variableExists = false;
-				while (!file.eof())
-				{
-					std::string line;
-					std::getline(file, line, ' ');
-					if (editor->InternalSameString(variable, line))
-					{
-						variableExists = true;
-						line.clear();
-						break;
-					}
-					line.clear();
-
-					std::getline(file, line, '\n');
-					line.clear();
-				}
-
-				// The variable inputted does not exist in the document
-				assert(variableExists);
-
-				int value1 = 0;
-				int value2 = 0;
-				int value3 = 0;
-				file >> value1;
-				file >> value2;
-				file >> value3;
-
-				day = value1;
-				month = value2;
-				year = value3;
-
-				file.close();
-
-				return *editor;
-			}
-
-		private:
-
-			const char* name = nullptr;
-			const char* variable = nullptr;
-			Editor* editor = nullptr;
-			Access access = Access::OPEN;
-		};
-
 	public:
 
-		Editor(const char* name, Access access, int jumpLines = 0) 
+		FileNode() = default;
+		~FileNode() = default;
+		FileNode(const FileNode&) = default;
+		FileNode& operator=(const FileNode&) = default;
+		FileNode(FileNode&& other) noexcept;
+		FileNode& operator=(FileNode&& other) noexcept;
+
+		/// <summary>
+		/// Safely reads the value stored under the specified field name.
+		/// </summary>
+		/// <typeparam name="T">Type of the value to retrieve.</typeparam>
+		/// <param name="name">Name of the field.</param>
+		/// <param name="value">Output parameter receiving the value.</param>
+		/// <returns>False if the field does not exist or the value cannot be converted to the requested type; otherwise true.</returns>
+		template<typename T>
+		bool Read(StringView name, T& value) const
 		{
-			this->name = name;
-			this->access = access;
-			this->jumpLines = jumpLines;
-		}
+			AssertFile("File Read Error: File not isNewFile.");
 
-		~Editor() {}
+			if (!data->contains(name.Data()))
+				return false;
 
-		Variables Write(const char* variable)
-		{
-			// You are trying to write a file in view mode. Access with Open or Edit Mode.
-			assert(access != Access::VIEW);
-
-			return Variables(name.c_str(), variable, access);
-		}
-
-		Returns Read(const char* variable)
-		{
-			// You are trying to read an open file. Opened files are empty. Access with Edit or View Mode
-			assert(access != Access::OPEN);
-
-			return Returns(name.c_str(), variable, access, this);
-		}
-
-		int Search(const char* variable)
-		{
-			assert(access == Access::VIEW, "You can only search in view mode");
-
-			std::fstream file;
-
-			file.open(name, std::ios::in);
-
-			assert(file.is_open()); // File is not open
-
-			if (jumpLines > 0) InternalJumpLines(&file);
-
-			int numOfLines = 0;
-			bool variableExists = false;
-			while (!file.eof())
+			try
 			{
-				std::string line;
-				std::getline(file, line, ' ');
-				if (InternalSameString(variable, line))
-				{
-					variableExists = true;
-					line.clear();
-					break;
-				}
-				++numOfLines;
-				line.clear();
+				const auto& a = data->at(name.Data());
 
-				std::getline(file, line, '\n');
-				line.clear();
+				if constexpr (std::is_same_v<std::remove_cvref_t<T>, String>)
+					value = a.get<std::string>().c_str();
+				else
+					value = a.get<T>();
 			}
-
-			if (!variableExists) return 0;
-
-			return numOfLines + jumpLines;
-		}
-
-	private:
-
-		friend class Returns;
-
-		Editor() {}
-
-		bool InternalSameString(std::string a, std::string b)
-		{
-			bool ret = true;
-
-			if (a.size() != b.size()) return false;
-
-			for (unsigned int i = 0; i < a.size(); i++)
+			catch (const nlohmann::json::type_error&)
 			{
-				ret = (a[i] == b[i]);
-				if (!ret) return false;
+				return false;
 			}
 
 			return true;
 		}
 
-		void InternalJumpLines(std::fstream* file)
+		/// <summary>
+		/// Safely reads the value stored under this node.
+		/// </summary>
+		/// <typeparam name="T">Type of the value to retrieve.</typeparam>
+		/// <param name="value">Output parameter receiving the value.</param>
+		/// <returns>False if the value cannot be converted to the requested type; otherwise true.</returns>
+		template<typename T>
+		bool Read(T& value) const
 		{
-			for (unsigned int i = 0; i < jumpLines; ++i)
+			AssertFile("File Read Error: File not isNewFile.");
+
+			try
 			{
-				std::string line;
-				std::getline(*file, line, '\n');
+				if constexpr (std::is_same_v<std::remove_cvref_t<T>, String>)
+					value = data->get<std::string>().c_str();
+				else
+					value = data->get<T>();
 			}
+			catch (const nlohmann::json::type_error&)
+			{
+				return false;
+			}
+
+			return true;
 		}
 
-		std::string name;
-		Access access = Access::OPEN;
-		int jumpLines = 0;
+		/// <summary>
+		/// Quickly reads the value stored under the specified field name.
+		/// Throws if the field does not exist or the value cannot be converted to the requested type.
+		/// </summary>
+		/// <typeparam name="T">Type of the value to retrieve.</typeparam>
+		/// <param name="name">Name of the field.</param>
+		/// <returns>The value stored under the specified field name.</returns>
+		template<typename T>
+		T Read(StringView name) const
+		{
+			AssertFile("File Read Error: File not isNewFile.");
+
+			if (!data->contains(name.Data()))
+				throw std::runtime_error("JSON key not found");
+
+			const auto& a = data->at(name.Data());
+
+			if constexpr (std::is_same_v<std::remove_cvref_t<T>, String>)
+				return a.get<std::string>().c_str();
+			else
+				return a.get<T>();
+		}
+
+		/// <summary>
+		/// Quickly reads the value stored under this node.
+		/// Throws if the value cannot be converted to the requested type; otherwise true.
+		/// </summary>
+		/// <typeparam name="T">Type of the value to retrieve.</typeparam>
+		/// <returns>The value stored under this node.</returns>
+		template<typename T>
+		T Read() const
+		{
+			AssertFile("File Read Error: File not isNewFile.");
+
+			if constexpr (std::is_same_v<std::remove_cvref_t<T>, String>)
+				return data->get<std::string>().c_str();
+			else
+				return data->get<T>();
+		}
+
+		/// <summary>
+		/// Safely reads an element of this node, which must be a JSON array.
+		/// </summary>
+		/// <typeparam name="T">Type of the value to retrieve.</typeparam>
+		/// <param name="index">Zero-based index of the array element.</param>
+		/// <param name="value">Output parameter receiving the value.</param>
+		/// <returns>False if this node is not an array, the index is out of bounds, or the element cannot be retrieved; otherwise true.</returns>
+		template<typename T>
+		bool Read(unsigned int index, T& value) const
+		{
+			AssertFile("File Read Error: File not isNewFile.");
+
+			if (!data->is_array() || data->size() <= index)
+				return false;
+
+			try
+			{
+				const auto& a = data->at(index);
+
+				if constexpr (std::is_same_v<std::remove_cvref_t<T>, String>)
+					value = a.get<std::string>().c_str();
+				else
+					value = a.get<T>();
+			}
+			catch (const nlohmann::json::type_error&)
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// Quickly reads  an element of this node, which must be a JSON array.
+		/// Throws if this node is not an array or the index is out of bounds.
+		/// </summary>
+		/// <typeparam name="T">Type of the value to retrieve.</typeparam>
+		/// <param name="index">Zero-based index of the array element.</param>
+		/// <returns>The value stored under the specified field name.</returns>
+		template<typename T>
+		T Read(unsigned int index) const
+		{
+			AssertFile("File Read Error: File not isNewFile.");
+
+			if (!data->is_array())
+				throw std::runtime_error("Current FileNode is not an array!");
+
+			if (data->size() <= index)
+				throw std::runtime_error("Index out of bounds!");
+
+			const auto& a = data->at(index);
+
+			if constexpr (std::is_same_v<std::remove_cvref_t<T>, String>)
+				return a.get<std::string>().c_str();
+			else
+				return a.get<T>();
+		}
+
+		/// <summary>
+		/// Writes a value to the specified field.
+		/// Overwrites the existing value if the field already exists.
+		/// </summary>
+		/// <typeparam name="T">Type of the value to write.</typeparam>
+		/// <param name="name">Name of the field.</param>
+		/// <param name="value">Value to write.</param>
+		/// <returns>False if the value cannot be serialized; otherwise true.</returns>
+		template<typename T>
+		bool Write(const char* name, const T& value)
+		{
+			AssertFile("File Write Error: File not isNewFile.");
+
+			try
+			{
+				if constexpr (std::is_same_v<std::remove_cvref_t<T>, String>)
+					(*data)[name] = value.Str();
+				else if constexpr (std::is_same_v<std::remove_cvref_t<T>, StringView>)
+					(*data)[name] = value.Data();
+				else
+					(*data)[name] = value;
+			}
+			catch (const nlohmann::json::type_error&)
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// Writes a value to the specified field.
+		/// Overwrites the existing value if the field already exists.
+		/// </summary>
+		/// <typeparam name="T">Type of the value to write.</typeparam>
+		/// <param name="name">Name of the field.</param>
+		/// <param name="value">Value to write.</param>
+		/// <returns>False if the value cannot be serialized; otherwise true.</returns>
+		template<typename T>
+		bool Write(StringView name, const T& value)
+		{
+			AssertFile("File Write Error: File not isNewFile.");
+
+			try
+			{
+				if constexpr (std::is_same_v<std::remove_cvref_t<T>, String>)
+					(*data)[name.Data()] = value.Str();
+				else if constexpr (std::is_same_v<std::remove_cvref_t<T>, StringView>)
+					(*data)[name.Data()] = value.Data();
+				else
+					(*data)[name.Data()] = value;
+			}
+			catch (const nlohmann::json::type_error&)
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// Writes a value to this node.
+		/// Overwrites the existing value if it has one.
+		/// </summary>
+		/// <typeparam name="T">Type of the value to write.</typeparam>
+		/// <param name="value">Value to write.</param>
+		/// <returns>False if the value cannot be serialized; otherwise true.</returns>
+		template<typename T>
+		bool Write(const T& value)
+		{
+			AssertFile("File Write Error: File not isNewFile.");
+
+			try
+			{
+				if constexpr (std::is_same_v<std::remove_cvref_t<T>, String>)
+					(*data) = value.Str();
+				else if constexpr (std::is_same_v<std::remove_cvref_t<T>, StringView>)
+					(*data) = value.Data();
+				else
+					(*data) = value;
+			}
+			catch (const nlohmann::json::type_error&)
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// Writes a value to an element of this node, which must be a JSON array.
+		/// Overwrites the existing element at the specified index.
+		/// </summary>
+		/// <typeparam name="T">Type of the value to write.</typeparam>
+		/// <param name="index">Zero-based index of the array element.</param>
+		/// <param name="value">Value to write.</param>
+		/// <returns>False if this node is not an array, the index is out of bounds, or the value cannot be serialized; otherwise true.</returns>
+		template<typename T>
+		bool Write(unsigned int index, const T& value)
+		{
+			AssertFile("File Write Error: File not isNewFile.");
+
+			if (!data->is_array() || data->size() <= index)
+				return false;
+
+			try
+			{
+				if constexpr (std::is_same_v<std::remove_cvref_t<T>, String>)
+					(*data)[index] = value.Str();
+				else if constexpr (std::is_same_v<std::remove_cvref_t<T>, StringView>)
+					(*data)[index] = value.Data();
+				else
+					(*data)[index] = value;
+			}
+			catch (const nlohmann::json::type_error&)
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// Appends a value to an array stored under the specified field.
+		/// If the field does not exist, tt creates a new JSON array for it.
+		/// </summary>
+		/// <typeparam name="T">Type of the value to append.</typeparam>
+		/// <param name="name">Name of the array field.</param>
+		/// <param name="value">Value to append.</param>
+		/// <returns>-1 if the field is not a JSON array or the value cannot be serialized; otherwise the new pushed index.</returns>
+		template<typename T>
+		int Push(const char* name, const T& value)
+		{
+			AssertFile("File Write Error: File not isNewFile.");
+
+			if (!data->contains(name))
+				(*data)[name] = nlohmann::json::array();
+			else if (!(*data)[name].is_array())
+				return -1;
+
+			auto& a = (*data)[name];
+			try
+			{
+				if constexpr (std::is_same_v<std::remove_cvref_t<T>, String>)
+					a.push_back(value.Str());
+				else if constexpr (std::is_same_v<std::remove_cvref_t<T>, StringView>)
+					a.push_back(value.Data());
+				else
+					a.push_back(value);
+			}
+			catch (const nlohmann::json::type_error&)
+			{
+				return -1;
+			}
+
+			return a.size() - 1;
+		}
+
+		/// <summary>
+		/// Appends a value to an array stored under the specified field.
+		/// If the field does not exist, tt creates a new JSON array for it.
+		/// </summary>
+		/// <typeparam name="T">Type of the value to append.</typeparam>
+		/// <param name="name">Name of the array field.</param>
+		/// <param name="value">Value to append.</param>
+		/// <returns>-1 if the field is not a JSON array or the value cannot be serialized; otherwise the new pushed index.</returns>
+		template<typename T>
+		int Push(StringView name, const T& value)
+		{
+			AssertFile("File Write Error: File not isNewFile.");
+
+			if (!data->contains(name.Data()))
+				(*data)[name.Data()] = nlohmann::json::array();
+			else if (!(*data)[name.Data()].is_array())
+				return -1;
+
+			auto& a = (*data)[name.Data()];
+			try
+			{
+				if constexpr (std::is_same_v<std::remove_cvref_t<T>, String>)
+					a.push_back(value.Str());
+				else if constexpr (std::is_same_v<std::remove_cvref_t<T>, StringView>)
+					a.push_back(value.Data());
+				else
+					a.push_back(value);
+			}
+			catch (const nlohmann::json::type_error&)
+			{
+				return -1;
+			}
+
+			return a.size() - 1;
+		}
+
+		/// <summary>
+		/// Pushes back a value to this node, which must be a JSON array.
+		/// Creates a new JSON array if the field does not exist.
+		/// </summary>
+		/// <typeparam name="T">Type of the value to append.</typeparam>
+		/// <param name="value">Value to append.</param>
+		/// <returns>-1 if the value cannot be serialized; otherwise the new pushed index.</returns>
+		template<typename T>
+		int Push(const T& value)
+		{
+			AssertFile("File Write Error: File not isNewFile.");
+
+			if (!data->is_array())
+				return -1;
+
+			try
+			{
+				if constexpr (std::is_same_v<std::remove_cvref_t<T>, String>)
+					data->push_back(value.Str());
+				else if constexpr (std::is_same_v<std::remove_cvref_t<T>, StringView>)
+					data->push_back(value.Data());
+				else
+					data->push_back(value);
+			}
+			catch (const nlohmann::json::type_error&)
+			{
+				return -1;
+			}
+
+			return data->size() - 1;
+		}
+
+		/// <summary>
+		/// Safely accesses a child node by name.
+		/// </summary>
+		/// <param name="name">Name of the child node.</param>
+		/// <param name="node">Output parameter receiving the child node.</param>
+		/// <returns>False if the child node does not exist or cannot be accessed; otherwise true.</returns>
+		bool Access(const char* name, FileNode& node) const;
+
+		/// <summary>
+		/// Quickly accesses a child node by name.
+		/// Throws if the child node does not exist or cannot be accessed.
+		/// </summary>
+		/// <param name="name">Name of the child node.</param>
+		/// <returns>The child node stored under the specified name.</returns>
+		FileNode Access(StringView name) const;
+
+		/// <summary>
+		/// Safely accesses an element of this node, which must be a JSON array.
+		/// </summary>
+		/// <param name="index">Zero-based index of the array element.</param>
+		/// <param name="node">Output parameter receiving the array element.</param>
+		/// <returns>False if this node is not an array, the index is out of bounds, or the element cannot be accessed; otherwise true.</returns>
+		bool Access(unsigned int index, FileNode& node) const;
+
+		/// <summary>
+		/// Quickly accesses an element of this node, which must be a JSON array.
+		/// Throws if this node is not an array or the index is out of bounds.
+		/// </summary>
+		/// <param name="index">Zero-based index of the array element.</param>
+		/// <returns>The array element at the specified index.</returns>
+		FileNode Access(unsigned int index) const;
+
+		/// <summary>
+		/// Safely accesses an element of the node "name", which must be a JSON array.
+		/// </summary>
+		/// <param name="name">Name of the array in this node.</param>
+		/// <param name="index">Zero-based index of the array element.</param>
+		/// <param name="node">Output parameter receiving the array element.</param>
+		/// <returns>False if "name" node is not an array, the index is out of bounds, or the element cannot be accessed; otherwise true.</returns>
+		bool Access(const char* name, unsigned int index, FileNode& node) const;
+
+		/// <summary>
+		/// Safely accesses an element of the node "name", which must be a JSON array.
+		/// </summary>
+		/// <param name="name">Name of the array in this node.</param>
+		/// <param name="index">Zero-based index of the array element.</param>
+		/// <param name="node">Output parameter receiving the array element.</param>
+		/// <returns>False if "name" node is not an array, the index is out of bounds, or the element cannot be accessed; otherwise true.</returns>
+		bool Access(StringView name, unsigned int index, FileNode& node) const;
+
+		/// <summary>
+		/// Quickly accesses an element of the node "name", which must be a JSON array.
+		/// Throws if the node "name" is not an array or the index is out of bounds.
+		/// </summary>
+		/// <param name="name">Name of the array in this node.</param>
+		/// <param name="index">Zero-based index of the array element.</param>
+		/// <returns>The array element at the specified index.</returns>
+		FileNode Access(const char* name, unsigned int index) const;
+
+		/// <summary>
+		/// Quickly accesses an element of the node "name", which must be a JSON array.
+		/// Throws if the node "name" is not an array or the index is out of bounds.
+		/// </summary>
+		/// <param name="name">Name of the array in this node.</param>
+		/// <param name="index">Zero-based index of the array element.</param>
+		/// <returns>The array element at the specified index.</returns>
+		FileNode Access(StringView name, unsigned int index) const;
+
+		/// <summary>
+		/// Removes the field with the specified name.
+		/// </summary>
+		/// <param name="name">Name of the field to remove.</param>
+		/// <returns>False if the field does not exist; otherwise true.</returns>
+		bool Remove(StringView name);
+
+		/// <summary>
+		/// Removes an element from the array stored under the specified field.
+		/// </summary>
+		/// <param name="name">Name of the array field.</param>
+		/// <param name="index">Zero-based index of the array element to remove.</param>
+		/// <returns>False if the field does not contain an array, the index is out of bounds, or the element cannot be removed; otherwise true.</returns>
+		bool Remove(const char* name, unsigned int index);
+
+		/// <summary>
+		/// Removes an element from this node, which it must be a JSON array.
+		/// </summary>
+		/// <param name="index">Zero-based index of the array element to remove.</param>
+		/// <returns>False if this node is not an array, the index is out of bounds, or the element cannot be removed; otherwise true.</returns>
+		bool Remove(unsigned int index);
+
+		/// <summary>
+		/// Returns the amount of elements in the current json node.
+		/// </summary>
+		/// <returns></returns>
+		int Length() const;
+
+	protected:
+
+		FileNode(nlohmann::json&& data);
+
+		FileNode(nlohmann::json& json);
+
+		void AssertFile(const char* error) const;
+
+	protected:
+
+		nlohmann::json* data = nullptr;
+
+	};
+
+	class File : public FileNode
+	{
+
+		friend class FileManager;
+
+	public:
+
+		static const nlohmann::json Array;
+		static const nlohmann::json Object;
+
+		File() = default;
+		~File();
+		File(const File&) = delete;
+		File& operator=(const File&) = delete;
+		File(File&& other) noexcept;
+		File& operator=(File&& other) noexcept;
+
+		/// <summary>
+		/// Returns if the file is valid, by checking if the internal data is created.
+		/// </summary>
+		bool IsValid() const;
+
+		/// <summary>
+		/// Returns if the file is new, which means it has a name but not a path or directory yet.
+		/// </summary>
+		bool IsNew() const;
+
+		/// <summary>
+		/// Eliminates the current data without changing the file.
+		/// </summary>
+		void Clear();
+
+		/// <summary>
+		/// Saves the current file to the current stored path.
+		/// </summary>
+		/// <returns>False if the file is saved correctly; otherwise true.</returns>
+		bool Save();
+		/// <summary>
+		/// Saves the current file to the inputted path.
+		/// </summary>
+		/// <returns>False if the file is saved correctly; otherwise true.</returns>
+		bool SaveAs(const char* path);
+		/// <summary>
+		/// Saves the current file to the inputted path.
+		/// </summary>
+		/// <returns>False if the file is saved correctly; otherwise true.</returns>
+		bool SaveAs(StringView path);
+
+		/// <summary>
+		/// Resets the current file into a new one without path.
+		/// </summary>
+		/// <param name="name">Optional file name.</param>
+		void New(const char* fileName);
+		/// <summary>
+		/// Resets the current file into a new one without path.
+		/// </summary>
+		/// <param name="name">Optional file name.</param>
+		void New(StringView fileName);
+
+		/// <summary>
+		/// Returns the file path (directory + file name + extension).
+		/// </summary>
+		StringView Path() const;
+		/// <summary>
+		/// Returns the file name (file name + extension).
+		/// </summary>
+		StringView Name() const;
+		/// <summary>
+		/// Returns the file directory (directory).
+		/// </summary>
+		StringView Directory() const;
+
+	private:
+
+		File(nlohmann::json&& data, const String& path);
+
+		void GenerateFileInfo(const String& path);
+
+	private:
+
+		String path;
+		String name;
+		String directory;
+		bool isNewFile = false; // Is the file a new file? (no path, only file name)
 	};
 
 public:
 
-	FileManager(const char* extension = nullptr) 
-	{
-		SetExtension(extension);
-	}
+	/// <summary>
+	/// Returns if the inputted path has a valid format. 
+	/// This format requires at least one '\\' and ending with .'any extension')
+	/// </summary>
+	/// <param name="path">Path to validate.</param>
+	/// <returns>Returns true if the path format is valid.</returns>
+	static bool PathFormatValid(const char* path);
+	/// <summary>
+	/// Returns if the inputted path has a valid format. 
+	/// This format requires at least one '\\' and ending with .'any extension')
+	/// </summary>
+	/// <param name="path">Path to validate.</param>
+	/// <returns>Returns true if the path format is valid.</returns>
+	static bool PathFormatValid(StringView path);
 
-	~FileManager() {}
+	/// <summary>
+	/// Returns if the inputted path is valid and points to a file.
+	/// </summary>
+	/// <param name="path">Path to the file.</param>
+	/// <returns>Returns if the inputted path is valid and points to a file.</returns>
+	static bool FileExists(const char* path);
+	/// <summary>
+	/// Returns if the inputted path is valid and points to a file.
+	/// </summary>
+	/// <param name="path">Path to the file.</param>
+	/// <returns>Returns if the inputted path is valid and points to a file.</returns>
+	static bool FileExists(StringView path);
 
-	Editor OpenFile(const char* name)
-	{
-		name = InternalExtensionCheck(name);
+	/// <summary>
+	/// Returns if the inputted directory is valid and points to a folder.
+	/// </summary>
+	/// <param name="directory">Directory to check.</param>
+	/// <returns>Returns if the inputted directory is valid and points to a folder.</returns>
+	static bool DirectoryExists(const char* directory);
+	/// <summary>
+	/// Returns if the inputted directory is valid and points to a folder.
+	/// </summary>
+	/// <param name="directory">Directory to check.</param>
+	/// <returns>Returns if the inputted directory is valid and points to a folder.</returns>
+	static bool DirectoryExists(StringView directory);
 
-		if (InternalExists(name))
-		{
-			std::ofstream erase;
-			erase.open(name, std::ofstream::out | std::ofstream::trunc);
-			erase.close();
-		}
-		else
-		{
-			std::ofstream create(name);
-			create.close();
-		}
+	/// <summary>
+	/// Creates the inputted directory.
+	/// </summary>
+	/// <param name="directory">Directory to create.</param>
+	/// <returns>Returns if the inputted directory has been correctly created.</returns>
+	static bool DirectoryCreate(const char* directory);
+	/// <summary>
+	/// Creates the inputted directory.
+	/// </summary>
+	/// <param name="directory">Directory to create.</param>
+	/// <returns>Returns if the inputted directory has been correctly created.</returns>
+	static bool DirectoryCreate(StringView directory);
 
-		return Editor(name, Access::OPEN);
-	}
+	/// <summary>
+	/// Returns if the inputted path to a file has the expected extension. Does not check for a valid path nor file.
+	/// </summary>
+	/// <param name="path">Path to the file.</param>
+	/// <param name="extension">Extension to check.</param>
+	/// <returns>Returns if the inputted path to a file has the expected extension.</returns>
+	static bool FileHasExtension(const char* path, const char* extension);
+	/// <summary>
+	/// Returns if the inputted path to a file has the expected extension. Does not check for a valid path nor file.
+	/// </summary>
+	/// <param name="path">Path to the file.</param>
+	/// <param name="extension">Extension to check.</param>
+	/// <returns>Returns if the inputted path to a file has the expected extension.</returns>
+	static bool FileHasExtension(StringView path, const char* extension);
 
-	Editor EditFile(const char* name)
-	{
-		name = InternalExtensionCheck(name);
+	/// <summary>
+	/// Returns the directory of the inputted path.
+	/// </summary>
+	/// <param name="path">The path to convert into directory.</param>
+	/// <returns>The directory of the inputted path.</returns>
+	static String ToDirectory(StringView path);
 
-		if (!InternalExists(name)) return Editor(name, Access::ERROR);
+	/// <summary>
+	/// Returns the file name of the inputted path.
+	/// </summary>
+	/// <param name="path">The path to convert into file name.</param>
+	/// <returns>The file name of the inputted path.</returns>
+	static String ToFileName(StringView path);
 
-		return Editor(name, Access::EDIT);
-	}
+	/// <summary>
+	/// Opens a file for I/O.
+	/// </summary>
+	/// <param name="path">Path to the file to open.</param>
+	/// <param name="create">In case the file does not exist, should the function create a new file?</param>
+	/// <returns>The opened file.</returns>
+	static File OpenFile(const char* path, bool create = false);
+	/// <summary>
+	/// Opens a file for I/O.
+	/// </summary>
+	/// <param name="path">Path to the file to open.</param>
+	/// <param name="create">In case the file does not exist, should the function create a new file?</param>
+	/// <returns>The opened file.</returns>
+	static File OpenFile(StringView path, bool create = false);
+	/// <summary>
+	/// Opens a file for I/O. (Safe Version)
+	/// </summary>
+	/// <param name="path">Path to the file to open.</param>
+	/// <param name="output">The output file.</param>
+	/// <param name="create">In case the file does not exist, should the function create a new file?</param>
+	/// <returns>False if there has been an error on file opening; otherwise true.</returns>
+	static bool OpenFile(const char* path, File& output, bool create = false);
+	/// <summary>
+	/// Opens a file for I/O. (Safe Version)
+	/// </summary>
+	/// <param name="path">Path to the file to open.</param>
+	/// <param name="output">The output file.</param>
+	/// <param name="create">In case the file does not exist, should the function create a new file?</param>
+	/// <returns>False if there has been an error on file opening; otherwise true.</returns>
+	static bool OpenFile(StringView path, File& output, bool create = false);
 
-	Editor ViewFile(const char* name, int jumpLines = 0)
-	{
-		name = InternalExtensionCheck(name);
-
-		if (!InternalExists(name)) return Editor(name, Access::ERROR, jumpLines);
-
-		return Editor(name, Access::VIEW, jumpLines);
-	}
-
-	bool Exists(const char* name, bool addExtension = false) const
-	{
-		if (addExtension)
-		{
-			std::string fileName = name;
-			fileName += extension;
-			name = fileName.c_str();
-		}
-		std::fstream file;
-
-		// In mode (read)
-		file.open(name, std::ios::in);
-
-		bool ret = file.is_open();
-		file.close();
-
-		return ret;
-	}
-
-	void SetExtension(const char* extension)
-	{
-		if (extension)
-		{
-			this->extension.clear();
-			this->extension.shrink_to_fit();
-			this->extension = extension;
-		}
-	}
-
-private:
-
-	bool InternalExists(const char* name) const
-	{
-		std::fstream file;
-
-		// In mode (read)
-		file.open(name, std::ios::in);
-
-		bool ret = file.is_open();
-		file.close();
-
-		return ret;
-	}
-
-	const char* InternalExtensionCheck(const char* name)
-	{
-		if (extension.empty()) return name;
-
-		std::string check = name;
-		check.erase(check.begin(), check.end() - extension.size());
-		if (SameString(extension.c_str(), check.c_str())) return name;
-
-		std::string fileName = name;
-		fileName += extension;
-		return fileName.c_str();
-	}
-
-	std::string extension;
 };
-
-#endif // !__FILE_MANAGER_H__
-

@@ -8,7 +8,7 @@ class AppModule
 
 protected:
 
-	AppModule() : active(true) {}
+	AppModule() { }
 
 	virtual bool Awake()
 	{
@@ -40,9 +40,10 @@ protected:
 		return true;
 	}
 
-protected:
-
-	bool active = true;
+	virtual bool IsActive() const
+	{
+		return true;
+	}
 
 };
 
@@ -64,6 +65,15 @@ protected:
 		return *instance;
 	}
 
+	bool IsActive() const override
+	{
+		return active;
+	}
+
+public:
+
+	static bool active;
+
 private:
 
 	static T* instance;
@@ -71,3 +81,6 @@ private:
 
 template<typename T>
 T* Module<T>::instance = nullptr;
+
+template<typename T>
+bool Module<T>::active = true;

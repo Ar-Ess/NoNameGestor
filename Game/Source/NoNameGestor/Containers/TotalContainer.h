@@ -6,41 +6,53 @@ class TotalContainer : public Container
 {
 public: // Functions
 
-	TotalContainer(const char* name, std::string* format, bool* showFutureMoney) : Container(name, false, true, false, format, nullptr, ContainerType::TOTAL_MONEY)
+	TotalContainer(const char* name, String* format, Configuration* config) :
+		Container(name, false, true, false, format, config)
+	{ }
+
+	bool Update(Aggregate& agg) override
 	{
-		this->showFutureMoney = showFutureMoney;
+		money = agg.total - agg.assigned + agg.future;
+		leftMoney = agg.total - agg.assigned;
+		futureMoney = agg.future;
+
+		return true;
 	}
 
 	void Draw() override
 	{
-		ImGui::PushID(id);
-		if (!*showFutureMoney)
+		ImGui::PushID(id.Data());
 		{
-			ImGui::Text(name.c_str()); ImGui::SameLine();
-			ImGui::Text((*format).c_str(), money);
-		}
-		else
-		{
-			ImGui::Text("Actual Total"); ImGui::SameLine();
-			ImGui::Text((*format).c_str(), double(actualMoney));
+			if (!config->showFutureUnasigned)
+			{
+				ImGui::Text("Total: "); ImGui::SameLine();
+				ImGui::Text(format->Str(), money);
+			}
+			else
+			{
+				ImGui::Text("Actual Total: "); ImGui::SameLine();
+				ImGui::Text(format->Str(), double(leftMoney));
 
-			ImGui::Text("Future Total: "); ImGui::SameLine();
-			ImGui::Text((*format).c_str(), futureMoney);
+				ImGui::Text("Future Total: "); ImGui::SameLine();
+				ImGui::Text(format->Str(), futureMoney);
+			}
 		}
 		ImGui::PopID();
 	}
 
-	void SetMoney(float actualMoney, float futureMoney)
+	const char* TypeName() const override
 	{
-		this->money = actualMoney + futureMoney;
-		this->actualMoney = actualMoney;
-		this->futureMoney = futureMoney;
+		return "TOTAL ";
+	}
+
+	ContainerType Type() const override
+	{
+		return ContainerType::TOTAL_MONEY;
 	}
 
 private: // Variables
 
 	float futureMoney = 0.0f;
-	float actualMoney = 0.0f;
-	bool* showFutureMoney = nullptr;
+	float leftMoney = 0.0f;
 
 };

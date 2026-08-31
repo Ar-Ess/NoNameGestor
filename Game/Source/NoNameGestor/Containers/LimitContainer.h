@@ -1,115 +1,171 @@
 #pragma once
 
-#include "Container.h"
+#include "Framework/Utils/Maths.h"
+
+#include "NoNameGestor/Containers/Container.h"
 
 class LimitContainer : public Container
 {
 public: // Functions
 
-	LimitContainer(const char* name, bool hidden, bool open, bool unified, std::string* format, float* textFieldSize) : Container(name, hidden, open, unified, format, textFieldSize, ContainerType::LIMIT)
+	LimitContainer(const std::string& name, bool hidden, bool open, bool unified, String* format, Configuration* config) :
+		Container(name, hidden, open, unified, format, config)
 	{
-		NewLabel("New Limit");
+	}
+
+	LimitContainer(const FileManager::FileNode& node, String* format, Configuration* config) :
+		Container(node, format, config)
+	{
+		FileManager::FileNode lNode = node.Access("labels");
+		int size = lNode.Length();
+
+		for (int j = 0; j < size; ++j)
+		{
+			FileManager::FileNode node = lNode.Access(j);
+
+			String name = node.Read<String>("name");
+			float money = node.Read<float>("money");
+			float limit = node.Read<float>("limit");
+			NewLabel(name.Str(), money, limit);
+		}
 	}
 
 	~LimitContainer() override
 	{
-		ClearLabels();
 	}
 
-	void Start(const char* currency) override
+	bool Update(Aggregate& agg) override 
 	{
-	}
+		if (!Container::Update(agg))
+			return false;
 
-	void Update() override 
-	{
-		money = 0;
-		for (Label* l : labels) money += l->money;
+		agg.assigned += money;
+		return true;
 	}
 
 	void Draw() override
 	{
 		if (hidden) ImGui::BeginDisabled();
 
-		size_t size = labels.size();
-
-		for (suint i = 0; i < size; ++i)
-		{
-			ImGui::PushID(id * -1 * i);
-
-			if (i == 0) { if (ImGui::Button("+")) NewLabel("New Limit"); }
-			else ImGui::Dummy({ 33, 0 });
-
-			ImGui::SameLine();
-
-			float width = 100.0f;
-			if (!unified)
+		labels.Iterate(
+			[&](Label& l, int i, int size)
 			{
-				if (size > 1) { if (ImGui::Button("X")) DeleteLabel(i); }
-				else ImGui::Dummy({ 15, 0 });
+				ImGui::PushID(id.Data());
+				{
+					if (i == 0) { if (ImGui::Button("+")) NewLabel("New Limit"); }
+					else ImGui::Dummy({ 33, 0 });
 
-				ImGui::SameLine();
+					ImGui::SameLine();
 
-				ImGui::PushItemWidth(*textFieldSize);
-				ImGui::InputText("##LimitName", &labels[i]->name);
-				ImGui::PopItemWidth(); ImGui::SameLine();
+					float width = 100.0f;
+					if (!unified)
+					{
+						if (size > 1) { if (ImGui::Button("X")) { labels.Erase(i); return false; } }
+						else ImGui::Dummy({ 15, 0 });
+
+						ImGui::SameLine();
+
+						ImGui::PushItemWidth(config->textFieldSize);
+						ImGui::InputText("##LimitName", &l.name);
+						ImGui::PopItemWidth(); ImGui::SameLine();
+					}
+					else width += 50;
+
+					float limit = l.limit.Value();
+
+					ImGui::BeginGroup();
+					{
+						ImVec2 itemSize;
+						ImGui::PushItemWidth(width);
+						{
+							ImGui::DragFloat("##Drag", &l.money, 1.0f, 0.0f, limit, format->Str(), ImGuiSliderFlags_AlwaysClamp);
+							l.money = Maths::Clamp(l.money, 0, limit);
+							itemSize = ImGui::GetItemRectSize();
+							itemSize.y -= 15;
+						}
+						ImGui::PopItemWidth();
+
+						float ratio = Maths::Approximately(limit, 0) ? 1 : l.money / limit;
+						ImGui::ProgressBar(ratio, itemSize, "");
+					}
+					ImGui::EndGroup();
+
+					ImGui::SameLine();
+
+					ImGui::Text("/"); ImGui::SameLine();
+					ImGui::Text(format->Str(), limit); ImGui::SameLine();
+					if (ImGui::Button("Edit"))
+						editLimit = i;
+				}
+				ImGui::PopID();
 			}
-			else width += 50;
-
-			ImGui::BeginGroup();
-			ImGui::PushItemWidth(width);
-			ImGui::DragFloat("##Drag", &labels[i]->money, 1.0f, 0.0f, labels[i]->limit, (*format).c_str(), ImGuiSliderFlags_AlwaysClamp);
-			ImVec2 itemSize = ImGui::GetItemRectSize();
-			itemSize.y -= 15;
-			ImGui::PopItemWidth();
-
-			ImGui::ProgressBar(labels[i]->money / labels[i]->limit, itemSize, "");
-			ImGui::EndGroup();
-
-			ImGui::SameLine();
-
-			ImGui::Text("/"); ImGui::SameLine();
-			ImGui::Text((*format).c_str(), labels[i]->limit); ImGui::SameLine();
-			if (ImGui::Button("Edit"))
-			{
-				editLimit = true;
-				editLimitIndex = i;
-			}
-
-			ImGui::PopID();
-		}
+		);
 
 		if (hidden) ImGui::EndDisabled();
 
-		if (!editLimit)
-		{
-			if (hidden) ImGui::EndDisabled();
+		if (editLimit == -1)
 			return;
-		}
 
-		ImGui::PushID(id);
-		ImGui::OpenPopup("Edit limit");
-		ImGui::SetNextWindowPos(ImVec2((ImGui::GetWindowSize().x / 2) - 70, (ImGui::GetWindowSize().y / 2) - 50));
-		ImGui::SetNextWindowSize(ImVec2(140, 100));
-		if (ImGui::BeginPopupModal("Edit limit", nullptr, ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+		ImGui::PushID(id.Data());
 		{
-			ImGui::DragFloat("##Drag1", &labels[editLimitIndex]->tempLimit, 1.0f, 0.0f, MAX_MONEY, (*format).c_str(), ImGuiSliderFlags_AlwaysClamp);
-			if (ImGui::Button("Done"))
+			ImGui::OpenPopup("Edit Limit");
 			{
-				labels[editLimitIndex]->limit = labels[editLimitIndex]->tempLimit;
-				editLimit = false;
+				ImVec2 size = ImGui::GetWindowSize();
+				ImGui::SetNextWindowSize(ImVec2(140, 100));
+				ImGui::SetNextWindowPos(ImVec2(size.x / 2, size.y / 2), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+
+				if (ImGui::BeginPopupModal("Edit limit", nullptr, ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+				{
+					static float tempLimit = 0;
+					ImGui::DragFloat("##Drag1", &tempLimit, 1.0f, 0.0f, MAX_MONEY, format->Str(), ImGuiSliderFlags_AlwaysClamp);
+
+					if (ImGui::Button("Done"))
+					{
+						labels[editLimit].limit = tempLimit;
+						editLimit = -1;
+						tempLimit = 0;
+					}
+				}
 			}
+			ImGui::EndPopup();
 		}
-		ImGui::EndPopup();
 		ImGui::PopID();
+	}
+
+	void Save(FileManager::FileNode node) const override
+	{
+		Container::Save(node);
+
+		auto lnode = node.Access("labels");
+		labels.Iterate(
+			[&](const Label& l)
+			{
+				lnode.Push("limit", l.limit.Value());
+			}
+		);
 	}
 
 	float GetLabelLimit(int i) const
 	{
-		return labels[i]->limit;
+		return labels[i].limit.Value();
+	}
+
+	void NewLabel(const std::string& name = "New Limit", float money = 0.0f, float limit = 0.0f)
+	{
+		Container::NewLabel(Label(name, money, limit));
+	}
+
+	const char* TypeName() const override
+	{
+		return "LIMIT ";
+	}
+
+	ContainerType Type() const override
+	{
+		return ContainerType::LIMIT;
 	}
 
 private:
 
-	bool editLimit = false;
-	int editLimitIndex = 0;
+	int editLimit = -1;
 };

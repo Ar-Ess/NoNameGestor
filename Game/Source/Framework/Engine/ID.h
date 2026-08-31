@@ -20,6 +20,8 @@ public:
 
 	bool IsEmpty() const;
 
+	uint64_t Data() const;
+
 	bool operator==(const ID& id) const;
 
 	void operator=(const ID& id);

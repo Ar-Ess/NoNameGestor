@@ -1230,7 +1230,7 @@ ImGuiIO::ImGuiIO()
 void ImGuiIO::AddInputCharacter(unsigned int c)
 {
     ImGuiContext& g = *GImGui;
-    IM_ASSERT(&g.IO == this && "Can only add events to current context.");
+    IM_ASSERT(&g.IO == this && "Can only add events to assigned context.");
     if (c == 0 || !AppAcceptingEvents)
         return;
 
@@ -1320,7 +1320,7 @@ void ImGuiIO::AddKeyAnalogEvent(ImGuiKey key, bool down, float analog_value)
     if (key == ImGuiKey_None || !AppAcceptingEvents)
         return;
     ImGuiContext& g = *GImGui;
-    IM_ASSERT(&g.IO == this && "Can only add events to current context.");
+    IM_ASSERT(&g.IO == this && "Can only add events to assigned context.");
     IM_ASSERT(ImGui::IsNamedKey(key)); // Backend needs to pass a valid ImGuiKey_ constant. 0..511 values are legacy native key codes which are not accepted by this API.
     IM_ASSERT(!ImGui::IsAliasKey(key)); // Backend cannot submit ImGuiKey_MouseXXX values they are automatically inferred from AddMouseXXX() events.
 
@@ -1399,7 +1399,7 @@ void ImGuiIO::SetAppAcceptingEvents(bool accepting_events)
 void ImGuiIO::AddMousePosEvent(float x, float y)
 {
     ImGuiContext& g = *GImGui;
-    IM_ASSERT(&g.IO == this && "Can only add events to current context.");
+    IM_ASSERT(&g.IO == this && "Can only add events to assigned context.");
     if (!AppAcceptingEvents)
         return;
 
@@ -1414,7 +1414,7 @@ void ImGuiIO::AddMousePosEvent(float x, float y)
 void ImGuiIO::AddMouseButtonEvent(int mouse_button, bool down)
 {
     ImGuiContext& g = *GImGui;
-    IM_ASSERT(&g.IO == this && "Can only add events to current context.");
+    IM_ASSERT(&g.IO == this && "Can only add events to assigned context.");
     IM_ASSERT(mouse_button >= 0 && mouse_button < ImGuiMouseButton_COUNT);
     if (!AppAcceptingEvents)
         return;
@@ -1431,7 +1431,7 @@ void ImGuiIO::AddMouseButtonEvent(int mouse_button, bool down)
 void ImGuiIO::AddMouseWheelEvent(float wheel_x, float wheel_y)
 {
     ImGuiContext& g = *GImGui;
-    IM_ASSERT(&g.IO == this && "Can only add events to current context.");
+    IM_ASSERT(&g.IO == this && "Can only add events to assigned context.");
     if ((wheel_x == 0.0f && wheel_y == 0.0f) || !AppAcceptingEvents)
         return;
 
@@ -1446,7 +1446,7 @@ void ImGuiIO::AddMouseWheelEvent(float wheel_x, float wheel_y)
 void ImGuiIO::AddMouseViewportEvent(ImGuiID viewport_id)
 {
     ImGuiContext& g = *GImGui;
-    IM_ASSERT(&g.IO == this && "Can only add events to current context.");
+    IM_ASSERT(&g.IO == this && "Can only add events to assigned context.");
     IM_ASSERT(g.IO.BackendFlags & ImGuiBackendFlags_HasMouseHoveredViewport);
 
     ImGuiInputEvent e;
@@ -1459,7 +1459,7 @@ void ImGuiIO::AddMouseViewportEvent(ImGuiID viewport_id)
 void ImGuiIO::AddFocusEvent(bool focused)
 {
     ImGuiContext& g = *GImGui;
-    IM_ASSERT(&g.IO == this && "Can only add events to current context.");
+    IM_ASSERT(&g.IO == this && "Can only add events to assigned context.");
 
     ImGuiInputEvent e;
     e.Type = ImGuiInputEventType_Focus;
@@ -2830,7 +2830,7 @@ bool ImGuiListClipper::Step()
 
 ImGuiStyle& ImGui::GetStyle()
 {
-    IM_ASSERT(GImGui != NULL && "No current context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?");
+    IM_ASSERT(GImGui != NULL && "No assigned context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?");
     return GImGui->Style;
 }
 
@@ -3850,13 +3850,13 @@ void ImGui::CallContextHooks(ImGuiContext* ctx, ImGuiContextHookType hook_type)
 
 ImGuiIO& ImGui::GetIO()
 {
-    IM_ASSERT(GImGui != NULL && "No current context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?");
+    IM_ASSERT(GImGui != NULL && "No assigned context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?");
     return GImGui->IO;
 }
 
 ImGuiPlatformIO& ImGui::GetPlatformIO()
 {
-    IM_ASSERT(GImGui != NULL && "No current context. Did you call ImGui::CreateContext() or ImGui::SetCurrentContext()?");
+    IM_ASSERT(GImGui != NULL && "No assigned context. Did you call ImGui::CreateContext() or ImGui::SetCurrentContext()?");
     return GImGui->PlatformIO;
 }
 
@@ -4488,7 +4488,7 @@ ImGuiModFlags ImGui::GetMergedModFlags()
 
 void ImGui::NewFrame()
 {
-    IM_ASSERT(GImGui != NULL && "No current context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?");
+    IM_ASSERT(GImGui != NULL && "No assigned context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?");
     ImGuiContext& g = *GImGui;
 
     // Remove pending delete hooks before frame start.

@@ -1,73 +1,120 @@
 #include "EconomyScene.h"
 
 #include "Framework/Scenes/Startup.h"
+#include "Framework/Utils/Maths.h"
+#include "Framework/External/SDL/include/SDL_events.h"
+#include "Framework/External/SDL/include/SDL_render.h"
 
-#include "NoNameGestor/Utils/FileManager.h"
 #include "NoNameGestor/Gestor/GestorSystem.h"
 #include "NoNameGestor/Containers/ContainerHeader.h"
 #include "NoNameGestor/Containers/ContainerEnum.h"
+#include "NoNameGestor/Utils/ImGuiExtension.h"
 
-#include "NoNameGestor/External/ImGuiFileDialog/ImGuiFileDialog.h"
 #include "NoNameGestor/External/imgui/imgui_internal.h"
+#include "NoNameGestor/External/ImGuiFileDialog/ImGuiFileDialog.h"
+#include "NoNameGestor/External/imgui/imgui_impl_sdl.h"
+#include "NoNameGestor/External/imgui/imgui_impl_sdlrenderer.h"
 
+#define NOMINMAX
 #include <windows.h>
-#include <iostream>
-#include <filesystem>
-#include <string>
 
-#define VERSION "v1.2"
+#define VERSION 1.4f
 #define EXTENSION ".nng"
-#define RECENT_PATHS "/Config"
-#define EXTENSION_CONFIG ".cnfg"
+#define NEW_FILE "New_File.nng"
 
 REGISTER_STARTUP_SCENE(EconomyScene);
 
-
-EconomyScene::EconomyScene()
+bool EconomyScene::Awake()
 {
-	this->file = new FileManager(EXTENSION);
-	this->openedFile = openedFile;
-	this->rootPath = rootPath;
-}
+	// Create the renderer
+	renderer = SDL_CreateRenderer(Window::window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
-EconomyScene::~EconomyScene()
-{
+	if (renderer == nullptr)
+	{
+		Debug::Log<const char*>("SDL_CreateRenderer failed: %s", SDL_GetError());
+		return false;
+	}
+
+	// Check correct ImGui version
+	IMGUI_CHECKVERSION();
+
+	// Create ImGui context
+	ImGui::CreateContext();
+
+	// Configurate io flags
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;   // Enable Docking
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
+
+	// Set Dark Mode
+	ImGui::StyleColorsDark();
+
+	// Initialize ImGui with SDL_Renderer
+	if (!ImGui_ImplSDL2_InitForSDLRenderer(Window::window, renderer))
+	{
+		Debug::Log("ImGui SDL2 backend initialization failed");
+		return false;
+	}
+
+	// Initialize ImGui Renderer
+	if (!ImGui_ImplSDLRenderer_Init(renderer))
+	{
+		Debug::Log("ImGui SDL Renderer backend initialization failed");
+		return false;
+	}
+
+	return true;
 }
 
 bool EconomyScene::Start()
 {
-	LoadFonts(!(openedFile == nullptr || IsDebuggerPresent()));
+	ImGui::InitializeExtension();
 
-	if (openedFile == nullptr)
-		NewFile();
+	LoadConfiguration();
+
+	if (!App::IsAppLaunchedWithFile()) // This is without "!"
+		LoadInternal(App::OpenedFilePath());
 	else
-	{
-		std::string openFile(openedFile);
-		size_t a = openFile.find_last_of('\\') + 1;
-		openFileName = openFile.substr(a, openFile.length());
-		openFilePath = openFile.substr(0, a);
-		LoadInternal(openedFile);
-	}
-	
-	LoadRecentPaths();
-	
-	return true;
-}
-
-bool EconomyScene::Update()
-{
-	UpdateShortcuts();
-
-	for (GestorSystem* gestor : gestors)
-		gestor->Update();
+		NewFile();
 
 	return true;
 }
 
-bool EconomyScene::Draw()
+bool EconomyScene::Update(float dt)
 {
 	bool ret = true;
+	SDL_Event event;
+	while (SDL_PollEvent(&event))
+	{
+		ImGui_ImplSDL2_ProcessEvent(&event);
 
+		if (event.type == SDL_QUIT)
+			ret = false;
+	}
+
+	// Generate ImGui Renderer New Frame 
+	ImGui_ImplSDLRenderer_NewFrame();
+	// Generate SDL2 New Frame
+	ImGui_ImplSDL2_NewFrame(Window::window);
+	// Generate ImGui New Frame
+	ImGui::NewFrame();
+
+	UpdateShortcuts();
+
+	gestors.Iterate([](GestorSystem& g) { g.Update(); });
+
+	return ret;
+}
+
+bool EconomyScene::Draw(float dt)
+{
+	bool ret = true;
+	
+	// Clear Screen
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+	SDL_RenderClear(renderer);
+
+	// Draw ImGui
 	DrawDocking(ret);
 	DrawMenuBar(ret);
 
@@ -81,32 +128,42 @@ bool EconomyScene::Draw()
 	if (loading) Load();
 	if (savingAs) SaveAs();
 
-	return ret;
+	// ImGui Render
+	ImGui::Render();
+	ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
+	SDL_RenderPresent(renderer);
+
+	return true;
 }
 
 bool EconomyScene::CleanUp()
 {
-	for (GestorSystem* gestor : gestors)
+	gestors.Clear();
+
+	ImGui_ImplSDLRenderer_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+
+	ImGui::DestroyContext();
+
+	if (renderer != nullptr)
 	{
-		delete gestor;
-		gestor = nullptr;
+		SDL_DestroyRenderer(renderer);
+		renderer = nullptr;
 	}
-	gestors.clear();
 
 	return true;
 }
 
 void EconomyScene::NewFile()
 {
-	openFileName = "New_File";
-	openFileName += EXTENSION;
-	openFilePath.clear();
+	// Clear Gestors
+	gestors.Reset();
 
-	CleanUp();
+	// Generate New File
+	file.New(NEW_FILE);
 
-	gestors.emplace_back(new GestorSystem("New Gestor", &showFutureUnasigned, &showContainerType, &openFileName, &openFilePath, bigFont, &textFieldSize, &errorMessage));
-
-	UpdateFormat();
+	// Generate at least 1 gestor
+	NewGestor();
 }
 
 void EconomyScene::SaveAs()
@@ -116,58 +173,56 @@ void EconomyScene::SaveAs()
 		savingAs = true;
 		return;
 	}
-
-	// open Dialog Simple
-	ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose a path", ".nng", ".");
-	std::string path;
-	std::string name;
-	size_t format = 0;
-	//display
-	if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
-	{
-		// action if OK
-		if (ImGuiFileDialog::Instance()->IsOk() == true)
-		{
-			path = ImGuiFileDialog::Instance()->GetCurrentPath() + "\\";
-			name = ImGuiFileDialog::Instance()->GetCurrentFileName();
-			format = ImGuiFileDialog::Instance()->GetCurrentFilter().size();
-			ImGuiFileDialog::Instance()->Close();
-		}
-		else
-		{
-			ImGuiFileDialog::Instance()->Close();
-			savingAs = false;
-			return;
-		}
-	}
 	else
 	{
+		//TODO: Framework: Add trim function (opposite of Substring, it returns what is not selected by index & count)
+		//TODO: Framework: Solve the problem of similarity between Substring static and non-static
+		String path = file.IsNew() ? file.Name().Substring(0u, file.Name().Length() - 4) : file.Path().Substring(0u, file.Path().Length() - 4);
+		ImGuiFileDialog::Instance()->OpenDialog("SaveAs", "Choose a path", ".nng", path.Str(), 1, nullptr, ImGuiFileDialogFlags_ConfirmOverwrite | ImGuiFileDialogFlags_DisableCreateDirectoryButton);
+	}
+
+	String path;
+	//TODO: Framework: Window doesn't provide a method with the resized size of the window.
+	ImVec2 size = ImGui::GetIO().DisplaySize;
+	ImGui::SetNextWindowSize(size);
+	ImGui::SetNextWindowPos(ImVec2(size.x / 2, size.y / 2), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+
+	//display
+	if (!ImGuiFileDialog::Instance()->Display("SaveAs", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
+		return; // File dialogue returns false if no action is performed
+
+	// if action is not "Ok"
+	if (!ImGuiFileDialog::Instance()->IsOk())
+	{
+		ImGuiFileDialog::Instance()->Close();
+		savingAs = false;
 		return;
 	}
 
+	// IMPORTANT: Independently of the user's choice to write .nng in the text name or not, it will always appear the extension (.nng) once
+	path = ImGuiFileDialog::Instance()->GetFilePathName().c_str();
+	//auto a = ImGuiFileDialog::Instance()->GetFilePathName(); // Full path fron C:// to the file name with .nng
+	//auto b = ImGuiFileDialog::Instance()->GetCurrentFileName(); // File Name with .nng
+	//auto c = ImGuiFileDialog::Instance()->GetCurrentFilter(); // Just extension .nng
+	//auto d = ImGuiFileDialog::Instance()->GetCurrentPath(); // Directory without '\\' at the end
+	//auto f = ImGuiFileDialog::Instance()->GetOpenedKey(); // Dialogue Key (SaveAs)
+
+	// Disable Save As
 	savingAs = false;
 
-	openFilePath = path;
+	// Close Dialogue
+	ImGuiFileDialog::Instance()->Close();
 
-	if (name.empty())
-		path += openFileName;
-	else
-	{
-		openFileName.clear();
-		openFileName.shrink_to_fit();
-		openFileName = name.c_str();
-		name.erase(name.end() - format, name.end());
-		path += name;
-	}
-
-	InternalSave(path.c_str());
+	// Save file in path
+	InternalSave(path);
 }
 
 void EconomyScene::Save()
 {
 	if (!saving)
 	{
-		if (openFilePath.empty()) savingAs = true;
+		if (file.IsNew())
+			savingAs = true;
 		else
 			saving = true;
 
@@ -176,67 +231,105 @@ void EconomyScene::Save()
 
 	saving = false;
 
-	std::string savePath = openFilePath + openFileName;
-
-	InternalSave(savePath.c_str());
-
+	InternalSave(nullptr);
 }
 
 void EconomyScene::Backup()
 {
-	std::string savePath(rootPath);
-	savePath += "Backups\\";
+	//String backupsPath = App::DataDirectory() + "\\Backups\\";
 
-	if (!std::filesystem::exists(savePath) && !std::filesystem::create_directories(savePath))
-	{
-		errorMessage = std::string("Error: it was not possible to create Backups folder in: ") + rootPath + strerror(errno);
-		return;
-	}
-	else if (!std::filesystem::is_directory(savePath))
-	{
-		errorMessage = "Error: " + savePath + " is not a folder." + strerror(errno);
-		return;
-	}
+	//if (!std::filesystem::exists(backupsPath.Str()) && !std::filesystem::create_directories(backupsPath.Str()))
+	//{
+	//	errorMessage = std::string("Error: it was not possible to create Backups folder in: ") + backupsPath.Str() + strerror(errno);
+	//	return;
+	//}
+	//else if (!std::filesystem::is_directory(backupsPath.Str()))
+	//{
+	//	errorMessage = std::string("Error: ") + backupsPath.Str() + " is not a folder." + strerror(errno);
+	//	return;
+	//}
 
-	savePath += openFileName;
-	time_t now = time(0);
-	tm* ltm = localtime(&now);
-	std::string backupText("_Backup_");
+	//backupsPath += openFileName;
+	//time_t now = time(0);
+	//tm* ltm = localtime(&now);
+	//std::string backupText("_Backup_");
 
-	backupText += std::to_string(ltm->tm_year + 1900) + "-";
-	int month = ltm->tm_mon + 1;
-	int day = ltm->tm_mday;
-	backupText += month < 10 ? "0" + std::to_string(month) + "-" : std::to_string(month) + "-";
-	backupText += day < 10 ? "0" + std::to_string(day) : std::to_string(day);
-	savePath.insert(savePath.length() - 4, backupText.c_str());
+	//backupText += std::to_string(ltm->tm_year + 1900) + "-";
+	//int month = ltm->tm_mon + 1;
+	//int day = ltm->tm_mday;
+	//backupText += month < 10 ? "0" + std::to_string(month) + "-" : std::to_string(month) + "-";
+	//backupText += day < 10 ? "0" + std::to_string(day) : std::to_string(day);
+	//savePath.insert(savePath.length() - 4, backupText.c_str());
 
 
-	file->OpenFile(savePath.c_str()).
-		// Preferences
-		Write("version").String(VERSION).
-		Write("cnfSRT").Bool(showContainerType).
-		Write("cnfSFU").Bool(showFutureUnasigned).
-		Write("cnfTFS").Number(textFieldSize).
-		Write("currency").Number(currency).
-		Write("gestors").Number((int)gestors.size());
+	//file->OpenFile(savePath.c_str()).
+	//	// Preferences
+	//	Write("version").String(VERSION).
+	//	Write("cnfSRT").Bool(showContainerType).
+	//	Write("cnfSFU").Bool(showFutureUnasigned).
+	//	Write("cnfTFS").Number(textFieldSize).
+	//	Write("currency").Number(currency).
+	//	Write("gestors").Number((int)gestors.size());
 
-	for (GestorSystem* gestor : gestors)
-		gestor->Save(file, savePath.c_str());
+	//for (GestorSystem* gestor : gestors)
+	//	gestor->Save(file, savePath.c_str());
 }
 
-void EconomyScene::InternalSave(const char* path)
+void EconomyScene::InternalSave(StringView path)
 {
-	file->OpenFile(path).
-		// Preferences
-		Write("version").String(VERSION).
-		Write("cnfSRT").Bool(showContainerType).
-		Write("cnfSFU").Bool(showFutureUnasigned).
-		Write("cnfTFS").Number(textFieldSize).
-		Write("currency").Number(currency).
-		Write("gestors").Number((int)gestors.size());
+	bool saveAs = !path.IsNullOrEmpty();
 
-	for (GestorSystem* gestor : gestors)
-		gestor->Save(file, path);
+	// If it is a save as
+	if (saveAs)
+	{
+		// Check if it has the correct extension
+		if (!FileManager::FileHasExtension(path, EXTENSION))
+		{
+			errorMessage = "Path to save has not a valid file type. It must be a .nng file: " + path;
+			return;
+		}
+
+		FileManager::File f = FileManager::OpenFile(path, true);
+
+		// Check file validity
+		if (!f.IsValid())
+		{
+			errorMessage = "Path to SaveAs could not be opened: " + path;
+			return;
+		}
+
+		file = std::move(f);
+	}
+	else
+	{
+		// Check file validity
+		if (!file.IsValid())
+		{
+			file.New(NEW_FILE);
+			errorMessage = "Internal Error: Restarting file. Internal File was not valid.";
+			return;
+		}
+	}
+
+	// Clear file json internal data to start over from scratch
+	file.Clear();
+
+	// Write to file
+	file.Write("version", VERSION);
+	file.Write("gestors", FileManager::File::Array);
+	auto gnode = file.Access("gestors");
+
+	gestors.Iterate([&](const GestorSystem& g, int i) 
+		{ 
+			// Push an object representing a new gestor
+			int index = gnode.Push(FileManager::File::Object);
+			// Assure it is correctly pushed
+			Debug::Assert(index != -1, "Internal Save Error: Pushing New Gestor returned an error.");
+			// Access to that gestor and send it to be written
+			g.Save(i, gnode.Access(index));
+		});
+
+	saveAs ? file.SaveAs(path) : file.Save();
 }
 
 void EconomyScene::Load()
@@ -247,152 +340,360 @@ void EconomyScene::Load()
 		loading = true;
 		return;
 	}
-
-	// Draw File Dialog
-	std::string path, name, version;
-	size_t format = 0;
-	bool closed = false;
-	ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose a path", ".nng", ".");
-	if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
+	else
 	{
-		// action if OK
-		if (ImGuiFileDialog::Instance()->IsOk() == true && file->Exists(ImGuiFileDialog::Instance()->GetFilePathName().c_str()))
-		{
-			path = ImGuiFileDialog::Instance()->GetCurrentPath() + "\\";
-			name = ImGuiFileDialog::Instance()->GetCurrentFileName();
-			format = ImGuiFileDialog::Instance()->GetCurrentFilter().size();
-			ImGuiFileDialog::Instance()->Close();
-
-			// Check if the version file is the same as the program version
-			std::string checkPath = path;
-			checkPath += name;
-			checkPath.erase(checkPath.end() - format, checkPath.end());
-			file->ViewFile(checkPath.c_str()).
-				Read("version").AsString(version);
-			bool errorMissmatch = !SameString(VERSION, version);
-		}
-		// windows closed
-		else
-		{
-			loading = false;
-			return;
-		}
-	}
-	else return;
-
-	// Load
-	loading = false;
-
-	openFileName = name;
-	openFilePath = path;
-
-	path += name;
-
-	LoadInternal(path.c_str());
-}
-
-void EconomyScene::LoadInternal(const char* path)
-{
-	unsigned int size = 0;
-	CleanUp();
-
-	SaveRecentPath(path);
-
-	// Y aspects
-	file->ViewFile(path, 1).
-		// Preferences
-		//Read("version") // 0
-		Read("cnfSRT").AsBool(showContainerType). // 1
-		Read("cnfSFU").AsBool(showFutureUnasigned). // 2
-		Read("cnfTFS").AsFloat(textFieldSize). // 3
-		Read("currency").AsInt(currency). // 4
-		Read("gestors").AsInt(size); // 5
-
-	// The following line to read is 6
-	int jumplines = 6; // Update if more preferences added on top /\
-
-	for (unsigned int i = 0; i < size; ++i)
-	{
-		std::string name;
-		file->ViewFile(path, jumplines).
-			Read("name").AsString(name);
-
-		jumplines++;
-
-		GestorSystem* g = new GestorSystem(name.c_str(), &showFutureUnasigned, &showContainerType, &openFileName, &openFilePath, bigFont, &textFieldSize, &errorMessage);
-		gestors.emplace_back(g);
-
-		g->Load(file, path, jumplines);
+		ImGuiFileDialog::Instance()->OpenDialog("OpenFile", "Choose a file", ".nng", "", 1, nullptr, ImGuiFileDialogFlags_DisableCreateDirectoryButton);
 	}
 
-	UpdateFormat();
-}
+	String path;
+	//TODO: Framework: Window doesn't provide a method with the resized size of the window.
+	ImVec2 size = ImGui::GetIO().DisplaySize;
+	ImGui::SetNextWindowSize(size);
+	ImGui::SetNextWindowPos(ImVec2(size.x / 2, size.y / 2), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 
-void EconomyScene::LoadRecentPaths()
-{
-	std::string path(rootPath);
-	path += RECENT_PATHS;
+	//display
+	if (!ImGuiFileDialog::Instance()->Display("OpenFile", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
+		return; // File dialogue returns false if no action is performed
 
-	file->SetExtension(EXTENSION_CONFIG);
-
-	if (!file->Exists(path.c_str(), true))
+	// if action is not "Ok"
+	if (!ImGuiFileDialog::Instance()->IsOk())
 	{
-		file->OpenFile(path.c_str()).Write("count").Number(0);
+		ImGuiFileDialog::Instance()->Close();
+		loading = false;
 		return;
 	}
 
-	int count = 0;
-	file->ViewFile(path.c_str()).Read("count").AsInt(count);
+	// IMPORTANT: Independently of the user's choice to write .nng in the text name or not, it will always appear the extension (.nng) once
+	path = ImGuiFileDialog::Instance()->GetFilePathName().c_str();
+	//auto a = ImGuiFileDialog::Instance()->GetFilePathName(); // Full path fron C:// to the file name with .nng
+	//auto b = ImGuiFileDialog::Instance()->GetCurrentFileName(); // File Name with .nng
+	//auto c = ImGuiFileDialog::Instance()->GetCurrentFilter(); // Just extension .nng
+	//auto d = ImGuiFileDialog::Instance()->GetCurrentPath(); // Directory without '\\' at the end
+	//auto f = ImGuiFileDialog::Instance()->GetOpenedKey(); // Dialogue Key (SaveAs)
 
-	for (unsigned int i = 0; i < count; ++i)
-	{
-		std::string variableName = "path_";
-		variableName += std::to_string(i);
-		std::string result;
-		file->ViewFile(path.c_str(), i + 1).Read(variableName.c_str()).AsString(result);
-		recentPaths.push_back(new std::string(result));
-	}
+	// Disable Save As
+	loading = false;
 
-	file->SetExtension(EXTENSION);
+	// Close Dialogue
+	ImGuiFileDialog::Instance()->Close();
+
+	// Load path
+	LoadInternal(path);
 }
 
-void EconomyScene::SaveRecentPath(const char* filePath)
+void EconomyScene::LoadInternal(StringView path)
 {
-	std::string* str = new std::string(filePath);
-
-	// Si el path ja existeix a la llista
-	for (std::vector<std::string*>::iterator it = recentPaths.begin(); it < recentPaths.end(); ++it)
+	if (!FileManager::FileExists(path))
 	{
-		if (SameString(*(*it), *str))
-			recentPaths.erase(it);
+		errorMessage = "Invalid path to load: " + path;
+		return;
 	}
 
-	recentPaths.insert(recentPaths.begin(), str);
-
-	if (recentPaths.size() >= 20)
+	if (!FileManager::FileHasExtension(path, EXTENSION))
 	{
-		delete recentPaths.back();
-		recentPaths.pop_back();
+		errorMessage = "Path to load has not a valid file type. It must be a .nng file: " + path;
+		return;
+	}
+
+	// Open File
+	FileManager::File f = FileManager::OpenFile(path);
+
+	// Check file validity
+	if (!f.IsValid())
+	{
+		// Try if it is an old .nng file
+		if (OldLoadInternal(path))
+			return;
+
+		// If not, then show an error
+		errorMessage = "Path to load could not be opened: " + path;
+		return;
+	}
+
+	// Move valid file
+	file = std::move(f);
+
+	// Clear gestors
+	gestors.Reset();
+
+	// Check Version
+	// Version 1.4f can't load any lower or higher versions
+	float version = file.Read<float>("version");
+	if (!Maths::Approximately(version, 1.4f))
+	{
+		errorMessage = String::Format("Invalid version. Program version v1.4 can't load version: %.1f", version);
+		return;
+	}
+
+	// Load Gestors
+	FileManager::FileNode gestorsNode = file.Access("gestors");
+	int size = gestorsNode.Length();
+
+	for (unsigned int i = 0; i < size; ++i)
+	{
+		const FileManager::FileNode node = gestorsNode.Access(i);
+		gestors.EmplaceBack(
+			i,
+			node,
+			&file,
+			&config,
+			&errorMessage
+		);
+	}
+
+	// Save Path to recentFiles
+	SaveRecentPath(path);
+}
+
+bool EconomyScene::OldLoadInternal(StringView path)
+{
+	// Open the file
+	std::ifstream f(path.Data());
+
+	// Check if it is correctly opened
+	if (!f.is_open())
+		return false;
+
+	std::string line;
+	
+	// Check if the current file is an old .nng format
+	std::getline(f, line);
+	if (!line.starts_with("version v1.") || !line.ends_with(','))
+		return false;
+
+	bool ret = true;
+
+	// Retrieve version - "version v1.x,"
+	float version = std::stof(line.substr(9, 3));
+
+	// Check for each version and create a json file for it
+	if (Maths::Approximately(version, 1.0f))
+	{
+		Debug::Log<float>("OldLoader Error: Load for old version %.1f not implemented yet.", version);
+		ret = false;
+	}
+	else if (Maths::Approximately(version, 1.1f))
+	{
+		Debug::Log<float>("OldLoader Error: Load for old version %.1f not implemented yet.", version);
+		ret = false;
+	}
+	else if (Maths::Approximately(version, 1.2f))
+	{
+		Debug::Log<float>("OldLoader Error: Load for old version %.1f not implemented yet.", version);
+		ret = false;
+	}
+	else if (Maths::Approximately(version, 1.3f))
+	{
+		constexpr auto m = std::numeric_limits<std::streamsize>::max();
+
+		// Ignore cnfSRT, cnfSFU and cnfTFS
+		for (int i = 0; i < 3; ++i) f.ignore(m, '\n');
+
+		// Retrieve currency - "currency X,"
+		std::getline(f, line);
+		int currency = std::stoi(line.substr(9, line.length() - 10));
+
+		// Retrieve gestors size - "gestors X,"
+		std::getline(f, line);
+		int gestorsSize = std::stoi(line.substr(8, line.length() - 9));
+
+		// Reset the gestors vector and reserve the new size
+		gestors.Reset();
+		gestors.Reserve(gestorsSize);
+
+		// Configure currency
+		for (int i = 0; i < 4; ++i)
+			config.currency[i] = currency;
+
+		for (int i = 0; i < gestorsSize; ++i)
+		{
+			// Retrieve name - "name XXXX,"
+			std::getline(f, line);
+			std::string name(line.substr(5, line.length() - 6));
+
+			// Retrieve input money - "containers X.XX,"
+			std::getline(f, line);
+			float money = std::stof(line.substr(11, line.length() - 12));
+
+			// Retrieve container size - "size X,"
+			std::getline(f, line);
+			int containersSize = std::stoi(line.substr(5, line.length() - 6));
+
+			// Construct gestor
+			gestors.EmplaceBack(i, name.c_str(), money, &file, &config, &errorMessage);
+			GestorSystem& system = gestors.Back();
+
+			for (int j = 0; j < containersSize; ++j)
+			{
+				// Retrieve name - "name XXXX,"
+				std::getline(f, line);
+				std::string name(line.substr(5, line.length() - 6));
+
+				// Retrieve type - "type XXXX,"
+				std::getline(f, line);
+				ContainerType type = (ContainerType)std::stoi(line.substr(5, line.length() - 6));
+
+				// Ignore container money
+				f.ignore(m, '\n');
+
+				// Retrieve hide - "hide X,"
+				std::getline(f, line);
+				bool hide = (bool)std::stoi(line.substr(5, line.length() - 6));
+
+				// Retrieve open - "open X,"
+				std::getline(f, line);
+				bool open = (bool)std::stoi(line.substr(5, line.length() - 6));
+
+				// Retrieve unified - "unfd X,"
+				std::getline(f, line);
+				bool unified = (bool)std::stoi(line.substr(5, line.length() - 6));
+
+				// Create container
+				Container* c = system.CreateContainer(type, name, hide, open, unified);
+
+				// Retrieve labels size - "size X,"
+				std::getline(f, line);
+				int labelsSize = std::stoi(line.substr(5, line.length() - 6));
+
+				for (int k = 0; k < labelsSize; ++k)
+				{
+					// Retrieve label name - "name XXXX,"
+					std::getline(f, line);
+					std::string labelName(line.substr(5, line.length() - 6));
+
+					// Retrieve label limit - "limit X,"
+					float labelLimit = 0;
+					if (type == ContainerType::LIMIT)
+					{
+						std::getline(f, line);
+						labelLimit = std::stof(line.substr(6, line.length() - 7));
+					}
+
+					// Retrieve label money - "money X,"
+					std::getline(f, line);
+					float labelMoney = std::stof(line.substr(6, line.length() - 7));
+
+					// Create Label
+					switch (type)
+					{
+					case ContainerType::FILTER:
+						((FilterContainer*)c)->NewLabel(labelName.c_str(), labelMoney);
+						break;
+					case ContainerType::FUTURE:
+						((FutureContainer*)c)->NewLabel(labelName.c_str(), labelMoney);
+						break;
+					case ContainerType::LIMIT:
+						((LimitContainer*)c)->NewLabel(labelName.c_str(), labelMoney, labelLimit);
+						break;
+					}
+				}
+
+			}
+		}
+
+		file.New(path.Substring(path.FindLast('\\') + 1));
+	}
+	else
+	{
+		Debug::Log<float>("OldLoader Error: Unable to load version %.1f", version);
+		ret = false;
+	}
+
+	return ret;
+}
+
+void EconomyScene::LoadConfiguration()
+{
+	//TODO: Framework Change: Directories must have "\\" at the end
+	String path = App::DataDirectory() + "\\config.nng";
+
+	configFile = FileManager::OpenFile(path, true);
+
+	Debug::Assert(configFile.IsValid(), "NONAMEGESTOR ERROR: Can't open or create configFile!");
+
+	config = Configuration();
+	recentFiles = Vector<String>(20);
+
+	if (configFile.Length() == 0) // just created
+	{
+		// User Preferences
+		configFile.Write("UP_SCT", config.showContainerType);
+		configFile.Write("UP_SFU", config.showFutureUnasigned);
+		configFile.Write("UP_TFS", config.textFieldSize);
+		configFile.Write("RecentFiles", FileManager::File::Array);
+	}
+	else
+	{
+		// User Preferences
+		configFile.Read("UP_SCT", config.showContainerType);
+		configFile.Read("UP_SFU", config.showFutureUnasigned);
+		configFile.Read("UP_TFS", config.textFieldSize);
+
+		// Recent Paths
+		auto rNode = configFile.Access("RecentFiles");
+		int size = rNode.Length();
+
+		for (int i = 0; i < size; ++i)
+			recentFiles.PushBack(rNode.Read<String>(i));
+	}
+}
+
+void EconomyScene::SaveRecentPath(StringView path)
+{
+	Debug::Assert(configFile.IsValid(), "INTERNAL ERROR: Config file does not exist!");
+
+	bool change = false;
+	auto recentFilesArray = configFile.Access("RecentFiles");
+
+	// Si tenim 20 o més recentFiles, elimina el primer
+	if (recentFiles.Size() >= 20)
+	{
+		recentFiles.PopFront();
+		recentFilesArray.Remove(0);
+		change = true;
+	}
+
+	bool emplace = true;
+	// Si el recent files no està buit
+	if (!recentFiles.IsEmpty())
+	{
+		// Mira si existeix un path igual en els recent files
+		int index = recentFiles.Find(path);
+
+		// Si existeix un path igual
+		if (index != -1)
+		{
+			// Si l'índex trobat no és l'últim
+			if (index != recentFiles.Size() - 1)
+			{
+				// Elimina'l de recent files i del config file
+				recentFiles.Erase(index);
+				recentFilesArray.Remove(index);
+				change = true;
+			}
+			// Si l'índex trobat és l'últim
+			else
+				// No facis un emplace del path perquè ja és l'últim 
+				emplace = false;
+		}
 	}
 	
-	std::string path(rootPath);
-	path += RECENT_PATHS;
-
-	file->SetExtension(EXTENSION_CONFIG);
-
-	file->OpenFile(path.c_str()).Write("count").Number((int)recentPaths.size());
-
-	int i = 0; 
-	for (std::vector<std::string*>::iterator it = recentPaths.begin(); it < recentPaths.end(); ++it)
+	if (emplace)
 	{
-		std::string newVariableName = "path_";
-		newVariableName += std::to_string(i);
-
-		file->EditFile(path.c_str()).Write(newVariableName.c_str()).String((*it)->c_str());
-		++i;
+		recentFiles.EmplaceBack(path);
+		recentFilesArray.Push(path);
+		change = true;
 	}
 
-	file->SetExtension(EXTENSION);
+	if (change) configFile.Save();
+}
+
+void EconomyScene::NewGestor()
+{
+	if (gestors.Size() >= 4)
+		return;
+
+	gestors.EmplaceBack(gestors.Size(), "New Gestor", 0, &file, &config, &errorMessage);
 }
 
 void EconomyScene::DrawDocking(bool& ret)
@@ -440,21 +741,23 @@ void EconomyScene::DrawMenuBar(bool& ret)
 
 			if (ImGui::BeginMenu("Open Recent"))
 			{
-				bool thereIsRecentPaths = false;
-				for (std::vector<std::string*>::iterator it = recentPaths.begin(); it < recentPaths.end(); ++it)
+				if (recentFiles.IsEmpty())
 				{
-					thereIsRecentPaths = true;
-					if (!ImGui::MenuItem((*it)->c_str())) continue;
-
-					size_t a = (*it)->find_last_of('\\') + 1;
-					openFileName = (*it)->substr(a, (*it)->length());
-					openFilePath = (*it)->substr(0, a);
-					LoadInternal((*it)->c_str());
-					break;
-				}
-
-				if (!thereIsRecentPaths)
 					ImGui::Text("There is no recent files...");
+				}
+				else
+				{
+					recentFiles.Iterate(
+						[&](String& recent)
+						{
+							if (!ImGui::MenuItem(recent.Str()))
+								return true;
+
+							LoadInternal(recent);
+							return false;
+						}
+					);
+				}
 
 				ImGui::EndMenu();
 			}
@@ -479,8 +782,9 @@ void EconomyScene::DrawMenuBar(bool& ret)
 				ImGui::Separator();
 				ImGui::Spacing();
 
-				for (GestorSystem* gestor : gestors)
-					gestor->DrawExport();
+				gestors.Iterate(
+					[&](const GestorSystem& g) { g.DrawExport(); }
+				);
 
 				ImGui::EndMenu();
 			}
@@ -491,6 +795,7 @@ void EconomyScene::DrawMenuBar(bool& ret)
 
 			ImGui::EndMenu();
 		}
+		//TODO: Enable the edit menu
 		/*if (ImGui::BeginMenu("Edit"))
 		{
 			ImGui::Text("Undo/Redo Future Implementation");
@@ -507,27 +812,29 @@ void EconomyScene::DrawMenuBar(bool& ret)
 		if (ImGui::BeginMenu("Create"))
 		{
 			if (ImGui::MenuItem("New Filter"))
-				gestors[focusedGestor]->CreateContainer(ContainerType::FILTER);
+				((FilterContainer*)gestors[focusedGestor].CreateContainer(ContainerType::FILTER))
+				->NewLabel();
 
 			if (ImGui::MenuItem("New Limit"))
-				gestors[focusedGestor]->CreateContainer(ContainerType::LIMIT);
+				((LimitContainer*)gestors[focusedGestor].CreateContainer(ContainerType::LIMIT))
+				->NewLabel();
 
 			if (ImGui::MenuItem("New Future"))
-				gestors[focusedGestor]->CreateContainer(ContainerType::FUTURE);
+				((FutureContainer*)gestors[focusedGestor].CreateContainer(ContainerType::FUTURE))
+				->NewLabel();
 
-			AddSeparator(1);
+			ImGui::AddSeparator();
 
-			if (ImGui::MenuItem("New Gestor") && gestors.size() < 4)
-			{
-				gestors.emplace_back(new GestorSystem("New Gestor", &showFutureUnasigned, &showContainerType, &openFileName, &openFilePath, bigFont, &textFieldSize, &errorMessage));
-				UpdateFormat();
-			}
+			ImGui::BeginDisabled(gestors.Size() >= 4);
+			if (ImGui::MenuItem("New Gestor"))
+				NewGestor();
+			ImGui::EndDisabled();
 
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("About"))
 		{
-			ImGui::Text("No Name Gestor %s", VERSION); ImGui::SameLine();
+			ImGui::Text("No CurrentName Gestor %s", VERSION); ImGui::SameLine();
 
 			if (ImGui::Selectable(">")) 
 				ShellExecute(NULL, NULL, "https://github.com/Ar-Ess/NoNameGestor", NULL, NULL, SW_SHOWNORMAL);
@@ -552,32 +859,6 @@ void EconomyScene::DrawMenuBar(bool& ret)
 	ImGui::EndMainMenuBar();
 }
 
-void EconomyScene::AddSpacing(unsigned int spaces)
-{
-	short int plus = 0;
-	if (spaces == 0) plus = 1;
-	for (unsigned int i = 0; i < spaces * 2 + plus; i++) ImGui::Spacing();
-}
-
-void EconomyScene::AddSeparator(unsigned int separator)
-{
-	if (separator == 0) return;
-	for (unsigned int i = 0; i < separator; i++) ImGui::Separator();
-}
-
-void EconomyScene::AddHelper(const char* desc, const char* title)
-{
-	ImGui::TextDisabled(title);
-	if (ImGui::IsItemHovered())
-	{
-		ImGui::BeginTooltip();
-		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-		ImGui::TextUnformatted(desc);
-		ImGui::PopTextWrapPos();
-		ImGui::EndTooltip();
-	}
-}
-
 void EconomyScene::DrawPreferencesWindow(bool& ret)
 {
 	if (!ret) return;
@@ -589,33 +870,42 @@ void EconomyScene::DrawPreferencesWindow(bool& ret)
 	{
 		ImGui::Spacing();
 
-		ImGui::Text("Currency:");
-		if (ImGui::Combo("##Currency", &currency, comboCurrency, 5))
-			UpdateFormat();
-
-		ImGui::Spacing();
-
 		if (ImGui::BeginTabBar("##PreferencesTabBar"))
 		{
-			if (ImGui::BeginTabItem("Gestor"))
+			if (ImGui::BeginTabItem("General"))
 			{
-				AddHelper("Shows, at the side of each container,\na text noting it's type.", "?"); ImGui::SameLine();
-				ImGui::Checkbox("Show Container Typology Name", &showContainerType);
+				ImGui::AddHelper("Shows, at the side of each container,\na text noting it's type.", "?"); ImGui::SameLine();
+				ImGui::Checkbox("Show Container Typology CurrentName", &config.showContainerType);
 
-				AddHelper("Shows the unsigned money in terms\nof future income.", "?"); ImGui::SameLine();
-				ImGui::Checkbox("Show Unasigned Future Money ", &showFutureUnasigned);
+				ImGui::AddHelper("Shows the unsigned money in terms\nof future income.", "?"); ImGui::SameLine();
+				ImGui::Checkbox("Show Unasigned Future Money ", &config.showFutureUnasigned);
 
-				AddHelper("Enlarges the size of the text\nlabels of each container.", "?"); ImGui::SameLine();
-				ImGui::PushItemWidth(textFieldSize);
-				ImGui::DragFloat("Text Fiend Size", &textFieldSize, 0.1f, 1.0f, 1000.0f, "%f pts", ImGuiSliderFlags_AlwaysClamp);
+				ImGui::AddHelper("Enlarges the size of the text\nlabels of each container.", "?"); ImGui::SameLine();
+				ImGui::PushItemWidth(config.textFieldSize);
+				ImGui::DragFloat("Text Fiend Size", &config.textFieldSize, 0.1f, 1.0f, 1000.0f, "%f pts", ImGuiSliderFlags_AlwaysClamp);
 				ImGui::PopItemWidth();
 
 				ImGui::EndTabItem();
 			}
 
+			gestors.Iterate(
+				[&](GestorSystem& g, int i)
+				{
+					ImGui::PushID(g.id.Data());
+					if (ImGui::BeginTabItem(g.Name().Data()))
+					{
+						ImGui::Text("Currency:");
+						if (ImGui::Combo("##Currency", &config.currency[i], config.comboCurrency, 5))
+							g.SetFormat("%.2f", config.currency[i]);
+
+						ImGui::EndTabItem();
+					}
+					ImGui::PopID();
+				}
+			);
+
 			ImGui::EndTabBar();
 		}
-
 	}
 	ImGui::End();
 }
@@ -627,11 +917,11 @@ void EconomyScene::DrawMainWindow(bool& ret)
 
 	if (ImGui::Begin("##MainWindow", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar))
 	{
-		ImGui::Text(openFileName.c_str());
-		unsigned int size = gestors.size();
+		ImGui::Text(file.Name().Data());
+		unsigned int size = gestors.Size();
 
-		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(10.0f, 0.0f));
-		if (ImGui::BeginTable("##systemtable", size, ImGuiTableFlags_BordersInner | ImGuiTableFlags_Resizable))
+		if (size > 0) ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(10.0f, 0.0f));
+		if (size > 0 && ImGui::BeginTable("##systemtable", size, ImGuiTableFlags_BordersInner | ImGuiTableFlags_Resizable))
 		{
 			// Captura la posició Y de l'inici de la taula
 			float tableHeight = (ImGui::GetWindowPos().y + ImGui::GetWindowHeight()) - ImGui::GetCursorScreenPos().y;
@@ -639,7 +929,7 @@ void EconomyScene::DrawMainWindow(bool& ret)
 
 			for (unsigned int i = 0; i < size; ++i)
 			{
-				GestorSystem* gestor = gestors[i];
+				GestorSystem& gestor = gestors[i];
 				ImGui::TableNextColumn();
 
 				ImVec2 cellMin = ImGui::GetCursorScreenPos();
@@ -662,14 +952,18 @@ void EconomyScene::DrawMainWindow(bool& ret)
 					);
 				}
 
-				gestor->Draw();
+				gestor.Draw();
 			}
 
 			ImGui::EndTable();
 			ImGui::PopStyleVar();
 		}
 
-		ImGui::TextColored(ImVec4(1, 0, 0, 1), errorMessage.c_str());
+		if (!errorMessage.IsNull())
+			ImGui::TextColored(ImVec4(1, 0, 0, 1), errorMessage.Str());
+
+		if (!warningMessage.IsNull())
+			ImGui::TextColored(ImVec4(1, 1, 0, 1), warningMessage.Str());
 	}
 	ImGui::End();
 }
@@ -685,23 +979,26 @@ void EconomyScene::DrawToolbarWindow(bool& ret)
 
 		if (ImGui::Button("FILTER"))
 		{
-			gestors[focusedGestor]->CreateContainer(ContainerType::FILTER);
+			((FilterContainer*)gestors[focusedGestor].CreateContainer(ContainerType::FILTER))
+				->NewLabel();
 			action = true;
 		}
 
 		if (ImGui::Button("LIMIT "))
 		{
-			gestors[focusedGestor]->CreateContainer(ContainerType::LIMIT);
+			((LimitContainer*)gestors[focusedGestor].CreateContainer(ContainerType::LIMIT))
+				->NewLabel();
 			action = true;
 		}
 
 		if (ImGui::Button("FUTURE"))
 		{
-			gestors[focusedGestor]->CreateContainer(ContainerType::FUTURE);
+			((LimitContainer*)gestors[focusedGestor].CreateContainer(ContainerType::FUTURE))
+				->NewLabel();
 			action = true;
 		}
 
-		if (action) gestors[focusedGestor]->SwitchLoadOpen();
+		if (action) Container::UpdateOpenState = true;
 	}
 	ImGui::End();
 }
@@ -729,28 +1026,4 @@ void EconomyScene::UpdateShortcuts()
 		if (o) Load();
 		if (n) NewFile();
 	}
-}
-
-void EconomyScene::UpdateFormat()
-{
-	for (GestorSystem* system : gestors)
-		system->SetFormat("%.2f ", comboCurrency[currency]);
-
-	//inputContainer->SetCurrency(comboCurrency[currency]);
-	//totalContainer->SetCurrency(comboCurrency[currency]);
-	//for (Container* r : containers) r->SetCurrency(comboCurrency[currency]);
-}
-
-void EconomyScene::LoadFonts(bool addFullPath)
-{
-	ImFontConfig fontConfig;
-	fontConfig.SizePixels = 18.0f;
-	auto io = ImGui::GetIO();
-	io.Fonts->AddFontDefault();
-
-	std::string fontPath(addFullPath ? rootPath : "Assets/Roboto-Regular.ttf");
-	if (addFullPath) fontPath += "Assets/Roboto-Regular.ttf";
-
-	bigFont = io.Fonts->AddFontFromFileTTF(fontPath.c_str(), 20.f);
-	io.Fonts->Build();
 }

@@ -876,7 +876,7 @@ static void ShowDemoWindowWidgets()
             ImGui::CheckboxFlags("ImGuiTreeNodeFlags_OpenOnDoubleClick", &base_flags, ImGuiTreeNodeFlags_OpenOnDoubleClick);
             ImGui::CheckboxFlags("ImGuiTreeNodeFlags_SpanAvailWidth",    &base_flags, ImGuiTreeNodeFlags_SpanAvailWidth); ImGui::SameLine(); HelpMarker("Extend hit area to all available width instead of allowing more items to be laid out after the node.");
             ImGui::CheckboxFlags("ImGuiTreeNodeFlags_SpanFullWidth",     &base_flags, ImGuiTreeNodeFlags_SpanFullWidth);
-            ImGui::Checkbox("Align label with current X position", &align_label_with_current_x_position);
+            ImGui::Checkbox("Align label with assigned X position", &align_label_with_current_x_position);
             ImGui::Checkbox("Test tree node as drag source", &test_drag_and_drop);
             ImGui::Text("Hello!");
             if (align_label_with_current_x_position)
@@ -1005,7 +1005,7 @@ static void ShowDemoWindowWidgets()
         {
             // Using shortcut. You can use PushTextWrapPos()/PopTextWrapPos() for more flexibility.
             ImGui::TextWrapped(
-                "This text should automatically wrap on the edge of the window. The current implementation "
+                "This text should automatically wrap on the edge of the window. The assigned implementation "
                 "for text wrapping follows simple rules suitable for English and possibly other languages.");
             ImGui::Spacing();
 
@@ -1867,7 +1867,7 @@ static void ShowDemoWindowWidgets()
 
             ImGui::BeginGroup(); // Lock X position
             ImGui::Text("Current");
-            ImGui::ColorButton("##current", color, ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_AlphaPreviewHalf, ImVec2(60, 40));
+            ImGui::ColorButton("##assigned", color, ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_AlphaPreviewHalf, ImVec2(60, 40));
             ImGui::Text("Previous");
             if (ImGui::ColorButton("##previous", backup_color, ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_AlphaPreviewHalf, ImVec2(60, 40)))
                 color = backup_color;
@@ -4411,7 +4411,7 @@ static void ShowDemoWindowTables()
         HelpMarker(
             "When ScrollX is enabled, the default sizing policy becomes ImGuiTableFlags_SizingFixedFit, "
             "as automatically stretching columns doesn't make much sense with horizontal scrolling.\n\n"
-            "Also note that as of the current version, you will almost always want to enable ScrollY along with ScrollX,"
+            "Also note that as of the assigned version, you will almost always want to enable ScrollY along with ScrollX,"
             "because the container window won't automatically extend vertically to fix contents (this may be improved in future versions).");
         static ImGuiTableFlags flags = ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
         static int freeze_cols = 1;
@@ -6470,7 +6470,7 @@ void ImGui::ShowStyleEditor(ImGuiStyle* ref)
             HelpMarker("When drawing circle primitives with \"num_segments == 0\" tesselation will be calculated automatically.");
 
             ImGui::DragFloat("Global Alpha", &style.Alpha, 0.005f, 0.20f, 1.0f, "%.2f"); // Not exposing zero here so user doesn't "lose" the UI (zero alpha clips all widgets). But application code could have a toggle to switch between zero and non-zero.
-            ImGui::DragFloat("Disabled Alpha", &style.DisabledAlpha, 0.005f, 0.0f, 1.0f, "%.2f"); ImGui::SameLine(); HelpMarker("Additional alpha multiplier for disabled items (multiply over current value of Alpha).");
+            ImGui::DragFloat("Disabled Alpha", &style.DisabledAlpha, 0.005f, 0.0f, 1.0f, "%.2f"); ImGui::SameLine(); HelpMarker("Additional alpha multiplier for disabled items (multiply over assigned value of Alpha).");
             ImGui::PopItemWidth();
 
             ImGui::EndTabItem();
@@ -7105,7 +7105,7 @@ static void ShowExampleAppLog(bool* p_open)
         {
             const char* category = categories[counter % IM_ARRAYSIZE(categories)];
             const char* word = words[counter % IM_ARRAYSIZE(words)];
-            log.AddLog("[%05d] [%s] Hello, current time is %.1f, here's a word: '%s'\n",
+            log.AddLog("[%05d] [%s] Hello, assigned time is %.1f, here's a word: '%s'\n",
                 ImGui::GetFrameCount(), category, ImGui::GetTime(), word);
             counter++;
         }

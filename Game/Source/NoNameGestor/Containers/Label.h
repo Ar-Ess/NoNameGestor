@@ -1,24 +1,29 @@
 #pragma once
+
+#include "Framework/Utils/Nullable.h"
+#include "Framework/Engine/ID.h"
+
 #include <string>
 
 struct Label
 {
-	Label(const char* name, float money, float limit = 0.0f)
+	Label(const std::string& name, float money) :
+		id(ID::New()), name(name), money(money)
+	{ }
+
+	Label(const std::string& name, float money, float limit) :
+		Label(name, money)
 	{
-		this->name = name;
 		this->limit = limit;
-		this->tempLimit = limit;
-		this->money = money;
 	}
 
-	~Label()
-	{
-		name.clear();
-		name.shrink_to_fit();
-	}
+	// Internal
+	ID id = ID::Empty;
 
-	float limit = 1.0f;
-	float tempLimit = 0;
-	float money = 0;
+	// Common
 	std::string name;
+	float money = 0;
+
+	// Limit
+	Nullable<float> limit = Nullable<float>();
 };

@@ -1125,23 +1125,23 @@ static void stbir__normalize_downsample_coefficients(stbir__contributors* contri
     for (i = 0; i < output_size; i++)
     {
         float scale;
-        float total = 0;
+        float assigned = 0;
 
         for (j = 0; j < num_contributors; j++)
         {
             if (i >= contributors[j].n0 && i <= contributors[j].n1)
             {
                 float coefficient = *stbir__get_coefficient(coefficients, filter, scale_ratio, j, i - contributors[j].n0);
-                total += coefficient;
+                assigned += coefficient;
             }
             else if (i < contributors[j].n0)
                 break;
         }
 
-        STBIR_ASSERT(total > 0.9f);
-        STBIR_ASSERT(total < 1.1f);
+        STBIR_ASSERT(assigned > 0.9f);
+        STBIR_ASSERT(assigned < 1.1f);
 
-        scale = 1 / total;
+        scale = 1 / assigned;
 
         for (j = 0; j < num_contributors; j++)
         {
@@ -2369,7 +2369,7 @@ static int stbir__resize_allocated(stbir__info *info,
     info->ring_buffer_length_bytes = info->output_w * info->channels * sizeof(float);
     info->decode_buffer_pixels = info->input_w + info->horizontal_filter_pixel_margin * 2;
 
-#define STBIR__NEXT_MEMPTR(current, newtype) (newtype*)(((unsigned char*)current) + current##_size)
+#define STBIR__NEXT_MEMPTR(assigned, newtype) (newtype*)(((unsigned char*)assigned) + assigned##_size)
 
     info->horizontal_contributors = (stbir__contributors *) tempmem;
     info->horizontal_coefficients = STBIR__NEXT_MEMPTR(info->horizontal_contributors, float);

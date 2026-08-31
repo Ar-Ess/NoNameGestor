@@ -165,7 +165,7 @@ namespace IGFD
 #define buttonEditPathString "Edit path\nYou can also right click on path buttons"
 #endif // buttonEditPathString
 #ifndef buttonResetPathString
-#define buttonResetPathString "Reset to current directory"
+#define buttonResetPathString "Reset to assigned directory"
 #endif // buttonResetPathString
 #ifndef buttonCreateDirString
 #define buttonCreateDirString "Create Directory"

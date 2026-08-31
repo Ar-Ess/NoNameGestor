@@ -1,83 +1,70 @@
 #pragma once
 
-#include <vector>
-#include "NoNameGestor/Containers/ContainerEnum.h"
+#include "Framework/Data/Vector.h"
+#include "Framework/Engine/ID.h"
 
-class Container;
-class InputContainer;
-class TotalContainer;
-class FileManager;
-class ImFont;
+#include "NoNameGestor/Containers/ContainerEnum.h"
+#include "NoNameGestor/Utils/FileManager.h"
 
 #include <string>
+
+class InputContainer;
+class TotalContainer;
+class Container;
+struct Configuration;
 
 class GestorSystem
 {
 public:
 
-	GestorSystem(const char* name, bool* showFutureUnasigned, bool* showContainerType, std::string* openFileName, std::string* openFilePath, ImFont* bigFont, float* textFieldSize, std::string* errorMessage);
+	GestorSystem(int index, const char* name, float totalMoney, FileManager::File* file, Configuration* config, String* errorMessage);
+
+	GestorSystem(int index, const FileManager::FileNode& node, FileManager::File* file, Configuration* config, String* errorMessage);
 
 	~GestorSystem();
 
-	bool Start();
+public:
 
 	bool Update();
 
 	bool Draw();
 
-	void DrawExport();
+	void DrawExport() const;
 
-	void ExportGestor(std::vector<Container*>* exporting);
+	bool Save(int index, FileManager::FileNode node) const;
 
-	bool Save(FileManager* file, const char* path);
+	void SetFormat(const char* format, int currency);
 
-	bool Load(FileManager* file, const char* path, int& jumplines);
+	StringView Name() const;
 
-	void SetFormat(const char* format, const char* currency);
+	Container* CreateContainer(ContainerType container, const std::string& name = "New Container", bool hidden = false, bool open = true, bool unified = true);
 
-	Container* CreateContainer(ContainerType container, const char* name = "New Container", bool hidden = false, bool open = true, bool unified = true);
-
-	void SwitchLoadOpen();
+	Container* CreateContainer(ContainerType container, const FileManager::FileNode& containerNode);
 
 private:
 
-	void DeleteAllContainer();
-
-	// Input from 0 (smallest spacing) to whatever you need
-	void AddSpacing(unsigned int spaces = 1);
-
-	// Input from 1 to whatever you need
-	void AddSeparator(unsigned int separator = 1);
-
-	// Create helper pop up
-	void AddHelper(const char* desc, const char* title = "(?)");
-
-	void DeleteContainer(unsigned short index);
+	void Export(const Array<Container*>& exporting) const;
 
 	void MoveContainer(unsigned short index, unsigned short position);
 
-	int ReturnContainerIndex(intptr_t id);
+public:
 
-	void AddClearInputText(const char* name, std::string* buffer);
+	ID id = ID::Empty;
 
 private:
 
+	// Containers
 	InputContainer* inputContainer = nullptr;
 	TotalContainer* totalContainer = nullptr;
-	std::vector<Container*> containers;
+	Vector<Container*> containers;
 
+	// Naming
 	std::string name;
-	std::string format;
+	String format;
 
-	std::string* openFileName = nullptr;
-	std::string* openFilePath = nullptr;
-
-	bool* showContainerType = nullptr;
-	std::intptr_t id = 0;
-
-	ImFont* bigFont = nullptr;
-
-	float* textFieldSize = nullptr;
-	std::string* errorMessage = nullptr;
+	// Dependencies
+	FileManager::File* file = nullptr;
+	Configuration* config = nullptr;
+	String* errorMessage = nullptr;
 
 };

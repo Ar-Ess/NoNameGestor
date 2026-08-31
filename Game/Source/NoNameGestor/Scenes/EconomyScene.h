@@ -1,37 +1,40 @@
 #pragma once
 
 #include "Framework/Scenes/Scene.h"
+
+#include "NoNameGestor/Gestor/GestorSystem.h"
+#include "NoNameGestor/Gestor/Configuration.h"
+#include "NoNameGestor/Utils/FileManager.h"
 #include "NoNameGestor/Utils/Chrono.h"
-#include <string>
 
 class FileManager;
-class GestorSystem;
 struct ImFont;
+struct SDL_Renderer;
 
 class EconomyScene : public Scene
 {
 public:
 
-	EconomyScene();
-	~EconomyScene();
-
-	bool Start();
-	bool Update();
-	bool Draw();
-
-	bool CleanUp();
+	bool Awake() override;
+	bool Start() override;
+	bool Update(float dt) override;
+	bool Draw(float dt) override;
+	bool CleanUp() override;
 
 private: // Functions
 
 	void NewFile();
+
 	void SaveAs();
 	void Save();
-	void InternalSave(const char* path);
+	void InternalSave(StringView path);
 	void Backup();
 	void Load();
-	void LoadInternal(const char* path);
-	void LoadRecentPaths();
-	void SaveRecentPath(const char* path);
+	void LoadInternal(StringView path);
+	bool OldLoadInternal(StringView path);
+	void LoadConfiguration();
+	void SaveRecentPath(StringView path);
+	void NewGestor();
 
 	void DrawMenuBar(bool& ret);
 	void DrawDocking(bool& ret);
@@ -42,62 +45,34 @@ private: // Functions
 	void DrawToolbarWindow(bool& ret);
 
 	void UpdateShortcuts();
-	void UpdateFormat();
-
-	void LoadFonts(bool addFullPath);
-
-	// Input from 0 (smallest spacing) to whatever you need
-	void AddSpacing(unsigned int spaces = 1);
-
-	// Input from 1 to whatever you need
-	void AddSeparator(unsigned int separator = 1);
-
-	// Create helper pop up
-	void AddHelper(const char* desc, const char* title = "(?)");
 
 private: // Variables
 
-	// General
-	FileManager* file = nullptr;
+	// Files
+	FileManager::File file;
+	FileManager::File configFile;
+	Vector<String> recentFiles;
 
-	// Path List
-	const char* rootPath = nullptr;
-	std::vector<std::string*> recentPaths;
-
-	bool preferencesWindow = false;
+	// Config
+	Configuration config;
 
 	// Gestor
-	std::vector<GestorSystem*> gestors;
+	Vector<GestorSystem> gestors;
+	int focusedGestor = 0;
 
 	// Shortcuts
 	bool ctrl = false, shft = false, n = false, 
 		 p    = false, s    = false, o = false;
 
-	// Preferences
-	bool showContainerType = true;
-	bool showFutureUnasigned = false;
-	float textFieldSize = 150.f;
-
-	int currency = 0;
-	const char* comboCurrency[5] = { "EUR", "USD", "COP", "ARS", "PEN"};
-
 	// Save & Load
 	bool saving = false, loading = false, savingAs = false;
-	bool loadingV1_0 = false;
-	bool versionError = false;
 
-	std::string openFileName;
-	std::string openFilePath;
+	// Error Handling
+	String errorMessage;
+	String warningMessage;
 
-	Chrono chrono;
-	bool openToolbarPopup = false;
-	int focusedGestor = 0;
-
-	ImFont* bigFont = nullptr;
-
-	// Open File Directly
-	const char* openedFile = nullptr;
-
-	std::string errorMessage;
+	// Internals
+	SDL_Renderer* renderer = nullptr;
+	bool preferencesWindow = false;
 
 };

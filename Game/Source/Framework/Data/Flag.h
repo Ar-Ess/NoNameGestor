@@ -49,6 +49,12 @@ public:
 
 	static constexpr uint8_t maxCapacity = 64;
 
+	int CountTrue(unsigned int count = 64) const;
+	int CountTrue(unsigned int startIndex, unsigned int count) const;
+
+	int CountFalse(unsigned int count = 64) const;
+	int CountFalse(unsigned int startIndex, unsigned int count) const;
+
 private:
 
 	uint64_t flag = 0;

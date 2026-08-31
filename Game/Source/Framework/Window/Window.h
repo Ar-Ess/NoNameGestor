@@ -12,6 +12,7 @@ class Window : public Module<Window>
 {
 
 	friend class App;
+	friend class EconomyScene;
 
 public:
 
