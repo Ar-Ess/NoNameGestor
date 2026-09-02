@@ -27,7 +27,7 @@ private: // Functions
 
 	void SaveAs();
 	void Save();
-	void InternalSave(StringView path);
+	void InternalSave(StringView path, FileManager::File& file);
 	void Backup();
 	void Load();
 	void LoadInternal(StringView path);
@@ -51,13 +51,12 @@ private: // Variables
 	// Files
 	FileManager::File file;
 	FileManager::File configFile;
-	Vector<String> recentFiles;
 
 	// Config
 	Configuration config;
 
 	// Gestor
-	Vector<GestorSystem> gestors;
+	Vector<GestorSystem*, true> gestors;
 	int focusedGestor = 0;
 
 	// Shortcuts

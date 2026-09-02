@@ -20,12 +20,6 @@
     <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_draw.cpp">
       <Filter>External\ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_impl_sdl.cpp">
-      <Filter>External\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_impl_sdlrenderer.cpp">
-      <Filter>External\ImGui</Filter>
-    </ClCompile>
     <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_stdlib.cpp">
       <Filter>External\ImGui</Filter>
     </ClCompile>
@@ -49,6 +43,12 @@
     </ClCompile>
     <ClCompile Include="Source\NoNameGestor\Containers\Container.cpp">
       <Filter>Containers</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_impl_sdl2.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_impl_sdlrenderer2.cpp">
+      <Filter>External\ImGui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -112,12 +112,6 @@
     <ClInclude Include="Source\NoNameGestor\External\imgui\imgui.h">
       <Filter>External\ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="Source\NoNameGestor\External\imgui\imgui_impl_sdl.h">
-      <Filter>External\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\NoNameGestor\External\imgui\imgui_impl_sdlrenderer.h">
-      <Filter>External\ImGui</Filter>
-    </ClInclude>
     <ClInclude Include="Source\NoNameGestor\External\imgui\imgui_internal.h">
       <Filter>External\ImGui</Filter>
     </ClInclude>
@@ -150,6 +144,12 @@
     </ClInclude>
     <ClInclude Include="Source\NoNameGestor\Gestor\Aggregate.h">
       <Filter>Gestor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\imgui\imgui_impl_sdl2.h">
+      <Filter>External\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\imgui\imgui_impl_sdlrenderer2.h">
+      <Filter>External\ImGui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -8,7 +8,8 @@ public: // Functions
 
 	FilterContainer(const std::string& name, bool hidden, bool open, bool unified, String* format, Configuration* config) :
 		Container(name, hidden, open, unified, format, config)
-	{ }
+	{
+	}
 
 	FilterContainer(const FileManager::FileNode& node, String* format, Configuration* config) :
 		Container(node, format, config)

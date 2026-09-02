@@ -21,4 +21,10 @@ namespace ImGui
 
 	void AddClearInputText(const char* name, std::string* buffer);
 
+	void TextWithEndEllipsis(char const* aString, float aMaxWidth, bool useWordBoundaries, float aSpacing);
+
+	void TextWithStartEllipsis(char const* aString, float aMaxWidth, bool useWordBoundaries, float aSpacing);
+
+	bool IsSpace(char aCharacter);
+
 }

@@ -523,8 +523,8 @@ public:
 		static const nlohmann::json Array;
 		static const nlohmann::json Object;
 
-		File() = default;
-		~File();
+		File(bool isBackup = false);
+		virtual ~File();
 		File(const File&) = delete;
 		File& operator=(const File&) = delete;
 		File(File&& other) noexcept;
@@ -539,6 +539,11 @@ public:
 		/// Returns if the file is new, which means it has a name but not a path or directory yet.
 		/// </summary>
 		bool IsNew() const;
+
+		/// <summary>
+		/// Returns if the file is a backup, which means it can't be saved to itself, only SavedAs.
+		/// </summary>
+		virtual bool IsBackup() const;
 
 		/// <summary>
 		/// Eliminates the current data without changing the file.
@@ -591,15 +596,22 @@ public:
 
 		void GenerateFileInfo(const String& path);
 
-	private:
+	protected:
 
 		String path;
 		String name;
 		String directory;
 		bool isNewFile = false; // Is the file a new file? (no path, only file name)
+		bool isBackup = false;
 	};
 
 public:
+
+	/// <summary>
+	/// Transforms a file into a backup file.
+	/// </summary>
+	/// <param name="file">File to transform.</param>
+	static void ToBackup(File& file);
 
 	/// <summary>
 	/// Returns if the inputted path has a valid format. 
@@ -714,5 +726,36 @@ public:
 	/// <param name="create">In case the file does not exist, should the function create a new file?</param>
 	/// <returns>False if there has been an error on file opening; otherwise true.</returns>
 	static bool OpenFile(StringView path, File& output, bool create = false);
+
+	/// <summary>
+	/// Finds a file without loading the internal json data.
+	/// </summary>
+	/// <param name="path">Path to the file to find.</param>
+	/// <param name="create">In case the file does not exist, should the function create a new file?</param>
+	/// <returns>The found file.</returns>
+	static File FindFile(const char* path, bool create = false);
+	/// <summary>
+	/// Finds a file without loading the internal json data.
+	/// </summary>
+	/// <param name="path">Path to the file to find.</param>
+	/// <param name="create">In case the file does not exist, should the function create a new file?</param>
+	/// <returns>The found file.</returns>
+	static File FindFile(StringView path, bool create = false);
+	/// <summary>
+	/// Finds a file without loading the internal json data.
+	/// </summary>
+	/// <param name="path">Path to the file to find.</param>
+	/// <param name="output">The output file.</param>
+	/// <param name="create">In case the file does not exist, should the function create a new file?</param>
+	/// <returns>False if there has been an error on file finding; otherwise true.</returns>
+	static bool FindFile(const char* path, File& output, bool create = false);
+	/// <summary>
+	/// Finds a file without loading the internal json data.
+	/// </summary>
+	/// <param name="path">Path to the file to find.</param>
+	/// <param name="output">The output file.</param>
+	/// <param name="create">In case the file does not exist, should the function create a new file?</param>
+	/// <returns>False if there has been an error on file finding; otherwise true.</returns>
+	static bool FindFile(StringView path, File& output, bool create = false);
 
 };

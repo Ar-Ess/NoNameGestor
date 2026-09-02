@@ -138,9 +138,9 @@ public: // Functions
 
 		auto lnode = node.Access("labels");
 		labels.Iterate(
-			[&](const Label& l)
+			[&](const Label& l, int i)
 			{
-				lnode.Push("limit", l.limit.Value());
+				lnode.Access(i).Write("limit", l.limit.Value());
 			}
 		);
 	}

@@ -10,10 +10,9 @@
 #include "NoNameGestor/Containers/ContainerEnum.h"
 #include "NoNameGestor/Utils/ImGuiExtension.h"
 
-#include "NoNameGestor/External/imgui/imgui_internal.h"
 #include "NoNameGestor/External/ImGuiFileDialog/ImGuiFileDialog.h"
-#include "NoNameGestor/External/imgui/imgui_impl_sdl.h"
-#include "NoNameGestor/External/imgui/imgui_impl_sdlrenderer.h"
+#include "NoNameGestor/External/imgui/imgui_impl_sdl2.h"
+#include "NoNameGestor/External/imgui/imgui_impl_sdlrenderer2.h"
 
 #define NOMINMAX
 #include <windows.h>
@@ -21,6 +20,7 @@
 #define VERSION 1.4f
 #define EXTENSION ".nng"
 #define NEW_FILE "New_File.nng"
+#define DEFAULT_BACKUP_CREATION_DIRECTORY App::DataDirectory() + "\\Backups\\"
 
 REGISTER_STARTUP_SCENE(EconomyScene);
 
@@ -57,7 +57,7 @@ bool EconomyScene::Awake()
 	}
 
 	// Initialize ImGui Renderer
-	if (!ImGui_ImplSDLRenderer_Init(renderer))
+	if (!ImGui_ImplSDLRenderer2_Init(renderer))
 	{
 		Debug::Log("ImGui SDL Renderer backend initialization failed");
 		return false;
@@ -72,7 +72,7 @@ bool EconomyScene::Start()
 
 	LoadConfiguration();
 
-	if (!App::IsAppLaunchedWithFile()) // This is without "!"
+	if (App::IsAppLaunchedWithFile())
 		LoadInternal(App::OpenedFilePath());
 	else
 		NewFile();
@@ -93,15 +93,15 @@ bool EconomyScene::Update(float dt)
 	}
 
 	// Generate ImGui Renderer New Frame 
-	ImGui_ImplSDLRenderer_NewFrame();
+	ImGui_ImplSDLRenderer2_NewFrame();
 	// Generate SDL2 New Frame
-	ImGui_ImplSDL2_NewFrame(Window::window);
+	ImGui_ImplSDL2_NewFrame();
 	// Generate ImGui New Frame
 	ImGui::NewFrame();
 
 	UpdateShortcuts();
 
-	gestors.Iterate([](GestorSystem& g) { g.Update(); });
+	gestors.Iterate([](GestorSystem* g) { g->Update(); });
 
 	return ret;
 }
@@ -130,7 +130,7 @@ bool EconomyScene::Draw(float dt)
 
 	// ImGui Render
 	ImGui::Render();
-	ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
+	ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
 	SDL_RenderPresent(renderer);
 
 	return true;
@@ -140,7 +140,7 @@ bool EconomyScene::CleanUp()
 {
 	gestors.Clear();
 
-	ImGui_ImplSDLRenderer_Shutdown();
+	ImGui_ImplSDLRenderer2_Shutdown();
 	ImGui_ImplSDL2_Shutdown();
 
 	ImGui::DestroyContext();
@@ -175,17 +175,24 @@ void EconomyScene::SaveAs()
 	}
 	else
 	{
+		//TODO: Framework: App::Directory and path thingis should return a string view, not a string!
+
 		//TODO: Framework: Add trim function (opposite of Substring, it returns what is not selected by index & count)
 		//TODO: Framework: Solve the problem of similarity between Substring static and non-static
-		String path = file.IsNew() ? file.Name().Substring(0u, file.Name().Length() - 4) : file.Path().Substring(0u, file.Path().Length() - 4);
-		ImGuiFileDialog::Instance()->OpenDialog("SaveAs", "Choose a path", ".nng", path.Str(), 1, nullptr, ImGuiFileDialogFlags_ConfirmOverwrite | ImGuiFileDialogFlags_DisableCreateDirectoryButton);
+		IGFD::FileDialogConfig config;
+		//TODO: Instead of "C:\\" add a config option as the default place to save a new file
+		config.path = file.IsNew() ? (App::DebugMode ? App::DataDirectory().Str() : "C:\\") : file.Path().Substring(0u, file.Path().Length() - 4).Data();
+		config.flags = ImGuiFileDialogFlags_ConfirmOverwrite | ImGuiFileDialogFlags_DisableCreateDirectoryButton;
+		config.fileName = file.Name().Data();
+		ImGuiFileDialog::Instance()->OpenDialog("SaveAs", "Choose a path", ".nng", config);
 	}
 
 	String path;
 	//TODO: Framework: Window doesn't provide a method with the resized size of the window.
-	ImVec2 size = ImGui::GetIO().DisplaySize;
-	ImGui::SetNextWindowSize(size);
-	ImGui::SetNextWindowPos(ImVec2(size.x / 2, size.y / 2), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+	int width, height;
+	SDL_GetWindowSize(Window::window, &width, &height);
+	ImGui::SetNextWindowSize(ImVec2((float)width, (float)height), ImGuiCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(width / 2, height / 2), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 
 	//display
 	if (!ImGuiFileDialog::Instance()->Display("SaveAs", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
@@ -214,7 +221,7 @@ void EconomyScene::SaveAs()
 	ImGuiFileDialog::Instance()->Close();
 
 	// Save file in path
-	InternalSave(path);
+	InternalSave(path, file);
 }
 
 void EconomyScene::Save()
@@ -231,57 +238,62 @@ void EconomyScene::Save()
 
 	saving = false;
 
-	InternalSave(nullptr);
+	InternalSave(nullptr, file);
 }
 
 void EconomyScene::Backup()
 {
-	//String backupsPath = App::DataDirectory() + "\\Backups\\";
+	//TODO: Configuration option "backup unsaved files"?
+	if (!file.IsValid() || file.IsNew())
+	{
+		//TODO: Error messaging handling with time of error vanishing
+		errorMessage = "Can not backup an unsaved file. Please first save the current file.";
+		return;
+	}
 
-	//if (!std::filesystem::exists(backupsPath.Str()) && !std::filesystem::create_directories(backupsPath.Str()))
-	//{
-	//	errorMessage = std::string("Error: it was not possible to create Backups folder in: ") + backupsPath.Str() + strerror(errno);
-	//	return;
-	//}
-	//else if (!std::filesystem::is_directory(backupsPath.Str()))
-	//{
-	//	errorMessage = std::string("Error: ") + backupsPath.Str() + " is not a folder." + strerror(errno);
-	//	return;
-	//}
+	if (!FileManager::DirectoryExists(config.backupDirectory) && !FileManager::DirectoryCreate(config.backupDirectory))
+	{
+		errorMessage = "Error: it was not possible to create Backups folder in: " + config.backupDirectory + strerror(errno);
+	}
 
-	//backupsPath += openFileName;
-	//time_t now = time(0);
-	//tm* ltm = localtime(&now);
-	//std::string backupText("_Backup_");
+	time_t now = time(0);
+	tm* ltm = localtime(&now);
 
-	//backupText += std::to_string(ltm->tm_year + 1900) + "-";
-	//int month = ltm->tm_mon + 1;
-	//int day = ltm->tm_mday;
-	//backupText += month < 10 ? "0" + std::to_string(month) + "-" : std::to_string(month) + "-";
-	//backupText += day < 10 ? "0" + std::to_string(day) : std::to_string(day);
-	//savePath.insert(savePath.length() - 4, backupText.c_str());
+	int month = ltm->tm_mon + 1;
+	int day = ltm->tm_mday;
+	int hour = ltm->tm_hour;
+	int min = ltm->tm_min;
 
+	String info = String("_Backup_")
+		+ (ltm->tm_year + 1900)
+		+ '-'
+		+ (month < 10 ? String('0') + month : String::FromInt(month))
+		+ '-'
+		+ (day < 10 ? String('0') + day : String::FromInt(day))
+		+ '-'
+		+ (hour < 10 ? String('0') + hour : String::FromInt(hour))
+		+ '-'
+		+ (min < 10 ? String('0') + min : String::FromInt(min));
 
-	//file->OpenFile(savePath.c_str()).
-	//	// Preferences
-	//	Write("version").String(VERSION).
-	//	Write("cnfSRT").Bool(showContainerType).
-	//	Write("cnfSFU").Bool(showFutureUnasigned).
-	//	Write("cnfTFS").Number(textFieldSize).
-	//	Write("currency").Number(currency).
-	//	Write("gestors").Number((int)gestors.size());
+	String path = config.backupDirectory + file.Name();
+	path.Insert(info, path.Length() - 4);
 
-	//for (GestorSystem* gestor : gestors)
-	//	gestor->Save(file, savePath.c_str());
+	FileManager::File backup(true);
+	InternalSave(path, backup);
+
+	if (!backup.IsValid())
+		errorMessage = "Unable to backup properly. File: " + path;
 }
 
-void EconomyScene::InternalSave(StringView path)
+void EconomyScene::InternalSave(StringView path, FileManager::File& file)
 {
-	bool saveAs = !path.IsNullOrEmpty();
+	bool saveAs = !path.IsNullOrEmpty() || file.IsBackup();
 
 	// If it is a save as
 	if (saveAs)
 	{
+		Debug::Assert(!(path.IsNullOrEmpty() && file.IsBackup()), "Internal Save Error: If saving a backup, a valid path must be provided. Can't Save() a backup, only SaveAs(path).");
+
 		// Check if it has the correct extension
 		if (!FileManager::FileHasExtension(path, EXTENSION))
 		{
@@ -289,12 +301,12 @@ void EconomyScene::InternalSave(StringView path)
 			return;
 		}
 
-		FileManager::File f = FileManager::OpenFile(path, true);
+		FileManager::File f = FileManager::FindFile(path, true);
 
 		// Check file validity
 		if (!f.IsValid())
 		{
-			errorMessage = "Path to SaveAs could not be opened: " + path;
+			errorMessage = "Path to SaveAs could not be found: " + path;
 			return;
 		}
 
@@ -316,17 +328,18 @@ void EconomyScene::InternalSave(StringView path)
 
 	// Write to file
 	file.Write("version", VERSION);
+	file.Write("backup", file.IsBackup());
 	file.Write("gestors", FileManager::File::Array);
 	auto gnode = file.Access("gestors");
 
-	gestors.Iterate([&](const GestorSystem& g, int i) 
+	gestors.Iterate([&](const GestorSystem* g, int i) 
 		{ 
 			// Push an object representing a new gestor
 			int index = gnode.Push(FileManager::File::Object);
 			// Assure it is correctly pushed
 			Debug::Assert(index != -1, "Internal Save Error: Pushing New Gestor returned an error.");
 			// Access to that gestor and send it to be written
-			g.Save(i, gnode.Access(index));
+			g->Save(i, gnode.Access(index));
 		});
 
 	saveAs ? file.SaveAs(path) : file.Save();
@@ -342,14 +355,18 @@ void EconomyScene::Load()
 	}
 	else
 	{
-		ImGuiFileDialog::Instance()->OpenDialog("OpenFile", "Choose a file", ".nng", "", 1, nullptr, ImGuiFileDialogFlags_DisableCreateDirectoryButton);
+		IGFD::FileDialogConfig config;
+		config.path = "";
+		config.flags = ImGuiFileDialogFlags_DisableCreateDirectoryButton;
+		ImGuiFileDialog::Instance()->OpenDialog("OpenFile", "Choose a file", ".nng", config);
 	}
 
 	String path;
 	//TODO: Framework: Window doesn't provide a method with the resized size of the window.
-	ImVec2 size = ImGui::GetIO().DisplaySize;
-	ImGui::SetNextWindowSize(size);
-	ImGui::SetNextWindowPos(ImVec2(size.x / 2, size.y / 2), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+	int width, height;
+	SDL_GetWindowSize(Window::window, &width, &height);
+	ImGui::SetNextWindowSize(ImVec2((float)width, (float)height), ImGuiCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(width / 2, height / 2), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 
 	//display
 	if (!ImGuiFileDialog::Instance()->Display("OpenFile", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
@@ -425,6 +442,9 @@ void EconomyScene::LoadInternal(StringView path)
 		return;
 	}
 
+	bool isBackup = file.Read<bool>("backup");
+	if (isBackup) FileManager::ToBackup(file);
+
 	// Load Gestors
 	FileManager::FileNode gestorsNode = file.Access("gestors");
 	int size = gestorsNode.Length();
@@ -432,17 +452,19 @@ void EconomyScene::LoadInternal(StringView path)
 	for (unsigned int i = 0; i < size; ++i)
 	{
 		const FileManager::FileNode node = gestorsNode.Access(i);
-		gestors.EmplaceBack(
-			i,
-			node,
-			&file,
-			&config,
-			&errorMessage
+		gestors.PushBack(
+			new GestorSystem(
+				i,
+				node,
+				&file,
+				&config,
+				&errorMessage
+			)
 		);
 	}
 
 	// Save Path to recentFiles
-	SaveRecentPath(path);
+	if (!isBackup) SaveRecentPath(file.Path());
 }
 
 bool EconomyScene::OldLoadInternal(StringView path)
@@ -520,8 +542,8 @@ bool EconomyScene::OldLoadInternal(StringView path)
 			int containersSize = std::stoi(line.substr(5, line.length() - 6));
 
 			// Construct gestor
-			gestors.EmplaceBack(i, name.c_str(), money, &file, &config, &errorMessage);
-			GestorSystem& system = gestors.Back();
+			gestors.PushBack(new GestorSystem(i, name.c_str(), money, &file, &config, &errorMessage));
+			GestorSystem* system = gestors.Back();
 
 			for (int j = 0; j < containersSize; ++j)
 			{
@@ -549,7 +571,7 @@ bool EconomyScene::OldLoadInternal(StringView path)
 				bool unified = (bool)std::stoi(line.substr(5, line.length() - 6));
 
 				// Create container
-				Container* c = system.CreateContainer(type, name, hide, open, unified);
+				Container* c = system->CreateContainer(type, name, hide, open, unified);
 
 				// Retrieve labels size - "size X,"
 				std::getline(f, line);
@@ -609,10 +631,19 @@ void EconomyScene::LoadConfiguration()
 
 	configFile = FileManager::OpenFile(path, true);
 
-	Debug::Assert(configFile.IsValid(), "NONAMEGESTOR ERROR: Can't open or create configFile!");
+	if (!configFile.IsValid())
+	{
+		// Config file was present but incorrectly formatted
+		// Reset the file completely from scratch
+		std::ofstream config(path.Str(), std::ios::out | std::ios::trunc);
+		config << "{}";
+		config.close();
+		configFile = FileManager::OpenFile(path, true);
+		Debug::Assert(configFile.IsValid(), "NONAMEGESTOR ERROR: Can't open or create configFile!");
+		warningMessage = "Internal Error With User Preferences: Restarting user values to default.";
+	}
 
 	config = Configuration();
-	recentFiles = Vector<String>(20);
 
 	if (configFile.Length() == 0) // just created
 	{
@@ -620,7 +651,12 @@ void EconomyScene::LoadConfiguration()
 		configFile.Write("UP_SCT", config.showContainerType);
 		configFile.Write("UP_SFU", config.showFutureUnasigned);
 		configFile.Write("UP_TFS", config.textFieldSize);
-		configFile.Write("RecentFiles", FileManager::File::Array);
+		configFile.Write("UP_BCD", String::Empty);
+
+		// Internal Data
+		configFile.Write("ID_RFA", FileManager::File::Array); // Recent Files Array
+
+		configFile.Save();
 	}
 	else
 	{
@@ -628,13 +664,16 @@ void EconomyScene::LoadConfiguration()
 		configFile.Read("UP_SCT", config.showContainerType);
 		configFile.Read("UP_SFU", config.showFutureUnasigned);
 		configFile.Read("UP_TFS", config.textFieldSize);
+		configFile.Read("UP_BCD", config.backupDirectory);
+		if (config.backupDirectory.IsNullOrEmpty())
+			config.backupDirectory = DEFAULT_BACKUP_CREATION_DIRECTORY;
 
-		// Recent Paths
-		auto rNode = configFile.Access("RecentFiles");
+		// Internal Data
+		config.recentFiles = Vector<String>(20);
+		auto rNode = configFile.Access("ID_RFA");
 		int size = rNode.Length();
-
 		for (int i = 0; i < size; ++i)
-			recentFiles.PushBack(rNode.Read<String>(i));
+			config.recentFiles.PushBack(rNode.Read<String>(i));
 	}
 }
 
@@ -643,32 +682,32 @@ void EconomyScene::SaveRecentPath(StringView path)
 	Debug::Assert(configFile.IsValid(), "INTERNAL ERROR: Config file does not exist!");
 
 	bool change = false;
-	auto recentFilesArray = configFile.Access("RecentFiles");
+	auto recentFilesArray = configFile.Access("ID_RFA");
 
 	// Si tenim 20 o més recentFiles, elimina el primer
-	if (recentFiles.Size() >= 20)
+	if (config.recentFiles.Size() >= 20)
 	{
-		recentFiles.PopFront();
+		config.recentFiles.PopFront();
 		recentFilesArray.Remove(0);
 		change = true;
 	}
 
 	bool emplace = true;
 	// Si el recent files no està buit
-	if (!recentFiles.IsEmpty())
+	if (!config.recentFiles.IsEmpty())
 	{
 		// Mira si existeix un path igual en els recent files
-		int index = recentFiles.Find(path);
+		int index = config.recentFiles.Find(path);
 
 		// Si existeix un path igual
 		if (index != -1)
 		{
 			// Si l'índex trobat no és l'últim
-			if (index != recentFiles.Size() - 1)
+			if (index != config.recentFiles.Size() - 1)
 			{
 				// Elimina'l de recent files i del config file
-				recentFiles.Erase(index);
 				recentFilesArray.Remove(index);
+				config.recentFiles.Erase(index);
 				change = true;
 			}
 			// Si l'índex trobat és l'últim
@@ -680,8 +719,8 @@ void EconomyScene::SaveRecentPath(StringView path)
 	
 	if (emplace)
 	{
-		recentFiles.EmplaceBack(path);
 		recentFilesArray.Push(path);
+		config.recentFiles.EmplaceBack(path);
 		change = true;
 	}
 
@@ -693,7 +732,7 @@ void EconomyScene::NewGestor()
 	if (gestors.Size() >= 4)
 		return;
 
-	gestors.EmplaceBack(gestors.Size(), "New Gestor", 0, &file, &config, &errorMessage);
+	gestors.PushBack(new GestorSystem(gestors.Size(), "New Gestor", 0, &file, &config, &errorMessage));
 }
 
 void EconomyScene::DrawDocking(bool& ret)
@@ -741,13 +780,13 @@ void EconomyScene::DrawMenuBar(bool& ret)
 
 			if (ImGui::BeginMenu("Open Recent"))
 			{
-				if (recentFiles.IsEmpty())
+				if (config.recentFiles.IsEmpty())
 				{
 					ImGui::Text("There is no recent files...");
 				}
 				else
 				{
-					recentFiles.Iterate(
+					config.recentFiles.Iterate(
 						[&](String& recent)
 						{
 							if (!ImGui::MenuItem(recent.Str()))
@@ -755,7 +794,8 @@ void EconomyScene::DrawMenuBar(bool& ret)
 
 							LoadInternal(recent);
 							return false;
-						}
+						},
+						true
 					);
 				}
 
@@ -770,7 +810,7 @@ void EconomyScene::DrawMenuBar(bool& ret)
 			if (ImGui::MenuItem("Save As", "Ctrl + Shft + S"))
 				SaveAs();
 
-			if (ImGui::MenuItem("Backup"))
+			if (ImGui::MenuItem("Backup Now"))
 				Backup();
 
 
@@ -783,7 +823,7 @@ void EconomyScene::DrawMenuBar(bool& ret)
 				ImGui::Spacing();
 
 				gestors.Iterate(
-					[&](const GestorSystem& g) { g.DrawExport(); }
+					[&](const GestorSystem* g) { g->DrawExport(); }
 				);
 
 				ImGui::EndMenu();
@@ -812,15 +852,15 @@ void EconomyScene::DrawMenuBar(bool& ret)
 		if (ImGui::BeginMenu("Create"))
 		{
 			if (ImGui::MenuItem("New Filter"))
-				((FilterContainer*)gestors[focusedGestor].CreateContainer(ContainerType::FILTER))
+				((FilterContainer*)gestors[focusedGestor]->CreateContainer(ContainerType::FILTER))
 				->NewLabel();
 
 			if (ImGui::MenuItem("New Limit"))
-				((LimitContainer*)gestors[focusedGestor].CreateContainer(ContainerType::LIMIT))
+				((LimitContainer*)gestors[focusedGestor]->CreateContainer(ContainerType::LIMIT))
 				->NewLabel();
 
 			if (ImGui::MenuItem("New Future"))
-				((FutureContainer*)gestors[focusedGestor].CreateContainer(ContainerType::FUTURE))
+				((FutureContainer*)gestors[focusedGestor]->CreateContainer(ContainerType::FUTURE))
 				->NewLabel();
 
 			ImGui::AddSeparator();
@@ -834,7 +874,7 @@ void EconomyScene::DrawMenuBar(bool& ret)
 		}
 		if (ImGui::BeginMenu("About"))
 		{
-			ImGui::Text("No CurrentName Gestor %s", VERSION); ImGui::SameLine();
+			ImGui::Text("No Name Gestor %.1f", VERSION); ImGui::SameLine();
 
 			if (ImGui::Selectable(">")) 
 				ShellExecute(NULL, NULL, "https://github.com/Ar-Ess/NoNameGestor", NULL, NULL, SW_SHOWNORMAL);
@@ -875,34 +915,102 @@ void EconomyScene::DrawPreferencesWindow(bool& ret)
 			if (ImGui::BeginTabItem("General"))
 			{
 				ImGui::AddHelper("Shows, at the side of each container,\na text noting it's type.", "?"); ImGui::SameLine();
-				ImGui::Checkbox("Show Container Typology CurrentName", &config.showContainerType);
+				if (ImGui::Checkbox("Show Container Typology CurrentName", &config.showContainerType))
+				{
+					configFile.Write("UP_SCT", config.showContainerType);
+					configFile.Save();
+				}
 
 				ImGui::AddHelper("Shows the unsigned money in terms\nof future income.", "?"); ImGui::SameLine();
-				ImGui::Checkbox("Show Unasigned Future Money ", &config.showFutureUnasigned);
+				if (ImGui::Checkbox("Show Unasigned Future Money ", &config.showFutureUnasigned));
+				{
+					configFile.Write("UP_SFU", config.showFutureUnasigned);
+					configFile.Save();
+				}
 
 				ImGui::AddHelper("Enlarges the size of the text\nlabels of each container.", "?"); ImGui::SameLine();
 				ImGui::PushItemWidth(config.textFieldSize);
 				ImGui::DragFloat("Text Fiend Size", &config.textFieldSize, 0.1f, 1.0f, 1000.0f, "%f pts", ImGuiSliderFlags_AlwaysClamp);
+				if (ImGui::IsItemDeactivatedAfterEdit())
+				{
+					configFile.Write("UP_TFS", config.textFieldSize);
+					configFile.Save();
+				}
 				ImGui::PopItemWidth();
 
 				ImGui::EndTabItem();
 			}
 
-			gestors.Iterate(
-				[&](GestorSystem& g, int i)
+			if (ImGui::BeginTabItem("Gestors"))
+			{
+				if (ImGui::BeginTabBar("##GestorsTabBar"))
 				{
-					ImGui::PushID(g.id.Data());
-					if (ImGui::BeginTabItem(g.Name().Data()))
-					{
-						ImGui::Text("Currency:");
-						if (ImGui::Combo("##Currency", &config.currency[i], config.comboCurrency, 5))
-							g.SetFormat("%.2f", config.currency[i]);
+					gestors.Iterate(
+						[&](GestorSystem* g, int i)
+						{
+							ImGui::PushID(g->id.Data());
+							if (ImGui::BeginTabItem(g->Name().Data()))
+							{
+								ImGui::Text("Currency:");
+								if (ImGui::Combo("##Currency", &config.currency[i], config.comboCurrency, 5))
+									g->SetFormat("%.2f", config.currency[i]);
 
-						ImGui::EndTabItem();
-					}
-					ImGui::PopID();
+								ImGui::EndTabItem();
+							}
+							ImGui::PopID();
+						}
+					);
+
+					ImGui::EndTabBar();
 				}
-			);
+				ImGui::EndTabItem();
+			}
+
+			if (ImGui::BeginTabItem("Backups"))
+			{
+				static bool browsingBackupDirectory = false;
+				ImGui::AddHelper("Define where the program stores the backups", "?"); ImGui::SameLine();
+				if (ImGui::Button("Browse", ImVec2(50, 19)))
+				{
+					browsingBackupDirectory = true;
+					IGFD::FileDialogConfig config;
+					config.path = ".";
+					ImGuiFileDialog::Instance()->OpenDialog("BrowsingBackupDirectory", "Choose a Directory", nullptr, config);
+				}ImGui::SameLine();
+				if (ImGui::Button("R", ImVec2(19, 19)))
+				{
+					config.backupDirectory = DEFAULT_BACKUP_CREATION_DIRECTORY;
+					configFile.Write("UP_BCD", String::Empty);
+					configFile.Save();
+				}
+				ImGui::SameLine(); ImGui::Text("Backup Directory");
+				ImGui::Dummy(ImVec2(7, 2)); ImGui::SameLine();
+				ImGui::SameLine(); ImGui::TextWithStartEllipsis(config.backupDirectory.Str(), ImGui::GetWindowWidth() - 44, false, 0);
+
+				if (browsingBackupDirectory)
+				{
+					//TODO: Framework: Window doesn't provide a method with the resized size of the window.
+					int width, height;
+					SDL_GetWindowSize(Window::window, &width, &height);
+					ImGui::SetNextWindowSize(ImVec2((float)width, (float)height), ImGuiCond_Always);
+					ImGui::SetNextWindowPos(ImVec2(width / 2, height / 2), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+
+					if (ImGuiFileDialog::Instance()->Display("BrowsingBackupDirectory", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
+					{
+						if (ImGuiFileDialog::Instance()->IsOk())
+						{
+							config.backupDirectory = (ImGuiFileDialog::Instance()->GetCurrentPath() + '\\').c_str();
+							configFile.Write("UP_BCD", config.backupDirectory);
+							configFile.Save();
+						}
+
+						browsingBackupDirectory = false;
+						ImGuiFileDialog::Instance()->Close();
+					}
+				}
+
+				ImGui::EndTabItem();
+			}
 
 			ImGui::EndTabBar();
 		}
@@ -929,7 +1037,6 @@ void EconomyScene::DrawMainWindow(bool& ret)
 
 			for (unsigned int i = 0; i < size; ++i)
 			{
-				GestorSystem& gestor = gestors[i];
 				ImGui::TableNextColumn();
 
 				ImVec2 cellMin = ImGui::GetCursorScreenPos();
@@ -952,7 +1059,7 @@ void EconomyScene::DrawMainWindow(bool& ret)
 					);
 				}
 
-				gestor.Draw();
+				gestors[i]->Draw();
 			}
 
 			ImGui::EndTable();
@@ -979,21 +1086,21 @@ void EconomyScene::DrawToolbarWindow(bool& ret)
 
 		if (ImGui::Button("FILTER"))
 		{
-			((FilterContainer*)gestors[focusedGestor].CreateContainer(ContainerType::FILTER))
+			((FilterContainer*)gestors[focusedGestor]->CreateContainer(ContainerType::FILTER))
 				->NewLabel();
 			action = true;
 		}
 
 		if (ImGui::Button("LIMIT "))
 		{
-			((LimitContainer*)gestors[focusedGestor].CreateContainer(ContainerType::LIMIT))
+			((LimitContainer*)gestors[focusedGestor]->CreateContainer(ContainerType::LIMIT))
 				->NewLabel();
 			action = true;
 		}
 
 		if (ImGui::Button("FUTURE"))
 		{
-			((LimitContainer*)gestors[focusedGestor].CreateContainer(ContainerType::FUTURE))
+			((LimitContainer*)gestors[focusedGestor]->CreateContainer(ContainerType::FUTURE))
 				->NewLabel();
 			action = true;
 		}

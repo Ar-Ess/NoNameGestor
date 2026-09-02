@@ -33,7 +33,7 @@ public: // Functions
 		ImGui::Text(" - ");
 		ImGui::SameLine();
 		ImGui::PushID(id.Data());
-		ImGui::PushItemFlag(ImGuiItemFlags_::ImGuiItemFlags_SelectableDontClosePopup, true);
+		ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false);
 		ImGui::MenuItem(CurrentName()->c_str(), "", &exporting);
 		ImGui::PopItemFlag();
 		ImGui::PopID();

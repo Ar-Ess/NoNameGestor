@@ -1,26 +1,27 @@
 {
-    "gestors": [
+  "backup": false,
+  "gestors": [
+    {
+      "containers": [
         {
-            "containers": [
-                {
-                    "hide": false,
-                    "labels": [
-                        {
-                            "money": 178.0,
-                            "name": "New Filter"
-                        }
-                    ],
-                    "money": 178.0,
-                    "name": "New Container",
-                    "open": true,
-                    "type": 3,
-                    "unfd": true
-                }
-            ],
-            "currency": 0,
-            "money": 295.0,
-            "name": "New Gestor"
+          "hide": false,
+          "labels": [
+            {
+              "money": 178.0,
+              "name": "New Filter"
+            }
+          ],
+          "money": 178.0,
+          "name": "New Container",
+          "open": true,
+          "type": 3,
+          "unfd": true
         }
-    ],
-    "version": 1.399999976158142
+      ],
+      "currency": 0,
+      "money": 295.0,
+      "name": "New Gestor"
+    }
+  ],
+  "version": 1.399999976158142
 }

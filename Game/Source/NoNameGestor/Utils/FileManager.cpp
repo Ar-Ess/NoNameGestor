@@ -25,7 +25,7 @@ FileManager::FileNode& FileManager::FileNode::operator=(FileNode&& other) noexce
 
 bool FileManager::FileNode::Access(const char* name, FileNode& node) const
 {
-    AssertFile("File Access Error: File not isNewFile.");
+    AssertFile("File Access Error: File not valid.");
 
     if (!data->contains(name))
         return false;
@@ -44,7 +44,7 @@ bool FileManager::FileNode::Access(const char* name, FileNode& node) const
 
 FileManager::FileNode FileManager::FileNode::Access(StringView name) const
 {
-    AssertFile("File Access Error: File not isNewFile.");
+    AssertFile("File Access Error: File not valid.");
 
     if (!data->contains(name.Data()))
         throw std::runtime_error("JSON key not found");
@@ -54,7 +54,7 @@ FileManager::FileNode FileManager::FileNode::Access(StringView name) const
 
 bool FileManager::FileNode::Access(unsigned int index, FileNode& node) const
 {
-    AssertFile("File Access Error: File not isNewFile.");
+    AssertFile("File Access Error: File not valid.");
 
     if (!data->is_array() || data->size() <= index)
         return false;
@@ -73,7 +73,7 @@ bool FileManager::FileNode::Access(unsigned int index, FileNode& node) const
 
 FileManager::FileNode FileManager::FileNode::Access(unsigned int index) const
 {
-    AssertFile("File Access Error: File not isNewFile.");
+    AssertFile("File Access Error: File not valid.");
 
     if (!data->is_array())
         throw std::runtime_error("Current FileNode is not an array!");
@@ -86,7 +86,7 @@ FileManager::FileNode FileManager::FileNode::Access(unsigned int index) const
 
 bool FileManager::FileNode::Access(const char* name, unsigned int index, FileNode& node) const
 {
-    AssertFile("File Access Error: File not isNewFile.");
+    AssertFile("File Access Error: File not valid.");
 
     if (!data->contains(name))
         return false;
@@ -109,7 +109,7 @@ bool FileManager::FileNode::Access(const char* name, unsigned int index, FileNod
 
 bool FileManager::FileNode::Access(StringView name, unsigned int index, FileNode& node) const
 {
-    AssertFile("File Access Error: File not isNewFile.");
+    AssertFile("File Access Error: File not valid.");
 
     if (!data->contains(name.Data()))
         return false;
@@ -132,7 +132,7 @@ bool FileManager::FileNode::Access(StringView name, unsigned int index, FileNode
 
 FileManager::FileNode FileManager::FileNode::Access(const char* name, unsigned int index) const
 {
-    AssertFile("File Access Error: File not isNewFile.");
+    AssertFile("File Access Error: File not valid.");
 
     if (!data->contains(name))
         throw std::runtime_error("There is not an element with the inputted name!");
@@ -149,7 +149,7 @@ FileManager::FileNode FileManager::FileNode::Access(const char* name, unsigned i
 
 FileManager::FileNode FileManager::FileNode::Access(StringView name, unsigned int index) const
 {
-    AssertFile("File Access Error: File not isNewFile.");
+    AssertFile("File Access Error: File not valid.");
 
     if (!data->contains(name.Data()))
         throw std::runtime_error("There is not an element with the inputted name!");
@@ -166,14 +166,14 @@ FileManager::FileNode FileManager::FileNode::Access(StringView name, unsigned in
 
 bool FileManager::FileNode::Remove(StringView name)
 {
-    AssertFile("File Remove Error: File not isNewFile.");
+    AssertFile("File Remove Error: File not valid.");
 
     return data->erase(name.Data()) != 0;
 }
 
 bool FileManager::FileNode::Remove(const char* name, unsigned int index)
 {
-    AssertFile("File Remove Error: File not isNewFile.");
+    AssertFile("File Remove Error: File not valid.");
 
     auto& node = (*data)[name];
 
@@ -186,7 +186,7 @@ bool FileManager::FileNode::Remove(const char* name, unsigned int index)
 
 bool FileManager::FileNode::Remove(unsigned int index)
 {
-    AssertFile("File Remove Error: File not isNewFile.");
+    AssertFile("File Remove Error: File not valid.");
 
     if (!data->is_array() || data->size() <= index)
         return false;
@@ -197,7 +197,7 @@ bool FileManager::FileNode::Remove(unsigned int index)
 
 int FileManager::FileNode::Length() const
 {
-    AssertFile("File Length Error: File not isNewFile.");
+    AssertFile("File Length Error: File not valid.");
     return data->size();
 }
 
@@ -219,6 +219,11 @@ const nlohmann::json FileManager::File::Array = nlohmann::json::array();
 
 const nlohmann::json FileManager::File::Object = nlohmann::json::object();
 
+FileManager::File::File(bool isBackup) :
+    isBackup(isBackup)
+{
+}
+
 FileManager::File::~File()
 {
     delete data;
@@ -230,12 +235,14 @@ FileManager::File::File(File&& other) noexcept :
     path(std::move(other.path)),
     name(std::move(other.name)),
     directory(std::move(other.directory)),
-    isNewFile(other.isNewFile)
+    isNewFile(other.isNewFile),
+    isBackup(other.isBackup)
 {
     other.path = nullptr;
     other.name = nullptr;
     other.directory = nullptr;
     other.isNewFile = false;
+    other.isBackup = false;
 }
 
 FileManager::File& FileManager::File::operator=(File&& other) noexcept
@@ -251,11 +258,13 @@ FileManager::File& FileManager::File::operator=(File&& other) noexcept
     name = std::move(other.name);
     directory = std::move(other.directory);
     isNewFile = other.isNewFile;
+    isBackup = other.isBackup;
 
     other.path = nullptr;
     other.name = nullptr;
     other.directory = nullptr;
     other.isNewFile = false;
+    other.isBackup = false;
 
     return *this;
 }
@@ -270,18 +279,24 @@ bool FileManager::File::IsNew() const
     return isNewFile;
 }
 
+bool FileManager::File::IsBackup() const
+{
+    return isBackup;
+}
+
 void FileManager::File::Clear()
 {
-    AssertFile("File Clear Error: File not isNewFile.");
+    AssertFile("File Clear Error: File not valid.");
 
     *data = nlohmann::json::object();
 }
 
 bool FileManager::File::Save()
 {
-    AssertFile("File Save Error: File not isNewFile.");
+    AssertFile("File Save Error: File not valid.");
 
     Debug::Assert(!isNewFile, "File Save Error: Can't Save() a new file, it does not have a path. Use SaveAs(path) instead.");
+    Debug::Assert(!isBackup, "File Save Error: Can't Save() a backup. Use SaveAs(path) instead.");
 
     return SaveAs(path);
 }
@@ -293,7 +308,7 @@ bool FileManager::File::SaveAs(const char* path)
 
 bool FileManager::File::SaveAs(StringView path)
 {
-    AssertFile("File SaveAs Error: File not isNewFile.");
+    AssertFile("File SaveAs Error: File not valid.");
 
     std::ofstream file(path.Data(), std::ios::out | std::ios::trunc);
 
@@ -353,6 +368,16 @@ void FileManager::File::GenerateFileInfo(const String& p)
     directory = path.Substring(unsigned int(0), a);
     name = path.Substring(a, path.Length());
     isNewFile = false;
+}
+
+void FileManager::ToBackup(File& file)
+{
+    file.AssertFile("FileManager ToBackup Error: File not valid.");
+
+    file.isBackup = true;
+    file.isNewFile = true;
+    file.path = nullptr;
+    file.directory = nullptr;
 }
 
 bool FileManager::PathFormatValid(const char* path)
@@ -533,6 +558,8 @@ FileManager::File FileManager::OpenFile(StringView path, bool create)
 
 bool FileManager::OpenFile(const char* path, File& output, bool create)
 {
+    output = File();
+
     if (String::IsNullOrEmpty(path))
         return false;
 
@@ -572,6 +599,8 @@ bool FileManager::OpenFile(const char* path, File& output, bool create)
 
 bool FileManager::OpenFile(StringView path, File& output, bool create)
 {
+    output = File();
+
     if (path.IsNullOrEmpty())
         return false;
 
@@ -604,6 +633,132 @@ bool FileManager::OpenFile(StringView path, File& output, bool create)
 
     if (data.is_discarded())
         return false;
+
+    output = File(std::move(data), path);
+    return true;
+}
+
+FileManager::File FileManager::FindFile(const char* path, bool create)
+{
+    if (String::IsNullOrEmpty(path))
+        return File();
+
+    nlohmann::json data = nlohmann::json::object();
+
+    if (create && !FileExists(path))
+    {
+        std::ofstream file(path);
+
+        if (!file.is_open())
+            return File();
+
+        file << "{}";
+
+        if (!file.good())
+            return File();
+    }
+    else
+    {
+        std::ifstream file(path);
+
+        if (!file.good())
+            return File();
+    }
+
+    return File(std::move(data), path);
+}
+
+FileManager::File FileManager::FindFile(StringView path, bool create)
+{
+    if (path.IsNullOrEmpty())
+        return File();
+
+    nlohmann::json data = nlohmann::json::object();
+
+    if (create && !FileExists(path))
+    {
+        std::ofstream file(path.Data());
+
+        if (!file.is_open())
+            return File();
+
+        file << "{}";
+
+        if (!file.good())
+            return File();
+    }
+    else
+    {
+        std::ifstream file(path.Data());
+
+        if (!file.good())
+            return File();
+    }
+
+    return File(std::move(data), path);
+}
+
+bool FileManager::FindFile(const char* path, File& output, bool create)
+{
+    output = File();
+
+    if (String::IsNullOrEmpty(path))
+        return false;
+
+    nlohmann::json data = nlohmann::json::object();
+
+    if (create && !FileExists(path))
+    {
+        std::ofstream file(path);
+
+        if (!file.is_open())
+            return false;
+
+        file << "{}";
+
+        if (!file.good())
+            return false;
+    }
+    else
+    {
+        std::ifstream file(path);
+
+        if (!file.good())
+            return false;
+    }
+
+    output = File(std::move(data), path);
+    return true;
+}
+
+bool FileManager::FindFile(StringView path, File& output, bool create)
+{
+    output = File();
+
+    if (path.IsNullOrEmpty())
+        return false;
+
+    nlohmann::json data = nlohmann::json::object();
+
+    if (create && !FileExists(path))
+    {
+        std::ofstream file(path.Data());
+
+        if (!file.is_open())
+            return false;
+
+        file << "{}";
+
+        if (!file.good())
+            return false;
+    }
+    else
+    {
+        std::ifstream file(path.Data());
+
+        if (!file.good())
+            return false;
+    }
 
     output = File(std::move(data), path);
     return true;
