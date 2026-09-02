@@ -29,6 +29,7 @@ private: // Functions
 	void Save();
 	void InternalSave(StringView path, FileManager::File& file);
 	void Backup();
+	void UpdateAutomaticBackup();
 	void Load();
 	void LoadInternal(StringView path);
 	bool OldLoadInternal(StringView path);
@@ -73,5 +74,6 @@ private: // Variables
 	// Internals
 	SDL_Renderer* renderer = nullptr;
 	bool preferencesWindow = false;
+	Chrono backupChrono;
 
 };

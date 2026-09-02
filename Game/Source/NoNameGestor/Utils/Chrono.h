@@ -1,9 +1,38 @@
 #pragma once
 
-#include <vector>
+#include "Framework/Data/Vector.h"
+#include "Framework/Utils/PerfTimer.h"
 
 class Chrono
 {
+
+	enum class ChronoState
+	{
+		STOP,
+		RUN,
+		PAUSE
+	};
+
+	struct PauseStamp
+	{
+		PauseStamp(uint64_t start, uint64_t end) :
+			start(start), end(end)
+		{
+		}
+
+		bool IsCompleted() const
+		{
+			return start != 0 && end != 0;
+		}
+
+		uint64_t ElapsedTime() const
+		{
+			return end - start;
+		}
+
+		uint64_t start = 0, end = 0;
+	};
+
 public:
 
 	Chrono();
@@ -16,53 +45,24 @@ public:
 
 	void Resume();
 
-	bool ChronoStart(unsigned int seconds);
+	bool ChronoTicks(uint64_t ticks);
+
+	bool ChronoSec(double seconds);
+
+	bool ChronoMs(double ms);
 
 	void ChronoStop();
 
-	unsigned int Read() const;
+	uint64_t ReadTicks() const;
 
 	float ReadSec() const;
 
+	float ReadMs() const;
+
 private:
 
-	unsigned int startTime = 0;
-	unsigned int pausedAt = 0;
-
-	enum class ChronoState
-	{
-		STOP,
-		RUN,
-		PAUSE
-	};
-
-	struct PauseStamp
-	{
-		PauseStamp()
-		{
-
-		}
-
-		PauseStamp(unsigned int start, unsigned int end)
-		{
-			this->start = start;
-			this->end = end;
-		}
-
-		bool IsCompleted() const
-		{
-			return (start != 0 && end != 0);
-		}
-
-		unsigned int GetElapsedTime() const
-		{
-			return end - start;
-		}
-
-		unsigned int start = 0, end = 0;
-	};
-
-	std::vector<PauseStamp> stamps;
-
+	PerfTimer timer;
+	Vector<PauseStamp> stamps;
 	ChronoState state = ChronoState::STOP;
+
 };

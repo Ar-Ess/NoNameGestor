@@ -1,14 +1,7 @@
-// ----------------------------------------------------
-// Fast timer with milisecons precision
-// ----------------------------------------------------
-
 #include "Chrono.h"
 
 #include "Framework/External/SDL/include/SDL_timer.h"
 #include <assert.h>
-
-// L07: DONE 1: Fill Start(), Read(), ReadSec() methods
-// they are simple, one line each!
 	
 Chrono::Chrono()
 {
@@ -18,7 +11,7 @@ void Chrono::Start()
 {
 	if (state != ChronoState::STOP) return;
 
-	startTime = SDL_GetTicks();
+	timer.Start();
 	state = ChronoState::RUN;
 }
 
@@ -26,18 +19,16 @@ void Chrono::Stop()
 {
 	if (state == ChronoState::STOP) return;
 
-	startTime = 0;
+	timer = PerfTimer();
 	state = ChronoState::STOP;
-	stamps.clear();
-	stamps.shrink_to_fit();
-
+	stamps.Clear();
 }
 
 void Chrono::Pause()
 {
 	if (state != ChronoState::RUN) return;
 
-	stamps.push_back(PauseStamp(SDL_GetTicks(), 0));
+	stamps.EmplaceBack(timer.ReadTicks(), 0);
 	state = ChronoState::PAUSE;
 }
 
@@ -45,27 +36,85 @@ void Chrono::Resume()
 {
 	if (state != ChronoState::PAUSE) return;
 
-	stamps.back().end = SDL_GetTicks();
+	stamps.Back().end = timer.ReadTicks();
 	state = ChronoState::RUN;
 }
 
-bool Chrono::ChronoStart(unsigned int seconds)
+bool Chrono::ChronoTicks(uint64_t ticks)
 {
-	unsigned int time = SDL_GetTicks();
 	bool stop = false;
+
 	switch (state)
 	{
 	case ChronoState::STOP:
+
 		state = ChronoState::RUN;
-		startTime = time;
+		timer.Start();
+
 		break;
 
 	case ChronoState::RUN:
-		if (((time - startTime) / 1000.0f) >= seconds)
+
+		if (timer.ReadTicks() >= ticks)
 		{
 			stop = true;
 			ChronoStop();
 		}
+
+		break;
+	}
+
+	return stop;
+}
+
+bool Chrono::ChronoSec(double seconds)
+{
+	bool stop = false;
+
+	switch (state)
+	{
+	case ChronoState::STOP:
+
+		state = ChronoState::RUN;
+		timer.Start();
+
+		break;
+
+	case ChronoState::RUN:
+
+		if (timer.ReadSec() >= seconds)
+		{
+			stop = true;
+			ChronoStop();
+		}
+
+		break;
+	}
+
+	return stop;
+}
+
+bool Chrono::ChronoMs(double ms)
+{
+	bool stop = false;
+
+	switch (state)
+	{
+	case ChronoState::STOP:
+
+		state = ChronoState::RUN;
+		timer.Start();
+
+		break;
+
+	case ChronoState::RUN:
+
+		if (timer.ReadMs() >= ms)
+		{
+			stop = true;
+			ChronoStop();
+		}
+
 		break;
 	}
 
@@ -76,36 +125,27 @@ void Chrono::ChronoStop()
 {
 	if (state == ChronoState::STOP) return;
 
-	startTime = 0;
+	timer = PerfTimer();
 	state = ChronoState::STOP;
 }
 
-unsigned int Chrono::Read() const
+uint64_t Chrono::ReadTicks() const
 {
-	unsigned int readTime = SDL_GetTicks();
+	if (stamps.IsEmpty())
+		return timer.ReadTicks();
 
-	if (stamps.empty()) return readTime - startTime;
+	uint64_t elapsedPauseTime = 0;
+	stamps.Iterate([&](const PauseStamp& s) { if (s.IsCompleted()) elapsedPauseTime += s.ElapsedTime(); });
 
-	unsigned int elapsedPauseTime = 0;
-	for (PauseStamp pS : stamps)
-	{
-		if (pS.IsCompleted()) elapsedPauseTime += pS.GetElapsedTime();
-	}
-
-	return readTime - startTime - elapsedPauseTime;
+	return timer.ReadTicks() - elapsedPauseTime;
 }
 
 float Chrono::ReadSec() const
 {
-	unsigned int readTime = SDL_GetTicks();
+	return PerfTimer::TicksToSeconds(ReadTicks());
+}
 
-	if (stamps.empty()) return float(readTime - startTime) / 1000;
-
-	unsigned int elapsedPauseTime = 0;
-	for (PauseStamp pS : stamps)
-	{
-		if (pS.IsCompleted()) elapsedPauseTime += pS.GetElapsedTime();
-	}
-
-	return float(readTime - startTime - elapsedPauseTime) / 1000;
+float Chrono::ReadMs() const
+{
+	return PerfTimer::TicksToMs(ReadTicks());
 }

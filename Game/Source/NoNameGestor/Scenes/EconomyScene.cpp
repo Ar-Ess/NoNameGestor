@@ -21,6 +21,7 @@
 #define EXTENSION ".nng"
 #define NEW_FILE "New_File.nng"
 #define DEFAULT_BACKUP_CREATION_DIRECTORY App::DataDirectory() + "\\Backups\\"
+#define DEFAULT_FILE_DIALOG_DIRECTORY "C:\\"
 
 REGISTER_STARTUP_SCENE(EconomyScene);
 
@@ -89,7 +90,12 @@ bool EconomyScene::Update(float dt)
 		ImGui_ImplSDL2_ProcessEvent(&event);
 
 		if (event.type == SDL_QUIT)
+		{
 			ret = false;
+			// If Auto Backup when App Closing enabled, back up file (not backup a backup, neither a new file if not enabled)
+			if (config.autoCloseAppBackup && file.IsValid() && !file.IsBackup() && (config.backupUnsavedFiles || !file.IsNew()))
+				Backup();
+		}
 	}
 
 	// Generate ImGui Renderer New Frame 
@@ -100,6 +106,7 @@ bool EconomyScene::Update(float dt)
 	ImGui::NewFrame();
 
 	UpdateShortcuts();
+	UpdateAutomaticBackup();
 
 	gestors.Iterate([](GestorSystem* g) { g->Update(); });
 
@@ -179,12 +186,11 @@ void EconomyScene::SaveAs()
 
 		//TODO: Framework: Add trim function (opposite of Substring, it returns what is not selected by index & count)
 		//TODO: Framework: Solve the problem of similarity between Substring static and non-static
-		IGFD::FileDialogConfig config;
-		//TODO: Instead of "C:\\" add a config option as the default place to save a new file
-		config.path = file.IsNew() ? (App::DebugMode ? App::DataDirectory().Str() : "C:\\") : file.Path().Substring(0u, file.Path().Length() - 4).Data();
-		config.flags = ImGuiFileDialogFlags_ConfirmOverwrite | ImGuiFileDialogFlags_DisableCreateDirectoryButton;
-		config.fileName = file.Name().Data();
-		ImGuiFileDialog::Instance()->OpenDialog("SaveAs", "Choose a path", ".nng", config);
+		IGFD::FileDialogConfig fConfig;
+		fConfig.path = file.IsNew() ? (!App::DebugMode ? App::DataDirectory().Str() : config.defaultDialogDirectory.Str()) : file.Path().Substring(0u, file.Path().Length() - 4).Data();
+		fConfig.flags = ImGuiFileDialogFlags_ConfirmOverwrite | ImGuiFileDialogFlags_DisableCreateDirectoryButton;
+		fConfig.fileName = file.Name().Data();
+		ImGuiFileDialog::Instance()->OpenDialog("SaveAs", "Choose a path", ".nng", fConfig);
 	}
 
 	String path;
@@ -243,11 +249,10 @@ void EconomyScene::Save()
 
 void EconomyScene::Backup()
 {
-	//TODO: Configuration option "backup unsaved files"?
-	if (!file.IsValid() || file.IsNew())
+	if (!config.backupUnsavedFiles && (!file.IsValid() || file.IsNew()))
 	{
 		//TODO: Error messaging handling with time of error vanishing
-		errorMessage = "Can not backup an unsaved file. Please first save the current file.";
+		errorMessage = "Can not backup an unsaved file. Please first save the current file or enable the functionality on Preferences.";
 		return;
 	}
 
@@ -263,6 +268,7 @@ void EconomyScene::Backup()
 	int day = ltm->tm_mday;
 	int hour = ltm->tm_hour;
 	int min = ltm->tm_min;
+	int sec = ltm->tm_sec;
 
 	String info = String("_Backup_")
 		+ (ltm->tm_year + 1900)
@@ -273,7 +279,9 @@ void EconomyScene::Backup()
 		+ '-'
 		+ (hour < 10 ? String('0') + hour : String::FromInt(hour))
 		+ '-'
-		+ (min < 10 ? String('0') + min : String::FromInt(min));
+		+ (min < 10 ? String('0') + min : String::FromInt(min))
+		+ '-'
+		+ (sec < 10 ? String('0') + sec : String::FromInt(sec));
 
 	String path = config.backupDirectory + file.Name();
 	path.Insert(info, path.Length() - 4);
@@ -285,14 +293,29 @@ void EconomyScene::Backup()
 		errorMessage = "Unable to backup properly. File: " + path;
 }
 
+void EconomyScene::UpdateAutomaticBackup()
+{
+	if (!config.autoIntervalAppBackup || file.IsBackup())
+		return;
+
+	if (file.IsNew() && !config.backupUnsavedFiles)
+		return;
+
+	if (backupChrono.ChronoSec(config.comboIntervalValue[config.autoIntervalAppValue]))
+	{
+		Backup();
+	}
+}
+
 void EconomyScene::InternalSave(StringView path, FileManager::File& file)
 {
-	bool saveAs = !path.IsNullOrEmpty() || file.IsBackup();
+	bool backup = file.IsBackup();
+	bool saveAs = !path.IsNullOrEmpty() || backup;
 
 	// If it is a save as
 	if (saveAs)
 	{
-		Debug::Assert(!(path.IsNullOrEmpty() && file.IsBackup()), "Internal Save Error: If saving a backup, a valid path must be provided. Can't Save() a backup, only SaveAs(path).");
+		Debug::Assert(!(path.IsNullOrEmpty() && backup), "Internal Save Error: If saving a backup, a valid path must be provided. Can't Save() a backup, only SaveAs(path).");
 
 		// Check if it has the correct extension
 		if (!FileManager::FileHasExtension(path, EXTENSION))
@@ -328,7 +351,7 @@ void EconomyScene::InternalSave(StringView path, FileManager::File& file)
 
 	// Write to file
 	file.Write("version", VERSION);
-	file.Write("backup", file.IsBackup());
+	file.Write("backup", backup);
 	file.Write("gestors", FileManager::File::Array);
 	auto gnode = file.Access("gestors");
 
@@ -355,10 +378,10 @@ void EconomyScene::Load()
 	}
 	else
 	{
-		IGFD::FileDialogConfig config;
-		config.path = "";
-		config.flags = ImGuiFileDialogFlags_DisableCreateDirectoryButton;
-		ImGuiFileDialog::Instance()->OpenDialog("OpenFile", "Choose a file", ".nng", config);
+		IGFD::FileDialogConfig fConfig;
+		fConfig.path = config.defaultDialogDirectory.Str();
+		fConfig.flags = ImGuiFileDialogFlags_DisableCreateDirectoryButton;
+		ImGuiFileDialog::Instance()->OpenDialog("OpenFile", "Choose a file", ".nng", fConfig);
 	}
 
 	String path;
@@ -427,6 +450,10 @@ void EconomyScene::LoadInternal(StringView path)
 		return;
 	}
 
+	// If Auto Backup when File Closing enabled, back up file (not backup a backup, neither a new file if not enabled)
+	if (config.autoCloseFileBackup && file.IsValid() && !file.IsBackup() && (config.backupUnsavedFiles || !file.IsNew()))
+		Backup();
+
 	// Move valid file
 	file = std::move(f);
 
@@ -464,7 +491,14 @@ void EconomyScene::LoadInternal(StringView path)
 	}
 
 	// Save Path to recentFiles
-	if (!isBackup) SaveRecentPath(file.Path());
+	if (!isBackup)
+	{
+		SaveRecentPath(file.Path());
+		if (config.autoOpenFileBackup)
+			Backup();
+	}
+
+	backupChrono.ChronoStop();
 }
 
 bool EconomyScene::OldLoadInternal(StringView path)
@@ -649,9 +683,17 @@ void EconomyScene::LoadConfiguration()
 	{
 		// User Preferences
 		configFile.Write("UP_SCT", config.showContainerType);
-		configFile.Write("UP_SFU", config.showFutureUnasigned);
+		configFile.Write("UP_SFU", config.showFutureUnassigned);
 		configFile.Write("UP_TFS", config.textFieldSize);
-		configFile.Write("UP_BCD", String::Empty);
+		configFile.Write("UP_BUF", false); // Backup Unsaved Files?
+		configFile.Write("UP_BCD", String::Empty); // Backup Creation Directory
+		configFile.Write("UP_DDD", String::Empty); // Default Dialog Directory
+		configFile.Write("UP_ABS", false); // Automatic Backups System
+		configFile.Write("UP_AOFB", false); // Automatic Opening File Backup
+		configFile.Write("UP_ACFB", false); // Automatic Closing File Backup
+		configFile.Write("UP_ACAP", false); // Automatic Closing App Backup
+		configFile.Write("UP_AIAB", false); // Automatic Interval App Backup
+		configFile.Write("UP_AIAV", 3); // Automatic Interval App Value
 
 		// Internal Data
 		configFile.Write("ID_RFA", FileManager::File::Array); // Recent Files Array
@@ -662,11 +704,20 @@ void EconomyScene::LoadConfiguration()
 	{
 		// User Preferences
 		configFile.Read("UP_SCT", config.showContainerType);
-		configFile.Read("UP_SFU", config.showFutureUnasigned);
+		configFile.Read("UP_SFU", config.showFutureUnassigned);
 		configFile.Read("UP_TFS", config.textFieldSize);
+		configFile.Read("UP_BUF", config.backupUnsavedFiles);
 		configFile.Read("UP_BCD", config.backupDirectory);
 		if (config.backupDirectory.IsNullOrEmpty())
 			config.backupDirectory = DEFAULT_BACKUP_CREATION_DIRECTORY;
+		configFile.Read("UP_DDD", config.defaultDialogDirectory);
+		if (config.defaultDialogDirectory.IsNullOrEmpty())
+			config.defaultDialogDirectory = DEFAULT_FILE_DIALOG_DIRECTORY;
+		configFile.Read("UP_AOFB", config.autoOpenFileBackup);
+		configFile.Read("UP_ACFB", config.autoCloseFileBackup);
+		configFile.Read("UP_ACAB", config.autoCloseAppBackup);
+		configFile.Read("UP_AIAB", config.autoIntervalAppBackup);
+		configFile.Read("UP_AIAV", config.autoIntervalAppValue);
 
 		// Internal Data
 		config.recentFiles = Vector<String>(20);
@@ -914,17 +965,19 @@ void EconomyScene::DrawPreferencesWindow(bool& ret)
 		{
 			if (ImGui::BeginTabItem("General"))
 			{
+				ImGui::AddSpacing(1);
+
 				ImGui::AddHelper("Shows, at the side of each container,\na text noting it's type.", "?"); ImGui::SameLine();
-				if (ImGui::Checkbox("Show Container Typology CurrentName", &config.showContainerType))
+				if (ImGui::Checkbox("Show Container Typology Name", &config.showContainerType))
 				{
 					configFile.Write("UP_SCT", config.showContainerType);
 					configFile.Save();
 				}
 
 				ImGui::AddHelper("Shows the unsigned money in terms\nof future income.", "?"); ImGui::SameLine();
-				if (ImGui::Checkbox("Show Unasigned Future Money ", &config.showFutureUnasigned));
+				if (ImGui::Checkbox("Show Unassigned Future Money ", &config.showFutureUnassigned));
 				{
-					configFile.Write("UP_SFU", config.showFutureUnasigned);
+					configFile.Write("UP_SFU", config.showFutureUnassigned);
 					configFile.Save();
 				}
 
@@ -938,11 +991,28 @@ void EconomyScene::DrawPreferencesWindow(bool& ret)
 				}
 				ImGui::PopItemWidth();
 
+				ImGui::AddHelper("Default directory where the File Dialog will open\nwhen no existing file location can be determined.", "?"); ImGui::SameLine();
+				int r = -1;
+				if (ImGui::DirectoryBrowserField("Default Dialog Directory", &config.defaultDialogDirectory, r, 0, config.defaultDialogDirectory.Str()))
+				{
+					if (r == 1) // Browse operation returns a path
+						configFile.Write("UP_DDD", config.defaultDialogDirectory);
+					else if (r == 3) // Reset button clicked
+					{
+						config.defaultDialogDirectory = DEFAULT_FILE_DIALOG_DIRECTORY;
+						configFile.Write("UP_DDD", String::Empty);
+					}
+
+					configFile.Save();
+				}
+
 				ImGui::EndTabItem();
 			}
 
 			if (ImGui::BeginTabItem("Gestors"))
 			{
+				ImGui::AddSpacing(1);
+
 				if (ImGui::BeginTabBar("##GestorsTabBar"))
 				{
 					gestors.Iterate(
@@ -951,6 +1021,8 @@ void EconomyScene::DrawPreferencesWindow(bool& ret)
 							ImGui::PushID(g->id.Data());
 							if (ImGui::BeginTabItem(g->Name().Data()))
 							{
+								ImGui::AddSpacing(1);
+
 								ImGui::Text("Currency:");
 								if (ImGui::Combo("##Currency", &config.currency[i], config.comboCurrency, 5))
 									g->SetFormat("%.2f", config.currency[i]);
@@ -968,46 +1040,66 @@ void EconomyScene::DrawPreferencesWindow(bool& ret)
 
 			if (ImGui::BeginTabItem("Backups"))
 			{
-				static bool browsingBackupDirectory = false;
-				ImGui::AddHelper("Define where the program stores the backups", "?"); ImGui::SameLine();
-				if (ImGui::Button("Browse", ImVec2(50, 19)))
+				ImGui::AddSpacing(1);
+
+				ImGui::AddHelper("Determines if it is allowed to backup a newly created and unsaved file.", "?"); ImGui::SameLine();
+				if (ImGui::Checkbox("Backup unsaved files?", &config.backupUnsavedFiles))
 				{
-					browsingBackupDirectory = true;
-					IGFD::FileDialogConfig config;
-					config.path = ".";
-					ImGuiFileDialog::Instance()->OpenDialog("BrowsingBackupDirectory", "Choose a Directory", nullptr, config);
-				}ImGui::SameLine();
-				if (ImGui::Button("R", ImVec2(19, 19)))
-				{
-					config.backupDirectory = DEFAULT_BACKUP_CREATION_DIRECTORY;
-					configFile.Write("UP_BCD", String::Empty);
+					configFile.Write("UP_BUF", config.backupUnsavedFiles);
 					configFile.Save();
 				}
-				ImGui::SameLine(); ImGui::Text("Backup Directory");
-				ImGui::Dummy(ImVec2(7, 2)); ImGui::SameLine();
-				ImGui::SameLine(); ImGui::TextWithStartEllipsis(config.backupDirectory.Str(), ImGui::GetWindowWidth() - 44, false, 0);
 
-				if (browsingBackupDirectory)
+				ImGui::AddHelper("Define where the program stores the backups.", "?"); ImGui::SameLine();
+				int r = -1;
+				if (ImGui::DirectoryBrowserField("Backup Directory", &config.backupDirectory, r, 0, config.defaultDialogDirectory.Str()))
 				{
-					//TODO: Framework: Window doesn't provide a method with the resized size of the window.
-					int width, height;
-					SDL_GetWindowSize(Window::window, &width, &height);
-					ImGui::SetNextWindowSize(ImVec2((float)width, (float)height), ImGuiCond_Always);
-					ImGui::SetNextWindowPos(ImVec2(width / 2, height / 2), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-
-					if (ImGuiFileDialog::Instance()->Display("BrowsingBackupDirectory", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
+					if (r == 1) // Browse operation returns a path
+						configFile.Write("UP_BCD", config.backupDirectory);
+					else if (r == 3) // Reset button clicked
 					{
-						if (ImGuiFileDialog::Instance()->IsOk())
-						{
-							config.backupDirectory = (ImGuiFileDialog::Instance()->GetCurrentPath() + '\\').c_str();
-							configFile.Write("UP_BCD", config.backupDirectory);
-							configFile.Save();
-						}
-
-						browsingBackupDirectory = false;
-						ImGuiFileDialog::Instance()->Close();
+						config.backupDirectory = DEFAULT_BACKUP_CREATION_DIRECTORY;
+						configFile.Write("UP_BCD", String::Empty);
 					}
+
+					configFile.Save();
 				}
+
+				ImGui::AddSpacing(2);
+
+				ImGui::SectionText("Automatic Backups");
+				ImGui::AddHelper("When a file is opened, automatically generates a backup of it.", "?"); ImGui::SameLine();
+				if (ImGui::Checkbox("Backup on file open", &config.autoOpenFileBackup))
+				{
+					configFile.Write("UP_AOFB", config.autoOpenFileBackup);
+					configFile.Save();
+				}
+				ImGui::AddHelper("When a file is closed, automatically generates a backup of it.", "?"); ImGui::SameLine();
+				if (ImGui::Checkbox("Backup on file close", &config.autoCloseFileBackup))
+				{
+					configFile.Write("UP_ACFB", config.autoCloseFileBackup);
+					configFile.Save();
+				}
+				ImGui::AddHelper("When the app is closed, automatically generates a backup of the current file.", "?"); ImGui::SameLine();
+				if (ImGui::Checkbox("Backup on app close", &config.autoCloseAppBackup))
+				{
+					configFile.Write("UP_ACAB", config.autoCloseAppBackup);
+					configFile.Save();
+				}
+				ImGui::AddHelper("Periodically generates backups depending on the specified timing.", "?"); ImGui::SameLine();
+				if (ImGui::Checkbox("Backup periodically |", &config.autoIntervalAppBackup))
+				{
+					configFile.Write("UP_AIAB", config.autoIntervalAppBackup);
+					configFile.Save();
+				}
+				ImGui::SameLine(); ImGui::TimeDisplay(backupChrono.ReadSec());
+				ImGui::BeginDisabled(!config.autoIntervalAppBackup);
+				ImGui::Dummy(ImVec2(7, 2)); ImGui::SameLine();
+				if (ImGui::SliderCombo("##IntervalCombo", &config.autoIntervalAppValue, config.comboIntervalText, 7, 150))
+				{
+					configFile.Write("UP_AIAV", config.autoIntervalAppValue);
+					configFile.Save();
+				}
+				ImGui::EndDisabled();
 
 				ImGui::EndTabItem();
 			}
@@ -1023,9 +1115,15 @@ void EconomyScene::DrawMainWindow(bool& ret)
 	if (!ret) return;
 	ret = true;
 
-	if (ImGui::Begin("##MainWindow", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar))
+	if (ImGui::Begin("##MainWindow", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus))
 	{
 		ImGui::Text(file.Name().Data());
+		if (file.IsBackup())
+		{
+			ImGui::SameLine();
+			ImGui::Text("- Restored");
+		}
+
 		unsigned int size = gestors.Size();
 
 		if (size > 0) ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(10.0f, 0.0f));

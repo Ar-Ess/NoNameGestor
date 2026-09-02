@@ -3,8 +3,12 @@
 #include "Framework/Engine/App.h"
 #include "Framework/Data/String.h"
 
+#include "Framework/External/SDL/include/SDL.h"
+#include "Framework/Window/Window.h"
+
 #include "NoNameGestor/External/imgui/imgui_internal.h"
 #include "NoNameGestor/External/imgui/imgui_stdlib.h"
+#include "NoNameGestor/External/ImGuiFileDialog/ImGuiFileDialog.h"
 
 ImFont* InputTextFont = nullptr;
 
@@ -192,10 +196,103 @@ void ImGui::TextWithStartEllipsis(char const* aString, float aMaxWidth, bool use
 	ImGui::TextUnformatted(textStart);
 }
 
+bool ImGui::DirectoryBrowserField(const char* label, String* browsePath, int& result, float maxWindowWidth, const char* dialogBasePath)
+{
+	bool ret = false;
+
+	ImGui::BeginGroup();
+	{
+		if (ImGui::Button("Browse", ImVec2(50, 19)))
+		{
+			IGFD::FileDialogConfig config;
+			config.path = dialogBasePath;
+			ImGuiFileDialog::Instance()->OpenDialog(label, "Choose a Directory", nullptr, config);
+			result = 0;
+			ret = true;
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("R", ImVec2(19, 19)))
+		{
+			result = 3;
+			ret = true;
+		}
+		ImGui::SameLine(); ImGui::Text(label);
+
+		float width = maxWindowWidth <= 0 ? ImGui::GetWindowWidth() - ImGui::GetCursorPosX() - 20 : maxWindowWidth;
+		ImGui::TextWithStartEllipsis(browsePath->Str(), width, false, 0);
+
+	}
+	ImGui::EndGroup();
+
+	if (!ImGuiFileDialog::Instance()->IsOpened(label))
+		return ret;
+
+	//TODO: Framework: Window doesn't provide a method with the resized size of the window.
+	Point winSize = Window::WindowSize();
+	ImGui::SetNextWindowSize(ImVec2(winSize.x, winSize.y), ImGuiCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(winSize.x / 2, winSize.y / 2), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+
+	if (ImGuiFileDialog::Instance()->Display(label, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize))
+	{
+		if (ImGuiFileDialog::Instance()->IsOk())
+		{
+			*browsePath = (ImGuiFileDialog::Instance()->GetCurrentPath() + '\\').c_str();
+			result = 1;
+			ret = true;
+		}
+		else
+		{
+			result = 2;
+			ret = true;
+		}
+
+		ImGuiFileDialog::Instance()->Close();
+	}
+
+	return ret;
+}
+
 bool ImGui::IsSpace(char aCharacter)
 {
 	// all space characters are values 32 or less (space is 32)
 	// so we can convert them to a bitmask and use a single condition
 	const int mask = (1 << (' ' - 1)) | (1 << ('\f' - 1)) | (1 << ('\n' - 1)) | (1 << ('\r' - 1)) | (1 << ('\t' - 1)) | (1 << ('\v' - 1));
 	return (mask & (1 << ((aCharacter && aCharacter <= 32) * (aCharacter - 1)))) != 0;
+}
+
+void ImGui::SectionText(const char* text, unsigned int spacing)
+{
+	ImGui::Text(text);
+	ImGui::SameLine();
+	ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetTextLineHeight() * 0.5f);
+	ImGui::Separator();
+	ImGui::AddSpacing(spacing);
+}
+
+bool ImGui::SliderCombo(const char* label, int* value, const char* const items[], int itemsLength, float width)
+{
+	ImGui::BeginGroup();
+	if (!String::StartsWith("##", label))
+	{
+		ImGui::Text(label);
+	}
+	if (width > 0) ImGui::PushItemWidth(width);
+	ImGui::PushID(label);
+	bool ret = ImGui::SliderInt("##sliderint", value, 0, itemsLength - 1, "", ImGuiSliderFlags_NoInput);
+	ImGui::PopID();
+	if (width > 0) ImGui::PopItemWidth();
+	ImGui::SameLine(); ImGui::Text(items[*value]);
+	ImGui::EndGroup();
+	return ret;
+}
+
+void ImGui::TimeDisplay(double seconds)
+{
+	int s = static_cast<int>(std::floor(seconds));
+
+	int h = s / 3600;
+	int m = (s % 3600) / 60;
+	s = s % 60;
+
+	ImGui::Text("%02d:%02d:%02d", h, m, s);
 }

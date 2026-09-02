@@ -23,7 +23,7 @@ public: // Functions
 	{
 		ImGui::PushID(id.Data());
 		{
-			if (!config->showFutureUnasigned)
+			if (!config->showFutureUnassigned)
 			{
 				ImGui::Text("Total: "); ImGui::SameLine();
 				ImGui::Text(format->Str(), money);
