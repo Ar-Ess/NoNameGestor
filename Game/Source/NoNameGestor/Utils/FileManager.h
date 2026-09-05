@@ -3,11 +3,29 @@
 #include "Framework/Data/String.h"
 #include "Framework/External/JSON/json.hpp"
 
+#include "NoNameGestor/Utils/DateTime.h"
+
 #include <fstream>
 
+//TODO: Framework: Add this in the framework
 class FileManager
 {
-// New File Manager
+
+	struct FileInfo
+	{
+		DateTime creationDate;
+		DateTime lastAccessDate;
+		DateTime lastWriteDate;
+		uint64_t fileSize;
+		bool isReadonly;
+		bool isHidden;
+		bool isFromSystem;
+		bool isArchive;
+		bool isCompressed;
+		bool isEncrypted;
+		bool isTemporary;
+	};
+
 public:
 
 	class FileNode
@@ -590,9 +608,11 @@ public:
 		/// </summary>
 		StringView Directory() const;
 
+		const FileInfo& Info() const;
+
 	private:
 
-		File(nlohmann::json&& data, const String& path);
+		File(nlohmann::json&& data, const String& path, const FileInfo& info);
 
 		void GenerateFileInfo(const String& path);
 
@@ -603,6 +623,7 @@ public:
 		String directory;
 		bool isNewFile = false; // Is the file a new file? (no path, only file name)
 		bool isBackup = false;
+		FileInfo info;
 	};
 
 public:
@@ -757,5 +778,13 @@ public:
 	/// <param name="create">In case the file does not exist, should the function create a new file?</param>
 	/// <returns>False if there has been an error on file finding; otherwise true.</returns>
 	static bool FindFile(StringView path, File& output, bool create = false);
+
+	static bool RemoveFile(const char* path);
+
+	static bool RemoveFolder(const char* directory, bool removeItself = false);
+
+private:
+
+	static bool GetFileInfo(const char* path, FileInfo& info);
 
 };

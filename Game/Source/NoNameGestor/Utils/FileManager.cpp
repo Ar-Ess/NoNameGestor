@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <filesystem>
+#include <windows.h>
 
 FileManager::FileNode::FileNode(FileNode&& other) noexcept :
     data(other.data)
@@ -355,8 +356,14 @@ StringView FileManager::File::Directory() const
     return directory;
 }
 
-FileManager::File::File(nlohmann::json&& data, const String& path) :
-    FileNode(std::move(data))
+const FileManager::FileInfo& FileManager::File::Info() const
+{
+    return info;
+}
+
+FileManager::File::File(nlohmann::json&& data, const String& path, const FileInfo& info) :
+    FileNode(std::move(data)),
+    info(info)
 {
     GenerateFileInfo(path);
 }
@@ -515,7 +522,11 @@ FileManager::File FileManager::OpenFile(const char* path, bool create)
     if (data.is_discarded())
         return File();
 
-    return File(std::move(data), path);
+    FileInfo info;
+    if (!GetFileInfo(path, info))
+        return File();
+
+    return File(std::move(data), path, info);
 }
 
 FileManager::File FileManager::OpenFile(StringView path, bool create)
@@ -761,6 +772,56 @@ bool FileManager::FindFile(StringView path, File& output, bool create)
     }
 
     output = File(std::move(data), path);
+    return true;
+}
+
+bool FileManager::RemoveFile(const char* path)
+{
+    if (String::IsNullOrEmpty(path) || !FileExists(path))
+        return false;
+
+    return std::filesystem::remove(path);
+}
+
+bool FileManager::RemoveFolder(const char* directory, bool removeItself)
+{
+    if (String::IsNullOrEmpty(directory) || !DirectoryExists(directory))
+        return false;
+
+    int ret = 0;
+    if (removeItself)
+        ret = std::filesystem::remove_all(directory);
+    else
+    {
+        std::filesystem::path path(directory);
+        for (auto& entry : std::filesystem::directory_iterator(path))
+            std::filesystem::remove_all(entry.path());
+    }
+
+    return ret != 0;
+}
+
+bool FileManager::GetFileInfo(const char* path, FileManager::FileInfo& info)
+{
+    WIN32_FILE_ATTRIBUTE_DATA fileData;
+
+    if (!GetFileAttributesExA(path, GetFileExInfoStandard, &fileData))
+        return false;
+
+    info = {
+        DateTime::From::WindowsFileTime(fileData.ftCreationTime),
+        DateTime::From::WindowsFileTime(fileData.ftLastAccessTime),
+        DateTime::From::WindowsFileTime(fileData.ftLastWriteTime),
+        ((uint64_t)fileData.nFileSizeHigh << 32) | fileData.nFileSizeLow,
+        (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_READONLY),
+        (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN),
+        (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM),
+        (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE),
+        (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_COMPRESSED),
+        (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_ENCRYPTED),
+        (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_TEMPORARY)
+    };
+
     return true;
 }
 

@@ -188,6 +188,7 @@
     <ClCompile Include="Source\NoNameGestor\Main.cpp" />
     <ClCompile Include="Source\NoNameGestor\Scenes\EconomyScene.cpp" />
     <ClCompile Include="Source\NoNameGestor\Utils\Chrono.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Utils\DateTime.cpp" />
     <ClCompile Include="Source\NoNameGestor\Utils\FileManager.cpp" />
     <ClCompile Include="Source\NoNameGestor\Utils\ImGuiExtension.cpp" />
     <ClCompile Include="Source\NoNameGestor\Utils\LogFunction.cpp" />
@@ -218,12 +219,14 @@
     <ClInclude Include="Source\NoNameGestor\Gestor\GestorSystem.h" />
     <ClInclude Include="Source\NoNameGestor\Scenes\EconomyScene.h" />
     <ClInclude Include="Source\NoNameGestor\Utils\Chrono.h" />
+    <ClInclude Include="Source\NoNameGestor\Utils\DateTime.h" />
     <ClInclude Include="Source\NoNameGestor\Utils\FileManager.h" />
     <ClInclude Include="Source\NoNameGestor\Utils\Flag.h" />
     <ClInclude Include="Source\NoNameGestor\Utils\ImGuiExtension.h" />
     <ClInclude Include="Source\NoNameGestor\Utils\LogFunction.h" />
     <ClInclude Include="Source\NoNameGestor\Utils\Multibool.h" />
     <ClInclude Include="Source\NoNameGestor\Utils\Point.h" />
+    <ClInclude Include="Source\NoNameGestor\Utils\TimeSpan.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />

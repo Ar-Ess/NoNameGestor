@@ -17,6 +17,8 @@
 #define NOMINMAX
 #include <windows.h>
 
+#include "NoNameGestor/Utils/TimeSpan.h"
+
 #define VERSION 1.4f
 #define EXTENSION ".nng"
 #define NEW_FILE "New_File.nng"
@@ -1090,6 +1092,7 @@ void EconomyScene::DrawPreferencesWindow(bool& ret)
 				{
 					configFile.Write("UP_AIAB", config.autoIntervalAppBackup);
 					configFile.Save();
+					backupChrono.ChronoStop();
 				}
 				ImGui::SameLine(); ImGui::TimeDisplay(backupChrono.ReadSec());
 				ImGui::BeginDisabled(!config.autoIntervalAppBackup);
@@ -1100,6 +1103,14 @@ void EconomyScene::DrawPreferencesWindow(bool& ret)
 					configFile.Save();
 				}
 				ImGui::EndDisabled();
+
+				ImGui::AddSpacing(2);
+
+				ImGui::SectionText("Backup Clean Up");
+				if (ImGui::Button("Clean All Backups"))
+				{
+					// Backup delete system. I need a function that returns FileInfo from a directory.
+				}
 
 				ImGui::EndTabItem();
 			}
