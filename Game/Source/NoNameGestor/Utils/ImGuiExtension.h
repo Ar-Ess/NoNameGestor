@@ -2,6 +2,7 @@
 
 #include <string>
 #include "Framework/Data/String.h"
+#include "NoNameGestor/Utils/DateTime.h"
 
 struct ImFont;
 
@@ -49,5 +50,11 @@ namespace ImGui
 	bool SliderCombo(const char* label, int* value, const char* const items[], int itemsLength, float width = 0);
 
 	void TimeDisplay(double seconds);
+
+	bool OneOptionSelectableCombo(const char* labels[], int labelCount, int* selection, int spacing = -1);
+
+	bool DateField(const char* label, DateTime* date);
+
+	void CenterNextWindow();
 
 }

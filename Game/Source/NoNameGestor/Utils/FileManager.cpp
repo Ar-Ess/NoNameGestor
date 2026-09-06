@@ -564,7 +564,11 @@ FileManager::File FileManager::OpenFile(StringView path, bool create)
     if (data.is_discarded())
         return File();
 
-    return File(std::move(data), path);
+    FileInfo info;
+    if (!GetFileInfo(path.Data(), info))
+        return File();
+
+    return File(std::move(data), path, info);
 }
 
 bool FileManager::OpenFile(const char* path, File& output, bool create)
@@ -604,7 +608,11 @@ bool FileManager::OpenFile(const char* path, File& output, bool create)
     if (data.is_discarded())
         return false;
 
-    output = File(std::move(data), path);
+    FileInfo info;
+    if (!GetFileInfo(path, info))
+        return false;
+
+    output = File(std::move(data), path, info);
     return true;
 }
 
@@ -645,7 +653,11 @@ bool FileManager::OpenFile(StringView path, File& output, bool create)
     if (data.is_discarded())
         return false;
 
-    output = File(std::move(data), path);
+    FileInfo info;
+    if (!GetFileInfo(path.Data(), info))
+        return false;
+
+    output = File(std::move(data), path, info);
     return true;
 }
 
@@ -676,7 +688,11 @@ FileManager::File FileManager::FindFile(const char* path, bool create)
             return File();
     }
 
-    return File(std::move(data), path);
+    FileInfo info;
+    if (!GetFileInfo(path, info))
+        return File();
+
+    return File(std::move(data), path, info);
 }
 
 FileManager::File FileManager::FindFile(StringView path, bool create)
@@ -706,7 +722,11 @@ FileManager::File FileManager::FindFile(StringView path, bool create)
             return File();
     }
 
-    return File(std::move(data), path);
+    FileInfo info;
+    if (!GetFileInfo(path.Data(), info))
+        return File();
+
+    return File(std::move(data), path, info);
 }
 
 bool FileManager::FindFile(const char* path, File& output, bool create)
@@ -738,7 +758,11 @@ bool FileManager::FindFile(const char* path, File& output, bool create)
             return false;
     }
 
-    output = File(std::move(data), path);
+    FileInfo info;
+    if (!GetFileInfo(path, info))
+        return false;
+
+    output = File(std::move(data), path, info);
     return true;
 }
 
@@ -771,7 +795,11 @@ bool FileManager::FindFile(StringView path, File& output, bool create)
             return false;
     }
 
-    output = File(std::move(data), path);
+    FileInfo info;
+    if (!GetFileInfo(path.Data(), info))
+        return false;
+
+    output = File(std::move(data), path, info);
     return true;
 }
 

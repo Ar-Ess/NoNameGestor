@@ -50,7 +50,7 @@ public: // Functions
 		labels.Iterate(
 			[&](Label& l, int i, int size)
 			{
-				ImGui::PushID(id.Data());
+				ImGui::PushID(l.id.Data());
 				{
 					if (i == 0) { if (ImGui::Button("+")) NewLabel("New Limit"); }
 					else ImGui::Dummy({ 33, 0 });
@@ -95,7 +95,10 @@ public: // Functions
 					ImGui::Text("/"); ImGui::SameLine();
 					ImGui::Text(format->Str(), limit); ImGui::SameLine();
 					if (ImGui::Button("Edit"))
+					{
+						ImGui::OpenPopup("Edit Limit Popup");
 						editLimit = i;
+					}
 				}
 				ImGui::PopID();
 			}
@@ -103,33 +106,25 @@ public: // Functions
 
 		if (hidden) ImGui::EndDisabled();
 
-		if (editLimit == -1)
-			return;
+		ImGui::CenterNextWindow();
+		ImGui::SetNextWindowSize(ImVec2(140, 100));
 
-		ImGui::PushID(id.Data());
+		if (ImGui::BeginPopupModal("Edit limit", nullptr, ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
 		{
-			ImGui::OpenPopup("Edit Limit");
+			ImGui::PushID(id.Data());
+			static float tempLimit = 0;
+			ImGui::DragFloat("##Drag1", &tempLimit, 1.0f, 0.0f, MAX_MONEY, format->Str(), ImGuiSliderFlags_AlwaysClamp);
+
+			if (ImGui::Button("Done"))
 			{
-				ImVec2 size = ImGui::GetWindowSize();
-				ImGui::SetNextWindowSize(ImVec2(140, 100));
-				ImGui::SetNextWindowPos(ImVec2(size.x / 2, size.y / 2), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-
-				if (ImGui::BeginPopupModal("Edit limit", nullptr, ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
-				{
-					static float tempLimit = 0;
-					ImGui::DragFloat("##Drag1", &tempLimit, 1.0f, 0.0f, MAX_MONEY, format->Str(), ImGuiSliderFlags_AlwaysClamp);
-
-					if (ImGui::Button("Done"))
-					{
-						labels[editLimit].limit = tempLimit;
-						editLimit = -1;
-						tempLimit = 0;
-					}
-				}
+				labels[editLimit].limit = tempLimit;
+				tempLimit = 0;
+				ImGui::CloseCurrentPopup();
 			}
+			ImGui::PopID();
 			ImGui::EndPopup();
 		}
-		ImGui::PopID();
+
 	}
 
 	void Save(FileManager::FileNode node) const override

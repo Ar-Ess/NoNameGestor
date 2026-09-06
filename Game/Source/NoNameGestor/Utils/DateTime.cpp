@@ -16,7 +16,7 @@ DateTime DateTime::From::Now()
 	time_t now = time(0);
 	tm* ltm = localtime(&now);
 
-	int year = ltm->tm_year;
+	int year = ltm->tm_year + 1900;
 	int month = ltm->tm_mon + 1;
 	int day = ltm->tm_mday;
 	int hour = ltm->tm_hour;
@@ -221,10 +221,10 @@ void DateTime::Hour(uint64_t hours, bool am)
 
 uint64_t DateTime::Day() const
 {
-	uint64_t day = 0;
+	uint64_t days = 0;
 	uint64_t year = 0;
-	FindMonth(day, year);
-	return day;
+	FindMonth(days, year);
+	return days + 1;
 }
 
 void DateTime::Day(uint64_t day)
@@ -329,6 +329,20 @@ bool DateTime::IsLeapYear() const
 	uint64_t days = 0;
 	uint64_t year = FindYear(days);
 	return IsLeapYear(year);
+}
+
+void DateTime::Date(uint64_t& year, uint64_t& month, uint64_t& day)
+{
+	month = FindMonth(day, year);
+	++day;
+}
+
+void DateTime::Date(int& year, int& month, int& day)
+{
+	uint64_t d, y;
+	month = FindMonth(d, y);
+	day = d + 1;
+	year = y;
 }
 
 uint64_t DateTime::Year() const
@@ -492,7 +506,7 @@ uint64_t DateTime::FindMonth(uint64_t& day, uint64_t& year) const
 	i = 1;  d = 0;
 	while (d + DaysInMonth(year, i) <= day) d += DaysInMonth(year, i++);
 
-	day -= d + 1;
+	day -= d;
 	return i;
 }
 

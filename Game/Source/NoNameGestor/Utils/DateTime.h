@@ -183,6 +183,9 @@ public:
 	uint64_t DaysInYear() const;
 	bool IsLeapYear() const;
 
+	void Date(uint64_t& year, uint64_t& month, uint64_t& day);
+	void Date(int& year, int& month, int& day);
+
 	String ToString(bool onlyDate = true) const
 	{
 		if (ms == 0) return onlyDate ? "0001-01-01" : "0001-01-01 00:00:00.000";
@@ -427,7 +430,7 @@ public:
 private:
 
 	uint64_t FindYear(uint64_t& remainderDays) const;
-	uint64_t FindMonth(uint64_t& day, uint64_t& year) const;
+	uint64_t FindMonth(uint64_t& remainderDays, uint64_t& year) const;
 	uint64_t To24h(uint64_t hour, bool am) const;
 	uint64_t To12h(uint64_t hour) const;
 

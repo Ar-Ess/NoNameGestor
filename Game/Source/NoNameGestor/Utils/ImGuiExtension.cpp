@@ -2,6 +2,7 @@
 
 #include "Framework/Engine/App.h"
 #include "Framework/Data/String.h"
+#include "Framework/Utils/Maths.h"
 
 #include "Framework/External/SDL/include/SDL.h"
 #include "Framework/Window/Window.h"
@@ -295,4 +296,69 @@ void ImGui::TimeDisplay(double seconds)
 	s = s % 60;
 
 	ImGui::Text("%02d:%02d:%02d", h, m, s);
+}
+
+bool ImGui::OneOptionSelectableCombo(const char* labels[], int labelCount, int* selection, int spacing)
+{
+	if (labels == nullptr)
+		return false;
+
+	bool ret = false;
+	for (int i = 0; i < labelCount; i++)
+	{
+		bool s = i == *selection;
+		
+		ImGui::PushID(labels[i]);
+		if (ImGui::Checkbox("", &s))
+		{
+			*selection = i;
+			ret = true;
+		}
+		ImGui::PopID();
+		ImGui::SameLine(0, 6);
+		ImGui::Text(labels[i]);
+
+		if (i < labelCount - 1)
+			ImGui::SameLine(0, spacing);
+	}
+
+	return ret;
+}
+
+bool ImGui::DateField(const char* label, DateTime* date)
+{
+	if (date == nullptr)
+		return false;
+
+	int y, m, d;
+	date->Date(y, m, d);
+
+	bool ret = false;
+	ImGui::Text(String::StartsWith("##", label) ? "" : label); ImGui::SameLine();
+	ImGui::PushItemWidth(20);
+	ImGui::PushID(label);
+	ret |= ImGui::DragInt("##daydatefield", &d, 0.35, 1, 31, "%d", ImGuiSliderFlags_ClampOnInput);
+	ImGui::SameLine(0, 4); ImGui::Text("/"); ImGui::SameLine(0, 4);
+	ret |= ImGui::DragInt("##monthdatefield", &m, 0.2, 1, 12, "%d", ImGuiSliderFlags_ClampOnInput);
+	ImGui::SameLine(0, 4); ImGui::Text("/"); ImGui::SameLine(0, 4);
+	ImGui::PopItemWidth();
+	ImGui::PushItemWidth(36);
+	ret |= ImGui::DragInt("##yeardatefield", &y, 0.7, 0, INT_MAX, "%d", ImGuiSliderFlags_ClampOnInput);
+	ImGui::PopItemWidth();
+	ImGui::PopID();
+
+	if (ret)
+	{
+		uint64_t maxDay = DateTime::DaysInMonth(y, m);
+		d = Maths::Clamp(d, 1, maxDay);
+		*date = DateTime::From::Date(y, m, d);
+	}
+
+	return ret;
+}
+
+void ImGui::CenterNextWindow()
+{
+	ImVec2 size = ImGui::GetIO().DisplaySize;
+	ImGui::SetNextWindowPos(ImVec2(size.x / 2, size.y / 2), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 }

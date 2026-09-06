@@ -1107,9 +1107,64 @@ void EconomyScene::DrawPreferencesWindow(bool& ret)
 				ImGui::AddSpacing(2);
 
 				ImGui::SectionText("Backup Clean Up");
-				if (ImGui::Button("Clean All Backups"))
+				static const char* comboCleanBackups[] = { "All Backups", "Older than", "Keep newest X" };
+				static int a = 0;
+				ImGui::AddHelper("Defines how the search algorithm will proceed.\n - Delete All Backups: Clear all backups.\n - Delete Backups older than: Select a date and delete the older backups.\n - Keep newest X Backups: Select an amount and keep the newest amount of backups, deleting the oldest.", "?");
+				ImGui::SameLine(); ImGui::Text("Delete Metric: ");
+				ImGui::PushItemWidth(126);
+				ImGui::SameLine(0, 1); ImGui::Combo("##DeleteMetric", &a, comboCleanBackups, 3);
+				ImGui::PopItemWidth();
+				
+				static int index = -1;
+				if (a != 0)
 				{
-					// Backup delete system. I need a function that returns FileInfo from a directory.
+					static DateTime date = DateTime::From::Now();
+					ImGui::SameLine(0, 4);
+					ImGui::DateField("##DateBackupsSelect", &date);
+
+					static const char* labels[] = { "All Files", "Specific File" };
+					static int s = 0;
+					ImGui::AddHelper("Defines at which level the search algorithm metrics will act.\n - All Files: The metric will be used on all backups.\n - Specific File: The metric will apply individually per each backup name file.", "?");
+					ImGui::SameLine(); ImGui::OneOptionSelectableCombo(labels, 2, &s, 18);
+					ImGui::SameLine(0, 22); ImGui::Button("     Scan     ");
+				}
+				else
+				{
+					ImGui::Dummy(ImVec2(7, 2)); ImGui::SameLine();
+					if (ImGui::Button("Clean All"))
+					{
+						ImGui::OpenPopup("Confirm");
+						index = 0;
+					}
+				}
+
+				ImGui::CenterNextWindow();
+				if (ImGui::BeginPopupModal("Confirm", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize ))
+				{
+					if (index == 0)
+					{
+						ImGui::TextAligned(0.45, ImGui::GetWindowWidth(), "Are you sure you want to delete all backups?");
+						ImGui::TextAligned(0.45, ImGui::GetWindowWidth(), "This process is irreversible.");
+					}
+
+					ImGui::AddSpacing(2);
+
+					float w = ImGui::GetWindowWidth() / 2;
+					ImGui::SetCursorPosX(w - 130);
+					bool ret = false;
+					if (ImGui::Button("Yes", ImVec2(120, 0)))
+					{
+						ret = true;
+						FileManager::RemoveFolder(config.backupDirectory.Str());
+					}
+					ImGui::SameLine();
+
+					ret |= ImGui::Button("No", ImVec2(120, 0));
+
+					if (ret)
+						ImGui::CloseCurrentPopup();
+
+					ImGui::EndPopup();
 				}
 
 				ImGui::EndTabItem();
