@@ -174,7 +174,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\NoNameGestor\Containers\ConstContainer.cpp" />
     <ClCompile Include="Source\NoNameGestor\Containers\Container.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Containers\FilterContainer.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Containers\FutureContainer.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Containers\InputContainer.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Containers\LimitContainer.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Containers\TotalContainer.cpp" />
     <ClCompile Include="Source\NoNameGestor\External\ImGuiFileDialog\ImGuiFileDialog.cpp" />
     <ClCompile Include="Source\NoNameGestor\External\imgui\imgui.cpp" />
     <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_demo.cpp" />
@@ -188,11 +194,11 @@
     <ClCompile Include="Source\NoNameGestor\Main.cpp" />
     <ClCompile Include="Source\NoNameGestor\Scenes\EconomyScene.cpp" />
     <ClCompile Include="Source\NoNameGestor\Utils\Chrono.cpp" />
-    <ClCompile Include="Source\NoNameGestor\Utils\DateTime.cpp" />
     <ClCompile Include="Source\NoNameGestor\Utils\FileManager.cpp" />
     <ClCompile Include="Source\NoNameGestor\Utils\ImGuiExtension.cpp" />
     <ClCompile Include="Source\NoNameGestor\Utils\LogFunction.cpp" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Source\NoNameGestor\Containers\ConstContainer.h" />
     <ClInclude Include="Source\NoNameGestor\Containers\Container.h" />
     <ClInclude Include="Source\NoNameGestor\Containers\ContainerEnum.h" />
     <ClInclude Include="Source\NoNameGestor\Containers\ContainerHeader.h" />
@@ -219,7 +225,6 @@
     <ClInclude Include="Source\NoNameGestor\Gestor\GestorSystem.h" />
     <ClInclude Include="Source\NoNameGestor\Scenes\EconomyScene.h" />
     <ClInclude Include="Source\NoNameGestor\Utils\Chrono.h" />
-    <ClInclude Include="Source\NoNameGestor\Utils\DateTime.h" />
     <ClInclude Include="Source\NoNameGestor\Utils\FileManager.h" />
     <ClInclude Include="Source\NoNameGestor\Utils\Flag.h" />
     <ClInclude Include="Source\NoNameGestor\Utils\ImGuiExtension.h" />

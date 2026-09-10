@@ -3,6 +3,7 @@
 #include "Framework/Engine/App.h"
 #include "Framework/Data/String.h"
 #include "Framework/Utils/Maths.h"
+#include "Framework/Time/TimeSpan.h"
 
 #include "Framework/External/SDL/include/SDL.h"
 #include "Framework/Window/Window.h"
@@ -11,12 +12,11 @@
 #include "NoNameGestor/External/imgui/imgui_stdlib.h"
 #include "NoNameGestor/External/ImGuiFileDialog/ImGuiFileDialog.h"
 
-ImFont* InputTextFont = nullptr;
+ImFont* ImGui::RS::InputTextFont = nullptr;
+ImFont* ImGui::RS::PlusMinusButtonFont = nullptr;
 
-void ImGui::InitializeExtension()
+void ImGui::RS::InitializeExtension()
 {
-	ImFontConfig fontConfig;
-	fontConfig.SizePixels = 18.0f;
 	auto& io = ImGui::GetIO();
 	io.Fonts->AddFontDefault();
 
@@ -24,23 +24,25 @@ void ImGui::InitializeExtension()
 	String path = App::AssetsPath() + "\\Roboto-Regular.ttf";
 
 	InputTextFont = io.Fonts->AddFontFromFileTTF(path.Str(), 20.f);
+	PlusMinusButtonFont = io.Fonts->AddFontFromFileTTF(path.Str(), 20.f);
+
 	io.Fonts->Build();
 }
 
-void ImGui::AddSpacing(unsigned int spaces)
+void ImGui::RS::Spacing(unsigned int spaces)
 {
 	short int plus = 0;
 	if (spaces == 0) plus = 1;
 	for (unsigned int i = 0; i < spaces * 2 + plus; i++) ImGui::Spacing();
 }
 
-void ImGui::AddSeparator(unsigned int separator)
+void ImGui::RS::Separator(unsigned int separator)
 {
 	if (separator == 0) return;
 	for (unsigned int i = 0; i < separator; i++) ImGui::Separator();
 }
 
-void ImGui::AddHelper(const char* desc, const char* title)
+void ImGui::RS::Helper(const char* desc, const char* title)
 {
 	ImGui::TextDisabled(title);
 	if (ImGui::IsItemHovered())
@@ -53,7 +55,7 @@ void ImGui::AddHelper(const char* desc, const char* title)
 	}
 }
 
-void ImGui::AddClearInputText(const char* name, std::string* buffer)
+void ImGui::RS::ClearInputText(const char* name, std::string* buffer)
 {
 	// Guarda l'estat de l'estil actual
 	ImGui::PushFont(InputTextFont);
@@ -80,7 +82,7 @@ void ImGui::AddClearInputText(const char* name, std::string* buffer)
 	ImGui::PopFont();
 }
 
-void ImGui::TextWithEndEllipsis(char const* aString, float aMaxWidth, bool useWordBoundaries, float aSpacing)
+void ImGui::RS::TextWithEndEllipsis(char const* aString, float aMaxWidth, bool useWordBoundaries, float aSpacing)
 {
 	char const* partStart = aString;
 	char const* partEnd = aString;
@@ -140,7 +142,7 @@ void ImGui::TextWithEndEllipsis(char const* aString, float aMaxWidth, bool useWo
 	}
 }
 
-void ImGui::TextWithStartEllipsis(char const* aString, float aMaxWidth, bool useWordBoundaries, float aSpacing)
+void ImGui::RS::TextWithStartEllipsis(char const* aString, float aMaxWidth, bool useWordBoundaries, float aSpacing)
 {
 	ImWchar elipsisChar = ImGui::GetFont()->EllipsisChar;
 	char elipsisText[8];
@@ -197,7 +199,7 @@ void ImGui::TextWithStartEllipsis(char const* aString, float aMaxWidth, bool use
 	ImGui::TextUnformatted(textStart);
 }
 
-bool ImGui::DirectoryBrowserField(const char* label, String* browsePath, int& result, float maxWindowWidth, const char* dialogBasePath)
+bool ImGui::RS::DirectoryBrowserField(const char* label, String* browsePath, int& result, float maxWindowWidth, const char* dialogBasePath)
 {
 	bool ret = false;
 
@@ -220,7 +222,7 @@ bool ImGui::DirectoryBrowserField(const char* label, String* browsePath, int& re
 		ImGui::SameLine(); ImGui::Text(label);
 
 		float width = maxWindowWidth <= 0 ? ImGui::GetWindowWidth() - ImGui::GetCursorPosX() - 20 : maxWindowWidth;
-		ImGui::TextWithStartEllipsis(browsePath->Str(), width, false, 0);
+		ImGui::RS::TextWithStartEllipsis(browsePath->Str(), width, false, 0);
 
 	}
 	ImGui::EndGroup();
@@ -253,7 +255,7 @@ bool ImGui::DirectoryBrowserField(const char* label, String* browsePath, int& re
 	return ret;
 }
 
-bool ImGui::IsSpace(char aCharacter)
+bool ImGui::RS::IsSpace(char aCharacter)
 {
 	// all space characters are values 32 or less (space is 32)
 	// so we can convert them to a bitmask and use a single condition
@@ -261,16 +263,16 @@ bool ImGui::IsSpace(char aCharacter)
 	return (mask & (1 << ((aCharacter && aCharacter <= 32) * (aCharacter - 1)))) != 0;
 }
 
-void ImGui::SectionText(const char* text, unsigned int spacing)
+void ImGui::RS::SectionText(const char* text, unsigned int spacing)
 {
 	ImGui::Text(text);
 	ImGui::SameLine();
 	ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetTextLineHeight() * 0.5f);
 	ImGui::Separator();
-	ImGui::AddSpacing(spacing);
+	ImGui::RS::Spacing(spacing);
 }
 
-bool ImGui::SliderCombo(const char* label, int* value, const char* const items[], int itemsLength, float width)
+bool ImGui::RS::SliderCombo(const char* label, int* value, const char* const items[], int itemsLength, float width)
 {
 	ImGui::BeginGroup();
 	if (!String::StartsWith("##", label))
@@ -287,7 +289,7 @@ bool ImGui::SliderCombo(const char* label, int* value, const char* const items[]
 	return ret;
 }
 
-void ImGui::TimeDisplay(double seconds)
+void ImGui::RS::TimeDisplay(double seconds)
 {
 	int s = static_cast<int>(std::floor(seconds));
 
@@ -298,7 +300,7 @@ void ImGui::TimeDisplay(double seconds)
 	ImGui::Text("%02d:%02d:%02d", h, m, s);
 }
 
-bool ImGui::OneOptionSelectableCombo(const char* labels[], int labelCount, int* selection, int spacing)
+bool ImGui::RS::OneOptionSelectableCombo(const char* labels[], int labelCount, int* selection, int spacing)
 {
 	if (labels == nullptr)
 		return false;
@@ -325,7 +327,7 @@ bool ImGui::OneOptionSelectableCombo(const char* labels[], int labelCount, int* 
 	return ret;
 }
 
-bool ImGui::DateField(const char* label, DateTime* date)
+bool ImGui::RS::DateField(const char* label, DateTime* date)
 {
 	if (date == nullptr)
 		return false;
@@ -334,7 +336,7 @@ bool ImGui::DateField(const char* label, DateTime* date)
 	date->Date(y, m, d);
 
 	bool ret = false;
-	ImGui::Text(String::StartsWith("##", label) ? "" : label); ImGui::SameLine();
+	if (!String::StartsWith("##", label)) { ImGui::Text(label); ImGui::SameLine(); }
 	ImGui::PushItemWidth(20);
 	ImGui::PushID(label);
 	ret |= ImGui::DragInt("##daydatefield", &d, 0.35, 1, 31, "%d", ImGuiSliderFlags_ClampOnInput);
@@ -357,8 +359,95 @@ bool ImGui::DateField(const char* label, DateTime* date)
 	return ret;
 }
 
-void ImGui::CenterNextWindow()
+void ImGui::RS::CenterNextWindow()
 {
 	ImVec2 size = ImGui::GetIO().DisplaySize;
 	ImGui::SetNextWindowPos(ImVec2(size.x / 2, size.y / 2), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+}
+
+int ImGui::RS::PlusMinusButtonsV(const char* id, int* value, int min, int max, const char* format)
+{
+	if (value == nullptr)
+		return 0;
+
+	int ret = 0;
+	ImGui::PushID(id);
+	{
+		ImGui::BeginGroup();
+		{
+			ImVec2 pos = ImGui::GetCursorPos();
+
+			ImGui::SetCursorPosY(pos.y - 1);
+			ImGui::BeginDisabled(*value == max);
+			if (ImGui::Button("##+", ImVec2(9, 9)))
+			{
+				*value += 1;
+				ret = 1;
+			}
+			ImGui::SetCursorPos(ImVec2(pos.x + 1, pos.y - 4));
+			ImGui::Text("+");
+			ImGui::EndDisabled();
+			ImGui::SetCursorPos(ImVec2(pos.x, pos.y + 11));
+			ImGui::BeginDisabled(*value == min);
+			if (ImGui::Button("##-", ImVec2(9, 9)))
+			{
+				*value -= 1;
+				ret = 2;
+			}
+			ImGui::SetCursorPos(ImVec2(pos.x + 1, pos.y + 8));
+			ImGui::Text("-");
+			ImGui::EndDisabled();
+
+			ImGui::SetCursorPos(pos);
+		}
+		ImGui::EndGroup();
+	}
+	ImGui::PopID();
+
+	return ret;
+}
+
+int ImGui::RS::PlusMinusButtonsH(const char* id, int* value, int min, int max, const char* format)
+{
+	if (value == nullptr)
+		return 0;
+
+	int ret = 0;
+	ImGui::PushID(id);
+	{
+		ImGui::BeginDisabled(*value == min);
+		if (ImGui::Button("-##PlusMinusButtonsH"))
+		{
+			*value -= 1;
+			ret = 2;
+		}
+		ImGui::EndDisabled();
+		ImGui::SameLine();
+		ImGui::BeginDisabled(*value == max);
+		if (ImGui::Button("+##PlusMinusButtonsH"))
+		{
+			*value += 1;
+			ret = 1;
+		}
+		ImGui::EndDisabled();
+	}
+	ImGui::PopID();
+
+	return ret;
+}
+
+int ImGui::RS::MonthSelector(const char* id, int* value, const DateTime& base, DateTime* date, int min, int max)
+{
+	if (date == nullptr)
+		return 0;
+
+	int ret = PlusMinusButtonsH(id, value, min, max, "");
+
+	if (ret > 0)
+		*date = base + TimeSpan<>::From::Months(*value);
+
+	ImGui::SameLine();
+	ImGui::Text("%s %d", date->MonthName(), date->Year());
+
+	return ret;
 }

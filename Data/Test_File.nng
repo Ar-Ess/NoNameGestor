@@ -116,6 +116,20 @@
                     "open": true,
                     "type": 3,
                     "unfd": false
+                },
+                {
+                    "hide": false,
+                    "labels": [
+                        {
+                            "money": 0.0,
+                            "name": "New Const"
+                        }
+                    ],
+                    "money": 0.0,
+                    "name": "New Container",
+                    "open": true,
+                    "type": 6,
+                    "unfd": true
                 }
             ],
             "currency": 0,

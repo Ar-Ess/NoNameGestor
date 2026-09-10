@@ -7,6 +7,128 @@
 #include <filesystem>
 #include <windows.h>
 
+FileManager::FileInfo::FileInfo(FileInfo&& other) noexcept :
+    expectedRunoutDate(std::move(other.expectedRunoutDate)),
+    lastAccessDate(std::move(other.lastAccessDate)),
+    lastWriteDate(std::move(other.lastWriteDate)),
+    fileSize(other.fileSize),
+    isFile(std::move(other.isFile)),
+    path(std::move(other.path)),
+    name(std::move(other.name)),
+    directory(std::move(other.directory)),
+    isValid(other.isValid)
+{
+    other.expectedRunoutDate = DateTime::BaseEpoch;
+    other.lastAccessDate = DateTime::BaseEpoch;
+    other.lastWriteDate = DateTime::BaseEpoch;
+    other.fileSize = 0;
+    other.isFile = Flag::AllFalse;
+    other.path = String::Empty;
+    other.name = String::Empty;
+    other.directory = String::Empty;
+    other.isValid = false;
+}
+
+FileManager::FileInfo& FileManager::FileInfo::operator=(FileInfo&& other) noexcept
+{
+    if (this == &other)
+        return *this;
+
+    expectedRunoutDate   = std::move(other.expectedRunoutDate);
+    lastAccessDate = std::move(other.lastAccessDate);
+    lastWriteDate  = std::move(other.lastWriteDate);
+    fileSize       = other.fileSize;
+    isFile         = std::move(other.isFile);
+    path           = std::move(other.path);
+    name           = std::move(other.name);
+    directory      = std::move(other.directory);
+    isValid        = other.isValid;
+
+    other.fileSize = 0;
+    other.isValid = false;
+
+    return *this;
+}
+
+bool FileManager::FileInfo::IsValid() const
+{
+    return isValid;
+}
+
+StringView FileManager::FileInfo::Path() const
+{
+    return path;
+}
+
+StringView FileManager::FileInfo::Name() const
+{
+    return name;
+}
+
+StringView FileManager::FileInfo::Directory() const
+{
+    return directory;
+}
+
+bool FileManager::FileInfo::IsFile(FileFlag flag) const
+{
+    return isFile[(int)flag];
+}
+
+uint64_t FileManager::FileInfo::Size() const
+{
+    return fileSize;
+}
+
+DateTime FileManager::FileInfo::CreationDate() const
+{
+    return expectedRunoutDate;
+}
+
+DateTime FileManager::FileInfo::LastAccessDate() const
+{
+    return lastAccessDate;
+}
+
+DateTime FileManager::FileInfo::LastWriteDate() const
+{
+    return lastWriteDate;
+}
+
+bool FileManager::FileInfo::GenerateFileInfo(StringView p)
+{
+    WIN32_FILE_ATTRIBUTE_DATA fileData;
+
+    if (!GetFileAttributesExA(p.Data(), GetFileExInfoStandard, &fileData))
+        return false;
+
+    expectedRunoutDate = DateTime::From::WindowsFileTime(fileData.ftCreationTime);
+    lastAccessDate = DateTime::From::WindowsFileTime(fileData.ftLastAccessTime);
+    lastWriteDate = DateTime::From::WindowsFileTime(fileData.ftLastWriteTime);
+    fileSize = ((uint64_t)fileData.nFileSizeHigh << 32) | fileData.nFileSizeLow;
+    isFile = Flag(
+        (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_READONLY),
+        {
+            (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_READONLY),
+            (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN),
+            (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM),
+            (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE),
+            (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_COMPRESSED),
+            (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_ENCRYPTED),
+            (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_TEMPORARY)
+        }
+    );
+
+    path = p;
+    int a = p.FindLast('\\') + 1;
+    directory = p.Substring(unsigned int(0), a);
+    name = p.Substring(a, p.Length());
+
+    isValid = true;
+
+    return true;
+}
+
 FileManager::FileNode::FileNode(FileNode&& other) noexcept :
     data(other.data)
 {
@@ -221,7 +343,7 @@ const nlohmann::json FileManager::File::Array = nlohmann::json::array();
 const nlohmann::json FileManager::File::Object = nlohmann::json::object();
 
 FileManager::File::File(bool isBackup) :
-    isBackup(isBackup)
+    FileNode(), FileInfo(), isBackup(isBackup)
 {
 }
 
@@ -233,15 +355,10 @@ FileManager::File::~File()
 
 FileManager::File::File(File&& other) noexcept :
     FileNode(std::move(other)),
-    path(std::move(other.path)),
-    name(std::move(other.name)),
-    directory(std::move(other.directory)),
+    FileInfo(std::move(other)),
     isNewFile(other.isNewFile),
     isBackup(other.isBackup)
 {
-    other.path = nullptr;
-    other.name = nullptr;
-    other.directory = nullptr;
     other.isNewFile = false;
     other.isBackup = false;
 }
@@ -253,17 +370,12 @@ FileManager::File& FileManager::File::operator=(File&& other) noexcept
 
     delete data;
 
+    FileInfo::operator=(std::move(other));
     FileNode::operator=(std::move(other));
 
-    path = std::move(other.path);
-    name = std::move(other.name);
-    directory = std::move(other.directory);
     isNewFile = other.isNewFile;
     isBackup = other.isBackup;
 
-    other.path = nullptr;
-    other.name = nullptr;
-    other.directory = nullptr;
     other.isNewFile = false;
     other.isBackup = false;
 
@@ -321,7 +433,8 @@ bool FileManager::File::SaveAs(StringView path)
     if (!file.good())
         return false;
 
-    GenerateFileInfo(path);
+    if (!GenerateFileInfo(path))
+        return false;
 
     return true;
 }
@@ -341,39 +454,9 @@ void FileManager::File::New(StringView fileName)
     Clear();
 }
 
-StringView FileManager::File::Path() const
+FileManager::File::File(nlohmann::json&& data, const FileInfo& info) :
+    FileNode(std::move(data)), FileInfo(info)
 {
-    return path;
-}
-
-StringView FileManager::File::Name() const
-{
-    return name;
-}
-
-StringView FileManager::File::Directory() const
-{
-    return directory;
-}
-
-const FileManager::FileInfo& FileManager::File::Info() const
-{
-    return info;
-}
-
-FileManager::File::File(nlohmann::json&& data, const String& path, const FileInfo& info) :
-    FileNode(std::move(data)),
-    info(info)
-{
-    GenerateFileInfo(path);
-}
-
-void FileManager::File::GenerateFileInfo(const String& p)
-{
-    path = p;
-    int a = path.FindLast('\\') + 1;
-    directory = path.Substring(unsigned int(0), a);
-    name = path.Substring(a, path.Length());
     isNewFile = false;
 }
 
@@ -523,10 +606,10 @@ FileManager::File FileManager::OpenFile(const char* path, bool create)
         return File();
 
     FileInfo info;
-    if (!GetFileInfo(path, info))
+    if (!info.GenerateFileInfo(path))
         return File();
 
-    return File(std::move(data), path, info);
+    return File(std::move(data), info);
 }
 
 FileManager::File FileManager::OpenFile(StringView path, bool create)
@@ -565,10 +648,10 @@ FileManager::File FileManager::OpenFile(StringView path, bool create)
         return File();
 
     FileInfo info;
-    if (!GetFileInfo(path.Data(), info))
+    if (!info.GenerateFileInfo(path))
         return File();
 
-    return File(std::move(data), path, info);
+    return File(std::move(data), info);
 }
 
 bool FileManager::OpenFile(const char* path, File& output, bool create)
@@ -609,10 +692,10 @@ bool FileManager::OpenFile(const char* path, File& output, bool create)
         return false;
 
     FileInfo info;
-    if (!GetFileInfo(path, info))
+    if (!info.GenerateFileInfo(path))
         return false;
 
-    output = File(std::move(data), path, info);
+    output = File(std::move(data), info);
     return true;
 }
 
@@ -654,89 +737,126 @@ bool FileManager::OpenFile(StringView path, File& output, bool create)
         return false;
 
     FileInfo info;
-    if (!GetFileInfo(path.Data(), info))
+    if (!info.GenerateFileInfo(path))
         return false;
 
-    output = File(std::move(data), path, info);
+    output = File(std::move(data), info);
     return true;
 }
 
-FileManager::File FileManager::FindFile(const char* path, bool create)
+FileManager::File FileManager::OpenFile(const FileInfo& info)
 {
-    if (String::IsNullOrEmpty(path))
+    if (!info.isValid)
         return File();
 
-    nlohmann::json data = nlohmann::json::object();
+    nlohmann::json data;
+
+    std::ifstream file(info.path.Str());
+
+    if (!file.good())
+        return File();
+
+    data = nlohmann::json::parse(file, nullptr, false);
+
+    if (data.is_discarded())
+        return File();
+
+    return File(std::move(data), info);
+}
+
+bool FileManager::OpenFile(const FileInfo& info, FileManager::File& output)
+{
+    output = File();
+
+    if (!info.isValid)
+        return false;
+
+    nlohmann::json data;
+
+    std::ifstream file(info.path.Str());
+
+    if (!file.good())
+        return false;
+
+    data = nlohmann::json::parse(file, nullptr, false);
+
+    if (data.is_discarded())
+        return false;
+
+    output = File(std::move(data), info);
+    return true;
+}
+
+FileManager::FileInfo FileManager::FindFile(const char* path, bool create)
+{
+    if (String::IsNullOrEmpty(path))
+        return FileInfo();
 
     if (create && !FileExists(path))
     {
         std::ofstream file(path);
 
         if (!file.is_open())
-            return File();
+            return FileInfo();
 
         file << "{}";
 
         if (!file.good())
-            return File();
+            return FileInfo();
     }
     else
     {
         std::ifstream file(path);
 
         if (!file.good())
-            return File();
+            return FileInfo();
     }
 
     FileInfo info;
-    if (!GetFileInfo(path, info))
-        return File();
+    if (!info.GenerateFileInfo(path))
+        return FileInfo();
 
-    return File(std::move(data), path, info);
+    return info;
 }
 
-FileManager::File FileManager::FindFile(StringView path, bool create)
+FileManager::FileInfo FileManager::FindFile(StringView path, bool create)
 {
     if (path.IsNullOrEmpty())
-        return File();
-
-    nlohmann::json data = nlohmann::json::object();
+        return FileInfo();
 
     if (create && !FileExists(path))
     {
         std::ofstream file(path.Data());
 
         if (!file.is_open())
-            return File();
+            return FileInfo();
 
         file << "{}";
 
         if (!file.good())
-            return File();
+            return FileInfo();
     }
     else
     {
         std::ifstream file(path.Data());
 
         if (!file.good())
-            return File();
+            return FileInfo();
     }
 
     FileInfo info;
-    if (!GetFileInfo(path.Data(), info))
-        return File();
+    if (!info.GenerateFileInfo(path))
+        return FileInfo();
 
-    return File(std::move(data), path, info);
+    return info;
 }
 
-bool FileManager::FindFile(const char* path, File& output, bool create)
+bool FileManager::FindFile(const char* path, FileInfo& output, bool create)
 {
-    output = File();
+    output = FileInfo();
 
     if (String::IsNullOrEmpty(path))
         return false;
-
-    nlohmann::json data = nlohmann::json::object();
 
     if (create && !FileExists(path))
     {
@@ -758,22 +878,18 @@ bool FileManager::FindFile(const char* path, File& output, bool create)
             return false;
     }
 
-    FileInfo info;
-    if (!GetFileInfo(path, info))
+    if (!output.GenerateFileInfo(path))
         return false;
 
-    output = File(std::move(data), path, info);
     return true;
 }
 
-bool FileManager::FindFile(StringView path, File& output, bool create)
+bool FileManager::FindFile(StringView path, FileInfo& output, bool create)
 {
-    output = File();
+    output = FileInfo();
 
     if (path.IsNullOrEmpty())
         return false;
-
-    nlohmann::json data = nlohmann::json::object();
 
     if (create && !FileExists(path))
     {
@@ -795,11 +911,137 @@ bool FileManager::FindFile(StringView path, File& output, bool create)
             return false;
     }
 
-    FileInfo info;
-    if (!GetFileInfo(path.Data(), info))
+    if (!output.GenerateFileInfo(path))
         return false;
 
-    output = File(std::move(data), path, info);
+    return true;
+}
+
+Array<FileManager::FileInfo> FileManager::FindFiles(const char* directory)
+{
+    if (String::IsNullOrEmpty(directory) || !DirectoryExists(directory))
+        return Array<FileInfo>();
+
+    std::vector<std::string> infos = std::vector<std::string>();
+
+    std::filesystem::path path(directory);
+    for (auto& entry : std::filesystem::directory_iterator(path))
+    {
+        if (entry.is_directory())
+            continue;
+
+        infos.push_back(path.string());
+    }
+
+    if (infos.empty())
+        return Array<FileInfo>();
+
+    auto ret = Array<FileInfo>(infos.size());
+
+    for (int i = 0; i < ret.Size(); ++i)
+    {
+        FileInfo info = FileInfo();
+        if (info.GenerateFileInfo(infos[i].c_str()))
+            ret[i] = std::move(info);
+    }
+
+    return ret;
+}
+
+Array<FileManager::FileInfo> FileManager::FindFiles(StringView directory)
+{
+    if (directory.IsNullOrEmpty() || !DirectoryExists(directory))
+        return Array<FileInfo>();
+
+    std::vector<std::string> infos = std::vector<std::string>();
+
+    std::filesystem::path path(directory.Data());
+    for (auto& entry : std::filesystem::directory_iterator(path))
+    {
+        if (entry.is_directory())
+            continue;
+
+        infos.push_back(entry.path().string());
+    }
+
+    if (infos.empty())
+        return Array<FileInfo>();
+
+    auto ret = Array<FileInfo>(infos.size());
+
+    for (int i = 0; i < ret.Size(); ++i)
+    {
+        FileInfo info = FileInfo();
+        if (info.GenerateFileInfo(infos[i].c_str()))
+            ret[i] = std::move(info);
+    }
+
+    return ret;
+}
+
+bool FileManager::FindFiles(const char* directory, Array<FileInfo>& output)
+{
+    output = Array<FileInfo>();
+
+    if (String::IsNullOrEmpty(directory) || !DirectoryExists(directory))
+        return false;
+
+    std::vector<std::string> infos = std::vector<std::string>();
+
+    std::filesystem::path path(directory);
+    for (auto& entry : std::filesystem::directory_iterator(path))
+    {
+        if (entry.is_directory())
+            continue;
+
+        infos.push_back(path.string());
+    }
+
+    if (infos.empty())
+        return false;
+
+    output = Array<FileInfo>(infos.size());
+
+    for (int i = 0; i < output.Size(); ++i)
+    {
+        FileInfo info = FileInfo();
+        if (info.GenerateFileInfo(infos[i].c_str()))
+            output[i] = std::move(info);
+    }
+
+    return true;
+}
+
+bool FileManager::FindFiles(StringView directory, Array<FileInfo>& output)
+{
+    output = Array<FileInfo>();
+
+    if (directory.IsNullOrEmpty() || !DirectoryExists(directory))
+        return false;
+
+    std::vector<std::string> infos = std::vector<std::string>();
+
+    std::filesystem::path path(directory.Data());
+    for (auto& entry : std::filesystem::directory_iterator(path))
+    {
+        if (entry.is_directory())
+            continue;
+
+        infos.push_back(path.string());
+    }
+
+    if (infos.empty())
+        return false;
+
+    output = Array<FileInfo>(infos.size());
+
+    for (int i = 0; i < output.Size(); ++i)
+    {
+        FileInfo info = FileInfo();
+        if (info.GenerateFileInfo(infos[i].c_str()))
+            output[i] = std::move(info);
+    }
+
     return true;
 }
 
@@ -809,6 +1051,35 @@ bool FileManager::RemoveFile(const char* path)
         return false;
 
     return std::filesystem::remove(path);
+}
+
+bool FileManager::RemoveFile(FileInfo& file)
+{
+    if (!file.isValid)
+        return false;
+
+    bool ret = std::filesystem::remove(file.path.Str());
+    if (ret) FileInfo temp = std::move(file);
+
+    return ret;
+}
+
+int FileManager::RemoveFiles(Array<FileInfo>& files)
+{
+    if (files.IsEmpty())
+        return 0;
+
+    int count = 0;
+    files.Iterate(
+        [&](FileInfo& file)
+        {
+            if (RemoveFile(file))
+                ++count;
+            return true;
+        }
+    );
+
+    return count;
 }
 
 bool FileManager::RemoveFolder(const char* directory, bool removeItself)
@@ -827,29 +1098,5 @@ bool FileManager::RemoveFolder(const char* directory, bool removeItself)
     }
 
     return ret != 0;
-}
-
-bool FileManager::GetFileInfo(const char* path, FileManager::FileInfo& info)
-{
-    WIN32_FILE_ATTRIBUTE_DATA fileData;
-
-    if (!GetFileAttributesExA(path, GetFileExInfoStandard, &fileData))
-        return false;
-
-    info = {
-        DateTime::From::WindowsFileTime(fileData.ftCreationTime),
-        DateTime::From::WindowsFileTime(fileData.ftLastAccessTime),
-        DateTime::From::WindowsFileTime(fileData.ftLastWriteTime),
-        ((uint64_t)fileData.nFileSizeHigh << 32) | fileData.nFileSizeLow,
-        (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_READONLY),
-        (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN),
-        (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM),
-        (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE),
-        (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_COMPRESSED),
-        (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_ENCRYPTED),
-        (bool)(fileData.dwFileAttributes & FILE_ATTRIBUTE_TEMPORARY)
-    };
-
-    return true;
 }
 

@@ -68,19 +68,19 @@ bool GestorSystem::Update()
 	return true;
 }
 
-bool GestorSystem::Draw()
+bool GestorSystem::Draw(float maxWidth, Flag& enable)
 {
-	ImGui::AddSpacing();
+	ImGui::RS::Spacing();
 
 	ImGui::PushID(id.Data());
-	ImGui::AddClearInputText("##GestorName", &name);
+	ImGui::RS::ClearInputText("##GestorName", &name);
 	ImGui::PopID();
 
-	ImGui::AddSpacing();
+	ImGui::RS::Spacing();
 
 	inputContainer->Draw();
 
-	ImGui::AddSpacing(2);
+	ImGui::RS::Spacing(2);
 
 	int index = -1;
 	ID move = ID::Empty;
@@ -89,7 +89,9 @@ bool GestorSystem::Draw()
 	containers.Iterate(
 		[&](Container* c, int i, int size)
 		{
-			bool ret = c->DrawBase(erase, move);
+			if (c->Type() == ContainerType::CONSTANT) enable(0, true);
+
+			bool ret = c->DrawBase(maxWidth, erase, move);
 
 			if (erase || !move.IsEmpty())
 				index = i;
@@ -112,8 +114,8 @@ bool GestorSystem::Draw()
 	}
 	else Container::UpdateOpenState = false;
 
-	ImGui::AddSpacing(2);
-	ImGui::AddSeparator();
+	ImGui::RS::Spacing(2);
+	ImGui::RS::Separator();
 
 	totalContainer->Draw();
 
@@ -131,7 +133,7 @@ void GestorSystem::DrawExport() const
 		if (!empty)
 		{
 			ImGui::Text("Select the containers:");
-			ImGui::AddSpacing();
+			ImGui::RS::Spacing();
 			containers.Iterate(
 				[&](const Container* c)
 				{
@@ -143,11 +145,11 @@ void GestorSystem::DrawExport() const
 		else
 		{
 			ImGui::TextDisabled("No containers yet:");
-			ImGui::AddSpacing(3);
+			ImGui::RS::Spacing(3);
 		}
 
-		ImGui::AddSpacing();
-		ImGui::AddSeparator();
+		ImGui::RS::Spacing();
+		ImGui::RS::Separator();
 
 		if (!selected || empty) ImGui::BeginDisabled();
 
@@ -167,6 +169,19 @@ void GestorSystem::DrawExport() const
 		ImGui::EndMenu();
 	}
 	ImGui::PopID();
+}
+
+void GestorSystem::DrawCashFlow(float widthRatio, float initX) const
+{
+	containers.Iterate(
+		[&](Container* container)
+		{
+			if (container->Type() != ContainerType::CONSTANT)
+				return true;
+
+			container->DrawCashFlow(widthRatio, initX);
+		}
+	);
 }
 
 void GestorSystem::Export(const Array<Container*>& exporting) const
@@ -231,26 +246,34 @@ Container* GestorSystem::CreateContainer(ContainerType container, const std::str
 {
 	switch (container)
 	{
-	case ContainerType::FILTER: containers.PushBack(new FilterContainer(name, hidden, open, unified, &format, config)); break;
-	case ContainerType::LIMIT:  containers.PushBack(new  LimitContainer(name, hidden, open, unified, &format, config)); break;
-	case ContainerType::FUTURE: containers.PushBack(new FutureContainer(name, hidden, open, unified, &format, config)); break;
+	case ContainerType::FILTER:   containers.PushBack(new FilterContainer(name, hidden, open, unified, &format, config)); break;
+	case ContainerType::LIMIT:    containers.PushBack(new  LimitContainer(name, hidden, open, unified, &format, config)); break;
+	case ContainerType::FUTURE:   containers.PushBack(new FutureContainer(name, hidden, open, unified, &format, config)); break;
+	case ContainerType::CONSTANT: containers.PushBack(new  ConstContainer(name, hidden, open, unified, &format, config)); break;
 	default: break;
 	}
 
-	return containers.Back();
+	Container* c = containers.Back();
+	c->Awake();
+
+	return c;
 }
 
 Container* GestorSystem::CreateContainer(ContainerType container, const FileManager::FileNode& containerNode)
 {
 	switch (container)
 	{
-	case ContainerType::FILTER: containers.PushBack(new FilterContainer(containerNode, &format, config)); break;
-	case ContainerType::LIMIT:  containers.PushBack(new  LimitContainer(containerNode, &format, config)); break;
-	case ContainerType::FUTURE: containers.PushBack(new FutureContainer(containerNode, &format, config)); break;
+	case ContainerType::FILTER:   containers.PushBack(new FilterContainer(containerNode, &format, config)); break;
+	case ContainerType::LIMIT:    containers.PushBack(new  LimitContainer(containerNode, &format, config)); break;
+	case ContainerType::FUTURE:   containers.PushBack(new FutureContainer(containerNode, &format, config)); break;
+	case ContainerType::CONSTANT: containers.PushBack(new  ConstContainer(containerNode, &format, config)); break;
 	default: break;
 	}
 
-	return containers.Back();
+	Container* c = containers.Back();
+	c->Awake();
+
+	return c;
 }
 
 StringView GestorSystem::Name() const

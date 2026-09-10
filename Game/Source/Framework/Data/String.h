@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include "Framework/Data/Array.h"
+#include "Framework/Utils/Maths.h"
 
 class StringView;
 
@@ -414,6 +415,18 @@ public: // Operators
 
     const char& operator[](unsigned int index) const;
 
+    bool operator<(const String& other) const;
+    bool operator<(const StringView& other) const;
+
+    bool operator>(const String& other) const;
+    bool operator>(const StringView& other) const;
+
+    bool operator<=(const String& other) const;
+    bool operator<=(const StringView& other) const;
+
+    bool operator>=(const String& other) const;
+    bool operator>=(const StringView& other) const;
+
 private:
 
     void Allocate(unsigned int length);
@@ -642,6 +655,18 @@ public: // Operators
     char& operator[](unsigned int index);
 
     const char& operator[](unsigned int index) const;
+
+    bool operator<(const String& other) const;
+    bool operator<(const StringView& other) const;
+
+    bool operator>(const String& other) const;
+    bool operator>(const StringView& other) const;
+
+    bool operator<=(const String& other) const;
+    bool operator<=(const StringView& other) const;
+
+    bool operator>=(const String& other) const;
+    bool operator>=(const StringView& other) const;
 
 private:
 

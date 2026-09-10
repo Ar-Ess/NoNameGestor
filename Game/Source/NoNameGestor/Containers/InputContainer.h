@@ -6,31 +6,13 @@ class InputContainer : public Container
 {
 public: // Functions
 
-	InputContainer(const char* name, float money, String* format) :
-		Container(name, false, true, false, format, nullptr)
-	{
-		this->money = money;
-	}
+	InputContainer(const char* name, float money, String* format);
 
-	bool Update(Aggregate& agg) override
-	{
-		agg.total += money;
-		return true;
-	}
+	~InputContainer() override = default;
 
-	void Draw() override 
-	{
-		ImGui::PushID(id.Data());
-		{
-			ImGui::Text("Money: "); ImGui::SameLine();
-			ImGui::PushItemWidth(150.0f);
-			{
-				ImGui::DragFloat("##Drag", &money, 1.0f, 0.0f, MAX_MONEY, format->Str(), ImGuiSliderFlags_AlwaysClamp);
-			}
-			ImGui::PopItemWidth();
-		}
-		ImGui::PopID();
-	}
+	bool Update(Aggregate& agg) override;
+
+	void Draw() override;
 
 	const char* TypeName() const override
 	{

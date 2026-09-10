@@ -4,6 +4,7 @@
 #include "Framework/Utils/Maths.h"
 #include "Framework/External/SDL/include/SDL_events.h"
 #include "Framework/External/SDL/include/SDL_render.h"
+//#include "Framework/Time/TimeSpan.h"
 
 #include "NoNameGestor/Gestor/GestorSystem.h"
 #include "NoNameGestor/Containers/ContainerHeader.h"
@@ -18,6 +19,7 @@
 #include <windows.h>
 
 #include "NoNameGestor/Utils/TimeSpan.h"
+#include "NoNameGestor/External/imgui/imgui_internal.h"
 
 #define VERSION 1.4f
 #define EXTENSION ".nng"
@@ -71,7 +73,7 @@ bool EconomyScene::Awake()
 
 bool EconomyScene::Start()
 {
-	ImGui::InitializeExtension();
+	ImGui::RS::InitializeExtension();
 
 	LoadConfiguration();
 
@@ -79,6 +81,9 @@ bool EconomyScene::Start()
 		LoadInternal(App::OpenedFilePath());
 	else
 		NewFile();
+
+	startDate = App::OpenAppTime;
+	endDate = App::OpenAppTime + TimeSpan<>::From::Months(12);
 
 	return true;
 }
@@ -263,28 +268,7 @@ void EconomyScene::Backup()
 		errorMessage = "Error: it was not possible to create Backups folder in: " + config.backupDirectory + strerror(errno);
 	}
 
-	time_t now = time(0);
-	tm* ltm = localtime(&now);
-
-	int month = ltm->tm_mon + 1;
-	int day = ltm->tm_mday;
-	int hour = ltm->tm_hour;
-	int min = ltm->tm_min;
-	int sec = ltm->tm_sec;
-
-	String info = String("_Backup_")
-		+ (ltm->tm_year + 1900)
-		+ '-'
-		+ (month < 10 ? String('0') + month : String::FromInt(month))
-		+ '-'
-		+ (day < 10 ? String('0') + day : String::FromInt(day))
-		+ '-'
-		+ (hour < 10 ? String('0') + hour : String::FromInt(hour))
-		+ '-'
-		+ (min < 10 ? String('0') + min : String::FromInt(min))
-		+ '-'
-		+ (sec < 10 ? String('0') + sec : String::FromInt(sec));
-
+	String info = DateTime::From::Now().ToString("_Backup_yyyy-MM-dd-HH-mm-ss");
 	String path = config.backupDirectory + file.Name();
 	path.Insert(info, path.Length() - 4);
 
@@ -326,7 +310,7 @@ void EconomyScene::InternalSave(StringView path, FileManager::File& file)
 			return;
 		}
 
-		FileManager::File f = FileManager::FindFile(path, true);
+		FileManager::FileInfo f = FileManager::FindFile(path, true);
 
 		// Check file validity
 		if (!f.IsValid())
@@ -335,7 +319,8 @@ void EconomyScene::InternalSave(StringView path, FileManager::File& file)
 			return;
 		}
 
-		file = std::move(f);
+		file = FileManager::OpenFile(f);
+
 	}
 	else
 	{
@@ -788,6 +773,57 @@ void EconomyScene::NewGestor()
 	gestors.PushBack(new GestorSystem(gestors.Size(), "New Gestor", 0, &file, &config, &errorMessage));
 }
 
+bool EconomyScene::RetrieveDeleteBackups(const DateTime& date, Array<FileManager::FileInfo>& ret)
+{
+	ret = Array<FileManager::FileInfo>();
+	auto files = FileManager::FindFiles(config.backupDirectory);
+
+	if (files.IsEmpty()) return false;
+
+	//TODO: Framework: Array must have a "Filter" fucntion that returns a different array based on a condition
+	auto indexes = files.FindAll(
+		[&](const FileManager::FileInfo& info)
+		{
+			return info.CreationDate() < date;
+		}
+	);
+
+	if (indexes.IsEmpty())
+		return false;
+
+	ret = Array<FileManager::FileInfo>(indexes.Size());
+	for (int i = 0; i < indexes.Size(); ++i)
+		ret[i] = std::move(files[indexes[i]]);
+
+	return true;
+}
+
+bool EconomyScene::RetrieveDeleteBackups(int amount, Array<FileManager::FileInfo>& ret)
+{
+	ret = Array<FileManager::FileInfo>();
+	auto files = FileManager::FindFiles(config.backupDirectory);
+
+	if (files.Size() <= amount) return false;
+
+	files.Sort(
+		[](const FileManager::FileInfo& a, const FileManager::FileInfo& b)
+		{
+			return a.CreationDate() > b.CreationDate();
+		}
+	);
+
+	ret = Array<FileManager::FileInfo>(files.Size() - amount);
+
+	ret.Iterate(
+		[&](FileManager::FileInfo& info, int i)
+		{
+			info = std::move(files[i]);
+		}
+	);
+
+	return true;
+}
+
 void EconomyScene::DrawDocking(bool& ret)
 {
 	if (!ret) return;
@@ -916,7 +952,11 @@ void EconomyScene::DrawMenuBar(bool& ret)
 				((FutureContainer*)gestors[focusedGestor]->CreateContainer(ContainerType::FUTURE))
 				->NewLabel();
 
-			ImGui::AddSeparator();
+			if (ImGui::MenuItem("New Constant"))
+				((FutureContainer*)gestors[focusedGestor]->CreateContainer(ContainerType::CONSTANT))
+				->NewLabel();
+
+			ImGui::RS::Separator();
 
 			ImGui::BeginDisabled(gestors.Size() >= 4);
 			if (ImGui::MenuItem("New Gestor"))
@@ -967,23 +1007,23 @@ void EconomyScene::DrawPreferencesWindow(bool& ret)
 		{
 			if (ImGui::BeginTabItem("General"))
 			{
-				ImGui::AddSpacing(1);
+				ImGui::RS::Spacing(1);
 
-				ImGui::AddHelper("Shows, at the side of each container,\na text noting it's type.", "?"); ImGui::SameLine();
+				ImGui::RS::Helper("Shows, at the side of each container,\na text noting it's type.", "?"); ImGui::SameLine();
 				if (ImGui::Checkbox("Show Container Typology Name", &config.showContainerType))
 				{
 					configFile.Write("UP_SCT", config.showContainerType);
 					configFile.Save();
 				}
 
-				ImGui::AddHelper("Shows the unsigned money in terms\nof future income.", "?"); ImGui::SameLine();
+				ImGui::RS::Helper("Shows the unsigned money in terms\nof future income.", "?"); ImGui::SameLine();
 				if (ImGui::Checkbox("Show Unassigned Future Money ", &config.showFutureUnassigned));
 				{
 					configFile.Write("UP_SFU", config.showFutureUnassigned);
 					configFile.Save();
 				}
 
-				ImGui::AddHelper("Enlarges the size of the text\nlabels of each container.", "?"); ImGui::SameLine();
+				ImGui::RS::Helper("Enlarges the size of the text\nlabels of each container.", "?"); ImGui::SameLine();
 				ImGui::PushItemWidth(config.textFieldSize);
 				ImGui::DragFloat("Text Fiend Size", &config.textFieldSize, 0.1f, 1.0f, 1000.0f, "%f pts", ImGuiSliderFlags_AlwaysClamp);
 				if (ImGui::IsItemDeactivatedAfterEdit())
@@ -993,9 +1033,9 @@ void EconomyScene::DrawPreferencesWindow(bool& ret)
 				}
 				ImGui::PopItemWidth();
 
-				ImGui::AddHelper("Default directory where the File Dialog will open\nwhen no existing file location can be determined.", "?"); ImGui::SameLine();
+				ImGui::RS::Helper("Default directory where the File Dialog will open\nwhen no existing file location can be determined.", "?"); ImGui::SameLine();
 				int r = -1;
-				if (ImGui::DirectoryBrowserField("Default Dialog Directory", &config.defaultDialogDirectory, r, 0, config.defaultDialogDirectory.Str()))
+				if (ImGui::RS::DirectoryBrowserField("Default Dialog Directory", &config.defaultDialogDirectory, r, 0, config.defaultDialogDirectory.Str()))
 				{
 					if (r == 1) // Browse operation returns a path
 						configFile.Write("UP_DDD", config.defaultDialogDirectory);
@@ -1013,7 +1053,7 @@ void EconomyScene::DrawPreferencesWindow(bool& ret)
 
 			if (ImGui::BeginTabItem("Gestors"))
 			{
-				ImGui::AddSpacing(1);
+				ImGui::RS::Spacing(1);
 
 				if (ImGui::BeginTabBar("##GestorsTabBar"))
 				{
@@ -1023,7 +1063,7 @@ void EconomyScene::DrawPreferencesWindow(bool& ret)
 							ImGui::PushID(g->id.Data());
 							if (ImGui::BeginTabItem(g->Name().Data()))
 							{
-								ImGui::AddSpacing(1);
+								ImGui::RS::Spacing(1);
 
 								ImGui::Text("Currency:");
 								if (ImGui::Combo("##Currency", &config.currency[i], config.comboCurrency, 5))
@@ -1042,129 +1082,170 @@ void EconomyScene::DrawPreferencesWindow(bool& ret)
 
 			if (ImGui::BeginTabItem("Backups"))
 			{
-				ImGui::AddSpacing(1);
+				ImGui::RS::Spacing(1);
 
-				ImGui::AddHelper("Determines if it is allowed to backup a newly created and unsaved file.", "?"); ImGui::SameLine();
-				if (ImGui::Checkbox("Backup unsaved files?", &config.backupUnsavedFiles))
+				ImGui::RS::SectionText("Backup Directory");
 				{
-					configFile.Write("UP_BUF", config.backupUnsavedFiles);
-					configFile.Save();
-				}
-
-				ImGui::AddHelper("Define where the program stores the backups.", "?"); ImGui::SameLine();
-				int r = -1;
-				if (ImGui::DirectoryBrowserField("Backup Directory", &config.backupDirectory, r, 0, config.defaultDialogDirectory.Str()))
-				{
-					if (r == 1) // Browse operation returns a path
-						configFile.Write("UP_BCD", config.backupDirectory);
-					else if (r == 3) // Reset button clicked
+					ImGui::RS::Helper("Determines if it is allowed to backup a newly created and unsaved file.", "?"); ImGui::SameLine();
+					if (ImGui::Checkbox("Backup unsaved files?", &config.backupUnsavedFiles))
 					{
-						config.backupDirectory = DEFAULT_BACKUP_CREATION_DIRECTORY;
-						configFile.Write("UP_BCD", String::Empty);
+						configFile.Write("UP_BUF", config.backupUnsavedFiles);
+						configFile.Save();
 					}
 
-					configFile.Save();
-				}
+					ImGui::RS::Helper("Define where the program stores the backups.", "?"); ImGui::SameLine();
+					int r = -1;
+					if (ImGui::RS::DirectoryBrowserField("Backup Directory", &config.backupDirectory, r, 0, config.defaultDialogDirectory.Str()))
+					{
+						if (r == 1) // Browse operation returns a path
+							configFile.Write("UP_BCD", config.backupDirectory);
+						else if (r == 3) // Reset button clicked
+						{
+							config.backupDirectory = DEFAULT_BACKUP_CREATION_DIRECTORY;
+							configFile.Write("UP_BCD", String::Empty);
+						}
 
-				ImGui::AddSpacing(2);
+						configFile.Save();
+					}
+				}
+				ImGui::RS::Spacing(2);
 
-				ImGui::SectionText("Automatic Backups");
-				ImGui::AddHelper("When a file is opened, automatically generates a backup of it.", "?"); ImGui::SameLine();
-				if (ImGui::Checkbox("Backup on file open", &config.autoOpenFileBackup))
+				ImGui::RS::SectionText("Automatic Backups");
 				{
-					configFile.Write("UP_AOFB", config.autoOpenFileBackup);
-					configFile.Save();
-				}
-				ImGui::AddHelper("When a file is closed, automatically generates a backup of it.", "?"); ImGui::SameLine();
-				if (ImGui::Checkbox("Backup on file close", &config.autoCloseFileBackup))
-				{
-					configFile.Write("UP_ACFB", config.autoCloseFileBackup);
-					configFile.Save();
-				}
-				ImGui::AddHelper("When the app is closed, automatically generates a backup of the current file.", "?"); ImGui::SameLine();
-				if (ImGui::Checkbox("Backup on app close", &config.autoCloseAppBackup))
-				{
-					configFile.Write("UP_ACAB", config.autoCloseAppBackup);
-					configFile.Save();
-				}
-				ImGui::AddHelper("Periodically generates backups depending on the specified timing.", "?"); ImGui::SameLine();
-				if (ImGui::Checkbox("Backup periodically |", &config.autoIntervalAppBackup))
-				{
-					configFile.Write("UP_AIAB", config.autoIntervalAppBackup);
-					configFile.Save();
-					backupChrono.ChronoStop();
-				}
-				ImGui::SameLine(); ImGui::TimeDisplay(backupChrono.ReadSec());
-				ImGui::BeginDisabled(!config.autoIntervalAppBackup);
-				ImGui::Dummy(ImVec2(7, 2)); ImGui::SameLine();
-				if (ImGui::SliderCombo("##IntervalCombo", &config.autoIntervalAppValue, config.comboIntervalText, 7, 150))
-				{
-					configFile.Write("UP_AIAV", config.autoIntervalAppValue);
-					configFile.Save();
-				}
-				ImGui::EndDisabled();
-
-				ImGui::AddSpacing(2);
-
-				ImGui::SectionText("Backup Clean Up");
-				static const char* comboCleanBackups[] = { "All Backups", "Older than", "Keep newest X" };
-				static int a = 0;
-				ImGui::AddHelper("Defines how the search algorithm will proceed.\n - Delete All Backups: Clear all backups.\n - Delete Backups older than: Select a date and delete the older backups.\n - Keep newest X Backups: Select an amount and keep the newest amount of backups, deleting the oldest.", "?");
-				ImGui::SameLine(); ImGui::Text("Delete Metric: ");
-				ImGui::PushItemWidth(126);
-				ImGui::SameLine(0, 1); ImGui::Combo("##DeleteMetric", &a, comboCleanBackups, 3);
-				ImGui::PopItemWidth();
-				
-				static int index = -1;
-				if (a != 0)
-				{
-					static DateTime date = DateTime::From::Now();
-					ImGui::SameLine(0, 4);
-					ImGui::DateField("##DateBackupsSelect", &date);
-
-					static const char* labels[] = { "All Files", "Specific File" };
-					static int s = 0;
-					ImGui::AddHelper("Defines at which level the search algorithm metrics will act.\n - All Files: The metric will be used on all backups.\n - Specific File: The metric will apply individually per each backup name file.", "?");
-					ImGui::SameLine(); ImGui::OneOptionSelectableCombo(labels, 2, &s, 18);
-					ImGui::SameLine(0, 22); ImGui::Button("     Scan     ");
-				}
-				else
-				{
+					ImGui::RS::Helper("When a file is opened, automatically generates a backup of it.", "?"); ImGui::SameLine();
+					if (ImGui::Checkbox("Backup on file open", &config.autoOpenFileBackup))
+					{
+						configFile.Write("UP_AOFB", config.autoOpenFileBackup);
+						configFile.Save();
+					}
+					ImGui::RS::Helper("When a file is closed, automatically generates a backup of it.", "?"); ImGui::SameLine();
+					if (ImGui::Checkbox("Backup on file close", &config.autoCloseFileBackup))
+					{
+						configFile.Write("UP_ACFB", config.autoCloseFileBackup);
+						configFile.Save();
+					}
+					ImGui::RS::Helper("When the app is closed, automatically generates a backup of the current file.", "?"); ImGui::SameLine();
+					if (ImGui::Checkbox("Backup on app close", &config.autoCloseAppBackup))
+					{
+						configFile.Write("UP_ACAB", config.autoCloseAppBackup);
+						configFile.Save();
+					}
+					ImGui::RS::Helper("Periodically generates backups depending on the specified timing.", "?"); ImGui::SameLine();
+					if (ImGui::Checkbox("Backup periodically |", &config.autoIntervalAppBackup))
+					{
+						configFile.Write("UP_AIAB", config.autoIntervalAppBackup);
+						configFile.Save();
+						backupChrono.ChronoStop();
+					}
+					ImGui::SameLine(); ImGui::RS::TimeDisplay(backupChrono.ReadSec());
+					ImGui::BeginDisabled(!config.autoIntervalAppBackup);
 					ImGui::Dummy(ImVec2(7, 2)); ImGui::SameLine();
-					if (ImGui::Button("Clean All"))
+					if (ImGui::RS::SliderCombo("##IntervalCombo", &config.autoIntervalAppValue, config.comboIntervalText, 7, 150))
+					{
+						configFile.Write("UP_AIAV", config.autoIntervalAppValue);
+						configFile.Save();
+					}
+					ImGui::EndDisabled();
+				}
+				ImGui::RS::Spacing(2);
+
+				ImGui::RS::SectionText("Backup Clean Up");
+				{
+					static const char* comboCleanBackups[] = { "All Backups", "Older than", "Keep newest X" };
+					static int a = 0;
+					ImGui::RS::Helper("Defines how the search algorithm will proceed.\n - Delete All Backups: Clear all backups.\n - Delete Backups older than: Select a date and delete the older backups.\n - Keep newest X Backups: Select an amount and keep the newest amount of backups, deleting the oldest.", "?");
+					ImGui::SameLine(); ImGui::Text("Delete Metrics: ");
+					ImGui::PushItemWidth(126);
+					ImGui::SameLine(0, 1); ImGui::Combo("##DeleteMetric", &a, comboCleanBackups, 3);
+					ImGui::PopItemWidth();
+					ImGui::SameLine(0, 6);
+
+					static Array<FileManager::FileInfo> deleteBackups;
+					static int index = -1;
+					if (a != 0)
+					{
+						static DateTime date = DateTime::From::Now();
+						static int amount = 1;
+
+						if (a == 1)
+						{
+							if (ImGui::Button("     Scan     "))
+								RetrieveDeleteBackups(date, deleteBackups);
+
+							ImGui::RS::Helper("Choose the date to filter the backups.\nIt will filter out any newer created file since this date.", "?");
+							ImGui::SameLine(); ImGui::RS::DateField("##DateBackupsSelect", &date);
+						}
+						else
+						{
+							if (ImGui::Button("     Scan     "))
+								RetrieveDeleteBackups(amount, deleteBackups);
+
+							ImGui::RS::Helper("Defines the amount of newest files to keep.", "?");
+							ImGui::SameLine();
+							ImGui::PushItemWidth(106);
+							ImGui::DragInt("##AmountBackupsSelect", &amount, 0.15, 1, INT_MAX, "%d", ImGuiSliderFlags_ClampOnInput);
+							ImGui::PopItemWidth();
+						}
+
+						if (!deleteBackups.IsEmpty())
+						{
+							ImGui::RS::Spacing();
+							if (ImGui::Button("Delete"))
+							{
+								ImGui::OpenPopup("Confirm");
+								index = 1;
+							}
+							ImGui::BeginChild("##BackupsDeleteDisplay", ImVec2(400, 160), ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar);
+
+							ImGui::Spacing();
+							deleteBackups.Iterate(
+								[](const FileManager::FileInfo& info)
+								{ ImGui::Text(info.Path().Data()); }
+							);
+							ImGui::Spacing();
+
+							ImGui::EndChild();
+						}
+					}
+					else if (ImGui::Button("Clean All"))
 					{
 						ImGui::OpenPopup("Confirm");
 						index = 0;
 					}
-				}
 
-				ImGui::CenterNextWindow();
-				if (ImGui::BeginPopupModal("Confirm", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize ))
-				{
-					if (index == 0)
+					ImGui::RS::CenterNextWindow();
+					if (ImGui::BeginPopupModal("Confirm", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
 					{
-						ImGui::TextAligned(0.45, ImGui::GetWindowWidth(), "Are you sure you want to delete all backups?");
+						if (index == 0)
+							ImGui::TextAligned(0.45, ImGui::GetWindowWidth(), "Are you sure you want to delete all backups?");
+						if (index == 1)
+							ImGui::TextAligned(0.45, ImGui::GetWindowWidth(), "Are you sure you want to delete this backups?");
 						ImGui::TextAligned(0.45, ImGui::GetWindowWidth(), "This process is irreversible.");
+
+						ImGui::RS::Spacing(2);
+
+						float w = ImGui::GetWindowWidth() / 2;
+						ImGui::SetCursorPosX(w - 130);
+						bool ret = false;
+						if (ImGui::Button("Yes", ImVec2(120, 0)))
+						{
+							ret = true;
+							if (index == 0) FileManager::RemoveFolder(config.backupDirectory.Str());
+							else if (index == 1)
+							{
+								FileManager::RemoveFiles(deleteBackups);
+								deleteBackups.Clear();
+							}
+						}
+						ImGui::SameLine();
+
+						ret |= ImGui::Button("No", ImVec2(120, 0));
+
+						if (ret)
+							ImGui::CloseCurrentPopup();
+
+						ImGui::EndPopup();
 					}
-
-					ImGui::AddSpacing(2);
-
-					float w = ImGui::GetWindowWidth() / 2;
-					ImGui::SetCursorPosX(w - 130);
-					bool ret = false;
-					if (ImGui::Button("Yes", ImVec2(120, 0)))
-					{
-						ret = true;
-						FileManager::RemoveFolder(config.backupDirectory.Str());
-					}
-					ImGui::SameLine();
-
-					ret |= ImGui::Button("No", ImVec2(120, 0));
-
-					if (ret)
-						ImGui::CloseCurrentPopup();
-
-					ImGui::EndPopup();
 				}
 
 				ImGui::EndTabItem();
@@ -1183,28 +1264,62 @@ void EconomyScene::DrawMainWindow(bool& ret)
 
 	if (ImGui::Begin("##MainWindow", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus))
 	{
+		ImGui::RS::Spacing(0);
+		ImGui::PushFont(ImGui::RS::InputTextFont);
 		ImGui::Text(file.Name().Data());
 		if (file.IsBackup())
 		{
 			ImGui::SameLine();
 			ImGui::Text("- Restored");
 		}
+		ImGui::PopFont();
 
-		unsigned int size = gestors.Size();
+		ImGui::RS::Spacing();
 
-		if (size > 0) ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(10.0f, 0.0f));
-		if (size > 0 && ImGui::BeginTable("##systemtable", size, ImGuiTableFlags_BordersInner | ImGuiTableFlags_Resizable))
+		if (ImGui::BeginTabBar("##NNGFileMainTabBar"))
 		{
-			// Captura la posició Y de l'inici de la taula
-			float tableHeight = (ImGui::GetWindowPos().y + ImGui::GetWindowHeight()) - ImGui::GetCursorScreenPos().y;
-			ImVec2 mousePos = ImGui::GetMousePos();
+			if (ImGui::BeginTabItem("Gestors"))
+			{
+				enableTabs = Flag::AllFalse;
+				DrawMainWindowGestors(enableTabs);
+				ImGui::EndTabItem();
+			}
 
-			for (unsigned int i = 0; i < size; ++i)
+			if (enableTabs[0] && ImGui::BeginTabItem("Cash Flow"))
+			{
+				DrawMainWindowCashFlow();
+				ImGui::EndTabItem();
+			}
+		}
+		ImGui::EndTabBar();
+
+		if (!errorMessage.IsNull())
+			ImGui::TextColored(ImVec4(1, 0, 0, 1), errorMessage.Str());
+
+		if (!warningMessage.IsNull())
+			ImGui::TextColored(ImVec4(1, 1, 0, 1), warningMessage.Str());
+	}
+	ImGui::End();
+}
+
+void EconomyScene::DrawMainWindowGestors(Flag& enable)
+{
+	//TODO: Build a way to eliminate a gestor
+	ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(10.0f, 0.0f));
+	if (ImGui::BeginTable("##systemtable", gestors.Size(), ImGuiTableFlags_BordersInner | ImGuiTableFlags_Resizable))
+	{
+		// Captura la posició Y de l'inici de la taula
+		float tableHeight = (ImGui::GetWindowPos().y + ImGui::GetWindowHeight()) - ImGui::GetCursorScreenPos().y;
+		ImVec2 mousePos = ImGui::GetMousePos();
+
+		gestors.Iterate(
+			[&](GestorSystem* g, int i)
 			{
 				ImGui::TableNextColumn();
 
+				float columnWidth = ImGui::GetColumnWidth();
 				ImVec2 cellMin = ImGui::GetCursorScreenPos();
-				ImVec2 cellMax = ImVec2(cellMin.x + ImGui::GetColumnWidth(), cellMin.y + tableHeight);
+				ImVec2 cellMax = ImVec2(cellMin.x + columnWidth, cellMin.y + tableHeight);
 
 				// Detectem si el clic ha estat dins la zona
 				bool mouseInside =
@@ -1223,20 +1338,60 @@ void EconomyScene::DrawMainWindow(bool& ret)
 					);
 				}
 
-				gestors[i]->Draw();
+				g->Draw(columnWidth, enable);
 			}
+		);
 
-			ImGui::EndTable();
-			ImGui::PopStyleVar();
-		}
-
-		if (!errorMessage.IsNull())
-			ImGui::TextColored(ImVec4(1, 0, 0, 1), errorMessage.Str());
-
-		if (!warningMessage.IsNull())
-			ImGui::TextColored(ImVec4(1, 1, 0, 1), warningMessage.Str());
+		ImGui::EndTable();
 	}
-	ImGui::End();
+	ImGui::PopStyleVar();
+}
+
+void EconomyScene::DrawMainWindowCashFlow()
+{
+	ImGui::Spacing();
+	ImGui::Text("Start Date:"); ImGui::SameLine();
+	ImGui::RS::MonthSelector("##MonthSelectorStart", &startMonthSelector, App::OpenAppTime, &startDate, 0, endMonthSelector - 3);
+	ImGui::SameLine(270);
+	ImGui::Text("End Date:"); ImGui::SameLine();
+	ImGui::RS::MonthSelector("##MonthSelectorEnd", &endMonthSelector, App::OpenAppTime, &endDate, startMonthSelector + 3, 18);
+
+	static float sds = 0;
+	
+	int total = startDate.MonthsUntil(endDate);
+	float w = (ImGui::GetWindowWidth() - 500) * Maths::Lerp(sds, 1, 0.9);
+
+	float x = 140 + (136 * (1 - sds));
+	ImVec2 pos = ImGui::GetCursorPos() + ImVec2(x, 52);
+	float wR = w / (float)total;
+
+	ImGui::RS::Spacing(2);
+	ImGui::PushItemWidth(60 + (138 * (1 - sds)));
+	ImGui::SliderFloat("##AAA", &sds, 1, 0, "");
+	ImGui::PopItemWidth();
+
+	ImGui::GetWindowDrawList()->AddLine(ImVec2(pos.x, pos.y), ImVec2(pos.x + w, pos.y), IM_COL32(255, 255, 255, 255), 2.0f);
+	for (int i = 0; i < total + 1; ++i)
+	{
+		float xPos = pos.x + (i * wR);
+		ImGui::GetWindowDrawList()->AddLine(ImVec2(xPos, pos.y - 16), ImVec2(xPos, pos.y), IM_COL32(255, 255, 255, 255), 2.0f);
+		ImGui::GetWindowDrawList()->AddLine(ImVec2(xPos, pos.y), ImVec2(xPos, pos.y + 300), IM_COL32(255, 255, 255, 100), 2.0f);
+		if (i == total)
+			continue;
+
+		ImGui::SetCursorPos(ImVec2(xPos - 62, pos.y - 38));
+		int month = (startDate.Month() + i) % 12;
+		if (month == 0) month = 12;
+		ImGui::Text(DateTime::MonthName(month));
+	}
+
+	ImGui::RS::Spacing(2);
+
+	gestors.Iterate(
+		[&](GestorSystem* g) {
+			g->DrawCashFlow(wR, pos.x);
+		}
+	);
 }
 
 void EconomyScene::DrawToolbarWindow(bool& ret)
@@ -1265,6 +1420,13 @@ void EconomyScene::DrawToolbarWindow(bool& ret)
 		if (ImGui::Button("FUTURE"))
 		{
 			((LimitContainer*)gestors[focusedGestor]->CreateContainer(ContainerType::FUTURE))
+				->NewLabel();
+			action = true;
+		}
+
+		if (ImGui::Button("CONST "))
+		{
+			((ConstContainer*)gestors[focusedGestor]->CreateContainer(ContainerType::CONSTANT))
 				->NewLabel();
 			action = true;
 		}

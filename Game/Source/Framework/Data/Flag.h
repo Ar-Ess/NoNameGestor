@@ -1,6 +1,9 @@
 #pragma once
 
-#include <stdint.h>
+#include <initializer_list>
+
+typedef unsigned long long uint64_t;
+typedef unsigned char      uint8_t;
 
 // 64 slots bit-wise manager
 class Flag
@@ -12,6 +15,8 @@ public:
 	// Use the 0b0 notation
 	// Example: 0b1001 means flag 1 and 4 are true, all the others are false
 	Flag(uint64_t flag);
+
+	Flag(bool element1, std::initializer_list<bool> list);
 
 	const static Flag AllFalse;
 	
@@ -38,6 +43,9 @@ public:
 	void Invert();
 
 	bool IsAnyTrue() const;
+	bool IsAllTrue() const;
+	bool IsAnyFalse() const;
+	bool IsAllFalse() const;
 
 	// Clear the flag.
 	// state: if false sets all the flags to false, if true sets all flags to true
@@ -47,7 +55,7 @@ public:
 
 	void operator()(unsigned int index, bool state);
 
-	static constexpr uint8_t maxCapacity = 64;
+	static constexpr uint8_t MaxCapacity = 64;
 
 	int CountTrue(unsigned int count = 64) const;
 	int CountTrue(unsigned int startIndex, unsigned int count) const;

@@ -11,11 +11,7 @@ struct Label
 		id(ID::New()), name(name), money(money)
 	{ }
 
-	Label(const std::string& name, float money, float limit) :
-		Label(name, money)
-	{
-		this->limit = limit;
-	}
+	~Label() {}
 
 	// Internal
 	ID id = ID::Empty;
@@ -24,6 +20,4 @@ struct Label
 	std::string name;
 	float money = 0;
 
-	// Limit
-	Nullable<float> limit = Nullable<float>();
 };

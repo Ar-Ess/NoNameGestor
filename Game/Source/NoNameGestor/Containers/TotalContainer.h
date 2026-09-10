@@ -6,39 +6,11 @@ class TotalContainer : public Container
 {
 public: // Functions
 
-	TotalContainer(const char* name, String* format, Configuration* config) :
-		Container(name, false, true, false, format, config)
-	{ }
+	TotalContainer(const char* name, String* format, Configuration* config);
 
-	bool Update(Aggregate& agg) override
-	{
-		money = agg.total - agg.assigned + agg.future;
-		leftMoney = agg.total - agg.assigned;
-		futureMoney = agg.future;
+	bool Update(Aggregate& agg) override;
 
-		return true;
-	}
-
-	void Draw() override
-	{
-		ImGui::PushID(id.Data());
-		{
-			if (!config->showFutureUnassigned)
-			{
-				ImGui::Text("Total: "); ImGui::SameLine();
-				ImGui::Text(format->Str(), money);
-			}
-			else
-			{
-				ImGui::Text("Actual Total: "); ImGui::SameLine();
-				ImGui::Text(format->Str(), double(leftMoney));
-
-				ImGui::Text("Future Total: "); ImGui::SameLine();
-				ImGui::Text(format->Str(), futureMoney);
-			}
-		}
-		ImGui::PopID();
-	}
+	void Draw() override;
 
 	const char* TypeName() const override
 	{

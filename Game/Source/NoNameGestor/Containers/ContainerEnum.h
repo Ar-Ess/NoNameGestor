@@ -7,5 +7,6 @@ enum class ContainerType
 	TOTAL_MONEY,
 	FILTER,
 	LIMIT,
-	FUTURE
+	FUTURE,
+	CONSTANT
 };

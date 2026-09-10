@@ -50,8 +50,21 @@
     <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_impl_sdlrenderer2.cpp">
       <Filter>External\ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="Source\NoNameGestor\Utils\DateTime.cpp">
-      <Filter>Utils</Filter>
+    <ClCompile Include="Source\NoNameGestor\Containers\ConstContainer.cpp">
+      <Filter>Containers</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Containers\TotalContainer.cpp">
+      <Filter>Containers</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Containers\InputContainer.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Containers\FilterContainer.cpp">
+      <Filter>Containers</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Containers\FutureContainer.cpp">
+      <Filter>Containers</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Containers\LimitContainer.cpp">
+      <Filter>Containers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -157,8 +170,8 @@
     <ClInclude Include="Source\NoNameGestor\Utils\TimeSpan.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Source\NoNameGestor\Utils\DateTime.h">
-      <Filter>Utils</Filter>
+    <ClInclude Include="Source\NoNameGestor\Containers\ConstContainer.h">
+      <Filter>Containers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

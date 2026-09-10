@@ -1,32 +1,93 @@
 #pragma once
 
+#include "Framework/Data/Flag.h"
 #include "Framework/Data/String.h"
 #include "Framework/External/JSON/json.hpp"
-
-#include "NoNameGestor/Utils/DateTime.h"
+#include "Framework/Time/DateTime.h"
 
 #include <fstream>
 
 //TODO: Framework: Add this in the framework
 class FileManager
 {
+public:
+
+	enum class FileFlag
+	{
+		READONLY,
+		HIDDEN,
+		FROM_SYSTEM,
+		ARCHIVE,
+		COMPRESSED,
+		ENCRYPTED,
+		TEMPORARY
+	};
 
 	struct FileInfo
 	{
-		DateTime creationDate;
+
+		friend class FileManager;
+
+	public:
+
+		FileInfo() = default;
+		~FileInfo() = default;
+		FileInfo(FileInfo&& other) noexcept;
+		FileInfo& operator=(FileInfo&& other) noexcept;
+
+		/// <summary>
+		/// Returns if the file is valid, by checking if the internal data is created.
+		/// </summary>
+		virtual bool IsValid() const;
+
+		/// <summary>
+		/// Returns the file path (directory + file name + extension).
+		/// </summary>
+		StringView Path() const;
+		/// <summary>
+		/// Returns the file name (file name + extension).
+		/// </summary>
+		StringView Name() const;
+		/// <summary>
+		/// Returns the file directory (directory).
+		/// </summary>
+		StringView Directory() const;
+		/// <summary>
+		/// Returns if the file flag inputted is true or false.
+		/// </summary>
+		bool IsFile(FileFlag flag) const;
+		/// <summary>
+		/// Returns the file size in bits.
+		/// </summary>
+		uint64_t Size() const;
+
+		DateTime CreationDate() const;
+		DateTime LastAccessDate() const;
+		DateTime LastWriteDate() const;
+
+	protected:
+
+		FileInfo(const FileInfo& other) = default;
+		FileInfo& operator=(const FileInfo& other) = default;
+
+		bool GenerateFileInfo(StringView p);
+
+	protected:
+
+		DateTime expectedRunoutDate;
 		DateTime lastAccessDate;
 		DateTime lastWriteDate;
-		uint64_t fileSize;
-		bool isReadonly;
-		bool isHidden;
-		bool isFromSystem;
-		bool isArchive;
-		bool isCompressed;
-		bool isEncrypted;
-		bool isTemporary;
-	};
+		uint64_t fileSize = 0;
+		Flag isFile;
+		String path;
+		String name;
+		String directory;
 
-public:
+	private:
+
+		bool isValid = false;
+
+	};
 
 	class FileNode
 	{
@@ -531,7 +592,7 @@ public:
 
 	};
 
-	class File : public FileNode
+	class File : public FileNode, public FileInfo
 	{
 
 		friend class FileManager;
@@ -551,7 +612,7 @@ public:
 		/// <summary>
 		/// Returns if the file is valid, by checking if the internal data is created.
 		/// </summary>
-		bool IsValid() const;
+		bool IsValid() const override;
 
 		/// <summary>
 		/// Returns if the file is new, which means it has a name but not a path or directory yet.
@@ -595,35 +656,14 @@ public:
 		/// <param name="name">Optional file name.</param>
 		void New(StringView fileName);
 
-		/// <summary>
-		/// Returns the file path (directory + file name + extension).
-		/// </summary>
-		StringView Path() const;
-		/// <summary>
-		/// Returns the file name (file name + extension).
-		/// </summary>
-		StringView Name() const;
-		/// <summary>
-		/// Returns the file directory (directory).
-		/// </summary>
-		StringView Directory() const;
-
-		const FileInfo& Info() const;
-
 	private:
 
-		File(nlohmann::json&& data, const String& path, const FileInfo& info);
-
-		void GenerateFileInfo(const String& path);
+		File(nlohmann::json&& data, const FileInfo& info);
 
 	protected:
 
-		String path;
-		String name;
-		String directory;
 		bool isNewFile = false; // Is the file a new file? (no path, only file name)
 		bool isBackup = false;
-		FileInfo info;
 	};
 
 public:
@@ -749,19 +789,33 @@ public:
 	static bool OpenFile(StringView path, File& output, bool create = false);
 
 	/// <summary>
-	/// Finds a file without loading the internal json data.
+	/// Opens a file for I/O through a valid FileInfo.
 	/// </summary>
-	/// <param name="path">Path to the file to find.</param>
-	/// <param name="create">In case the file does not exist, should the function create a new file?</param>
-	/// <returns>The found file.</returns>
-	static File FindFile(const char* path, bool create = false);
+	/// <param name="info">Valid FileInfo.</param>
+	/// <returns>The opened file.</returns>
+	static File OpenFile(const FileInfo& info);
+	/// <summary>
+	/// Opens a file for I/O through a valid FileInfo.
+	/// </summary>
+	/// <param name="info">Valid FileInfo.</param>
+	/// <param name="output">The output file.</param>
+	/// <returns>False if there has been an error on file opening; otherwise true.</returns>
+	static bool OpenFile(const FileInfo& info, File& output);
+
 	/// <summary>
 	/// Finds a file without loading the internal json data.
 	/// </summary>
 	/// <param name="path">Path to the file to find.</param>
 	/// <param name="create">In case the file does not exist, should the function create a new file?</param>
 	/// <returns>The found file.</returns>
-	static File FindFile(StringView path, bool create = false);
+	static FileInfo FindFile(const char* path, bool create = false);
+	/// <summary>
+	/// Finds a file without loading the internal json data.
+	/// </summary>
+	/// <param name="path">Path to the file to find.</param>
+	/// <param name="create">In case the file does not exist, should the function create a new file?</param>
+	/// <returns>The found file.</returns>
+	static FileInfo FindFile(StringView path, bool create = false);
 	/// <summary>
 	/// Finds a file without loading the internal json data.
 	/// </summary>
@@ -769,7 +823,7 @@ public:
 	/// <param name="output">The output file.</param>
 	/// <param name="create">In case the file does not exist, should the function create a new file?</param>
 	/// <returns>False if there has been an error on file finding; otherwise true.</returns>
-	static bool FindFile(const char* path, File& output, bool create = false);
+	static bool FindFile(const char* path, FileInfo& output, bool create = false);
 	/// <summary>
 	/// Finds a file without loading the internal json data.
 	/// </summary>
@@ -777,14 +831,41 @@ public:
 	/// <param name="output">The output file.</param>
 	/// <param name="create">In case the file does not exist, should the function create a new file?</param>
 	/// <returns>False if there has been an error on file finding; otherwise true.</returns>
-	static bool FindFile(StringView path, File& output, bool create = false);
+	static bool FindFile(StringView path, FileInfo& output, bool create = false);
+
+	/// <summary>
+	/// Finds all the files in a directory without loading the internal json data.
+	/// </summary>
+	/// <param name="directory">Path to the folder to scan.</param>
+	/// <returns>All the found files.</returns>
+	static Array<FileInfo> FindFiles(const char* directory);
+	/// <summary>
+	/// Finds all the files in a directory without loading the internal json data.
+	/// </summary>
+	/// <param name="directory">Path to the folder to scan.</param>
+	/// <returns>All the found files.</returns>
+	static Array<FileInfo> FindFiles(StringView directory);
+	/// <summary>
+	/// Finds all the files in a directory without loading the internal json data.
+	/// </summary>
+	/// <param name="directory">Path to the folder to scan.</param>
+	/// <param name="output">All the found files.</param>
+	/// <returns>False if there has been an error on file finding; otherwise true.</returns>
+	static bool FindFiles(const char* directory, Array<FileInfo>& output);
+	/// <summary>
+	/// Finds all the files in a directory without loading the internal json data.
+	/// </summary>
+	/// <param name="directory">Path to the folder to scan.</param>
+	/// <param name="output">All the found files.</param>
+	/// <returns>False if there has been an error on file finding; otherwise true.</returns>
+	static bool FindFiles(StringView directory, Array<FileInfo>& output);
 
 	static bool RemoveFile(const char* path);
+	
+	static bool RemoveFile(FileInfo& file);
+
+	static int RemoveFiles(Array<FileInfo>& files);
 
 	static bool RemoveFolder(const char* directory, bool removeItself = false);
-
-private:
-
-	static bool GetFileInfo(const char* path, FileInfo& info);
 
 };

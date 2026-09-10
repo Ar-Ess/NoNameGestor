@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Framework/Engine/Module.h"
-#include "Framework/Utils/PerfTimer.h"
+#include "Framework/Time/DateTime.h"
+#include "Framework/Time/PerfTimer.h"
 #include "Framework/Data/Array.h"
 #include "Framework/Data/String.h"
 #include "Framework/Data/Flag.h"
@@ -90,11 +91,9 @@ private:
 
 public:
 
-#ifdef NDEBUG
 	static const bool DebugMode;
-#else
-	static const bool DebugMode;
-#endif
+
+	static const DateTime OpenAppTime;
 
 private:
 

@@ -1,15 +1,18 @@
 #pragma once
 
-//TODO: Framework: Add this class to the framework
-#include "Framework/Engine/Debug.h"
-
 typedef long long int64_t;
 typedef unsigned long long uint64_t;
 struct _FILETIME;
 template<short int, short int>
 class TimeSpan;
 
-//TODO: make a cpp file
+#include "Framework/Data/String.h"
+
+/// Represents a calendar date and time using the proleptic Gregorian calendar.
+///
+/// The internal representation stores milliseconds elapsed since
+/// 0001-01-01 00:00:00.000. DateTime does not contain timezone information.
+///
 class DateTime
 {
 
@@ -26,16 +29,22 @@ public:
 		From(From&&) = delete;
 		From& operator=(From&&) = delete;
 	
+		/// Returns the current local date and time.
 		static DateTime Now();
 
+		/// Creates a DateTime representing the first moment of the specified year.
 		static DateTime Year(uint64_t year);
 
+		/// Creates a DateTime representing the first moment of the specified month.
 		static DateTime Month(uint64_t year, uint64_t month);
 
+		/// Creates a DateTime from a calendar date.
 		static DateTime Date(uint64_t year, uint64_t month, uint64_t day);
 
+		/// Creates a DateTime from a calendar date and time.
 		static DateTime Date(uint64_t year, uint64_t month, uint64_t day, uint64_t hour, uint64_t minute = 0, uint64_t second = 0, uint64_t millisecond = 0);
 
+		/// Creates a DateTime from a Windows FILETIME value.
 		static DateTime WindowsFileTime(const _FILETIME& date);
 
 	};
@@ -114,113 +123,124 @@ private:
 
 public:
 
-	static const DateTime BaseEpoch;
-
-	static const char* MonthName(uint64_t month);
-
-	static const char* DayOfWeekName(int day);
-
-	static const char* DayOfWeekName(uint64_t day, uint64_t month, uint64_t year);
-
-	static int DayOfWeek(uint64_t day, uint64_t month, uint64_t year);
-	
-	static int DayOfYear(uint64_t day, uint64_t month, uint64_t year);
-
+	/// Returns whether the specified year is a leap year according to the
+	/// Gregorian calendar rules.
 	static bool IsLeapYear(uint64_t year);
 
+	/// Returns the number of days in the specified month of the specified year.
+	static uint64_t DaysInMonth(uint64_t year, uint64_t month);
+
+	/// Returns the number of days in the specified year.
 	static uint64_t DaysInYear(uint64_t year);
 
-	static uint64_t DaysInMonth(uint64_t year, uint64_t month);
+	/// Returns the name of the specified month.
+	static const char* MonthName(uint64_t month);
+
+	/// The base calendar epoch represented by 0001-01-01 00:00:00.000.
+	static const DateTime BaseEpoch;
+
+	/// Returns the name of the specified day of the week.
+    /// The day value must range from 1 to 7.
+	static const char* DayOfWeekName(int day);
+
+	/// Returns the name of the day of the week for the specified calendar date.
+	static const char* DayOfWeekName(uint64_t day, uint64_t month, uint64_t year);
+
+	/// Returns the day of the week for the specified calendar date.
+	/// The returned value ranges from 1 to 7.
+	static int DayOfWeek(uint64_t day, uint64_t month, uint64_t year);
+	
+	/// Returns the day of the year for the specified calendar date.
+	/// The returned value ranges from 1 to 365, or 366 in a leap year.
+	static int DayOfYear(uint64_t day, uint64_t month, uint64_t year);
 
 private:
 
-	static const char* MonthNameInternal(uint64_t month) { return month == 0 || month > 12 ? nullptr : monthNames[month - 1]; }
+	static const char* MonthNameInternal(uint64_t month);
 
 public:
 
 	DateTime() = default;
 	DateTime(uint64_t msSinceBaseEpoch);
-	DateTime(const DateTime& date) = default;
-	DateTime& operator=(const DateTime& date) = default;
-	DateTime(DateTime&& date) = default;
-	DateTime& operator=(DateTime&& date) = default;
+	DateTime(const DateTime& other) = default;
+	DateTime& operator=(const DateTime& other) = default;
+	DateTime(DateTime&& other) noexcept;
+	DateTime& operator=(DateTime&& other) noexcept;
 
+	/// Returns the first moment of the current year.
 	DateTime StartOfYear() const;
+	/// Returns the last representable millisecond of the current year.
 	DateTime EndOfYear() const;
 
+	/// Returns the first moment of the current month.
 	DateTime StartOfMonth() const;
+	/// Returns the last representable millisecond of the current month.
 	DateTime EndOfMonth() const;
 
+	/// Returns the first moment of the current day.
 	DateTime StartOfDay() const;
+	/// Returns the last representable millisecond of the current day.
 	DateTime EndOfDay() const;
 
+	/// Returns the millisecond component of the time.
 	uint64_t Ms() const;
+	/// Sets the millisecond component of the time.
 	void Ms(uint64_t ms);
 
+	/// Returns the second component of the time.
 	uint64_t Seconds() const;
+	/// Sets the second component of the time.
 	void Seconds(uint64_t seconds);
 
+	/// Returns the minute component of the time.
 	uint64_t Minutes() const;
+	/// Sets the minute component of the time.
 	void Minutes(uint64_t minutes);
 
+	/// Returns the hour component of the time.
+	/// When f24h is true, returns the hour using the 24-hour clock.
+	/// When f24h is false, returns the hour using the 12-hour clock.
 	uint64_t Hour(bool f24h = true) const;
+	/// Sets the hour using the 24-hour clock.
 	void Hour(uint64_t hours);
+	/// Sets the hour using the 12-hour clock and the specified AM/PM period.
 	void Hour(uint64_t hours, bool am);
 
+	/// Returns the day of the month.
 	uint64_t Day() const;
+	/// Sets the day of the month.
 	void Day(uint64_t day);
+	/// Returns the name of the current day of the week.
 	const char* DayOfWeekName() const;
+	/// Returns the day of the week as a numeric value.
 	int DayOfWeek() const;
+	/// Returns the day of the year.
 	int DayOfYear() const;
 
+	/// Returns the month of the year.
 	uint64_t Month() const;
+	/// Sets the month of the year.
 	void Month(uint64_t month);
 	const char* MonthName() const;
+	/// Returns the number of days in the current month.
 	uint64_t DaysInMonth() const;
 
+	/// Returns the year.
 	uint64_t Year() const;
+	/// Sets the year.
 	void Year(uint64_t year);
+	/// Returns the number of days in the current year.
 	uint64_t DaysInYear() const;
+	/// Returns whether the current year is a leap year.
 	bool IsLeapYear() const;
 
-	void Date(uint64_t& year, uint64_t& month, uint64_t& day);
-	void Date(int& year, int& month, int& day);
+	void Date(uint64_t& year, uint64_t& month, uint64_t& day) const;
+	void Date(int& year, int& month, int& day) const;
 
-	String ToString(bool onlyDate = true) const
-	{
-		if (ms == 0) return onlyDate ? "0001-01-01" : "0001-01-01 00:00:00.000";
-
-		String result = String::Empty;
-
-		static const char* formats[7] = {
-			 "%04d",
-			"-%02d",
-			"-%02d",
-			" %02d",
-			":%02d",
-			":%02d",
-			".%03d"
-		};
-		int64_t array[7] = {
-			Year(),
-			Month(),
-			Day(),
-			onlyDate ? 0 : Hour(),
-			onlyDate ? 0 : Minutes(),
-			onlyDate ? 0 : Seconds(),
-			onlyDate ? 0 : Ms()
-		};
-
-		for (int i = 0; i < 7; ++i)
-		{			
-			if (onlyDate && i >= 3)
-				break;
-
-			result += String::Format(formats[i], array[i]);
-		}
-
-		return result;
-	}
+	/// Returns the formatted date and time as a string.
+	/// When onlyDate is true, returns the date using the default date format.
+	/// Otherwise, returns the date and time including milliseconds.
+	String ToString(bool onlyDate = true) const;
 	/// <summary>
 	/// yyyy: Four digit year.
 	/// MM: Two digit month(01 - 12).
@@ -231,10 +251,7 @@ public:
 	/// ss: Seconds(00 - 59).
 	/// fff: Milliseconds(3 digits).
 	/// </summary>
-	String ToString(const char* format) const
-	{
-		return ToString(String(format));
-	}
+	String ToString(const char* format) const;
 	/// <summary>
 	/// yyyy: Four digit year.
 	/// MM: Two digit month(01 - 12).
@@ -245,83 +262,31 @@ public:
 	/// ss: Seconds(00 - 59).
 	/// fff: Milliseconds(3 digits).
 	/// </summary>
-	String ToString(String format) const
-	{
-		for (int i = 0; i < format.Length(); ++i)
-		{
-			const char* c = format.Str() + i;
+	String ToString(String format) const;
+	//TODO: This has to input a string??
 
-			String f = String::Empty;
-			switch (*c)
-			{
-			case 'y':
-			{
-				if (!String::StartsWith("yyyy", c))
-					continue;
-
-				f = String::Format("%04d", Year());
-				break;
-			}
-			case 'M':
-			{
-				if (*(c + 1) != 'M')
-					continue;
-				f = String::Format("%02d", Month());
-				break;
-			}
-			case 'd':
-			{
-				if (*(c + 1) != 'd')
-					continue;
-				f = String::Format("%02d", Day());
-				break;
-			}
-			case 'H':
-			{
-				if (*(c + 1) != 'H')
-					continue;
-				f = String::Format("%02d", Hour());
-				break;
-			}
-			case 'h':
-			{
-				if (*(c + 1) != 'h')
-					continue;
-				f = String::Format("%02d", Hour(false));
-				break;
-			}
-			case 'm':
-			{
-				if (*(c + 1) != 'm')
-					continue;
-				f = String::Format("%02d", Minutes());
-				break;
-			}
-			case 's':
-			{
-				if (*(c + 1) != 's')
-					continue;
-				f = String::Format("%02d", Seconds());
-				break;
-			}
-			case 'f':
-			{
-				if (!String::StartsWith("fff", c))
-					continue;
-				f = String::Format("%03d", Ms());
-				break;
-			}
-			default:
-				continue;
-			}
-
-			for (int j = 0; j < f.Length(); ++j)
-				format[i + j] = f[j];
-			i += f.Length() - 1;
-		}
-
-		return format;
-	}
+	/// Returns the number of complete calendar years between this date and another date.
+	/// Month, day and time components are ignored.
+	/// The result is positive when other is in a later year and negative when it is earlier.
+	int64_t YearsUntil(const DateTime& other) const;
+	/// Returns the number of complete calendar months between this date and another date.
+	/// Day and time components are ignored.
+	/// The result is based only on the year and month components.
+	int64_t MonthsUntil(const DateTime& other) const;
+	/// Returns the number of complete elapsed days between this date and another date.
+	/// Partial days are discarded.
+	int64_t DaysUntil(const DateTime& other) const;
+	/// Returns the number of complete elapsed hours between this date and another date.
+	/// Partial hours are discarded.
+	int64_t HoursUntil(const DateTime& other) const;
+	/// Returns the number of complete elapsed minutes between this date and another date.
+	/// Partial minutes are discarded.
+	int64_t MinutesUntil(const DateTime& other) const;
+	/// Returns the number of complete elapsed seconds between this date and another date.
+	/// Partial seconds are discarded.
+	int64_t SecondsUntil(const DateTime& other) const;
+	/// Returns the exact elapsed milliseconds between this date and another date.
+	int64_t MsUntil(const DateTime& other) const;
 
 public:
 
@@ -424,8 +389,8 @@ public:
 	void operator+=(const CalendarSpan& other);
 	void operator-=(const CalendarSpan& other);
 
-	DateTime operator+(const CalendarSpan& other);
-	DateTime operator-(const CalendarSpan& other);
+	DateTime operator+(const CalendarSpan& other) const;
+	DateTime operator-(const CalendarSpan& other) const;
 
 private:
 
@@ -433,7 +398,6 @@ private:
 	uint64_t FindMonth(uint64_t& remainderDays, uint64_t& year) const;
 	uint64_t To24h(uint64_t hour, bool am) const;
 	uint64_t To12h(uint64_t hour) const;
-
 
 private:
 

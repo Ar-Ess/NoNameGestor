@@ -118,8 +118,8 @@ public:
 			);
 
 		static_assert(
-			std::is_copy_assignable_v<T>,
-			"Array(T*, int): T must be copy assignable because elements are copied from the source buffer."
+			std::is_copy_assignable_v<T> || std::is_move_assignable_v<T>,
+			"Array(T*, int): T must be copy or move assignable because elements are copied/moved from the source buffer."
 			);
 
 		if (bufferSize <= 0 || initBuffer == nullptr)
@@ -127,7 +127,13 @@ public:
 
 		data = new T[size];
 		for (int i = 0; i < size; ++i)
-			data[i] = initBuffer[i];
+		{
+			if constexpr (std::is_copy_assignable_v<T>)
+				data[i] = initBuffer[i];
+			else
+				data[i] = std::move(initBuffer[i]);
+
+		}
 	}
 
 	Array(const Array& other) requires (!Owns && std::is_copy_constructible_v<T>)
@@ -399,7 +405,7 @@ public:
 				result[count++] = i;
 		}
 
-		Array ret = Array<int>(result, count);
+		Array<int> ret = Array<int>(result, count);
 		delete[] result;
 
 		return ret;
@@ -801,7 +807,16 @@ private:
 			}
 		}
 
-		std::swap(data[i + 1], data[right]);
+		if (i + 1 != right)
+		{
+			data[right] = std::move(data[i + 1]);
+			data[i + 1] = std::move(pivot);
+		}
+		else
+		{
+			data[right] = std::move(pivot);
+		}
+
 		return i + 1;
 	}
 

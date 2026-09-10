@@ -1,5 +1,16 @@
 #include "Container.h"
 
+#include "Framework/Coroutine/CoroutineManager.h"
+#include "Framework/Render/Color.h"
+
+#include "NoNameGestor/Gestor/Configuration.h"
+#include "NoNameGestor/Gestor/Aggregate.h"
+#include "NoNameGestor/Utils/ImGuiExtension.h"
+
+#include "NoNameGestor/External/imgui/imgui.h"
+#include "NoNameGestor/External/imgui/imgui_stdlib.h"
+#include "NoNameGestor/External/imgui/imgui_internal.h"
+
 bool Container::UpdateOpenState = false;
 
 Container::~Container()
@@ -12,17 +23,29 @@ bool Container::Update(Aggregate& agg)
 		return false;
 
 	money = 0;
-	labels.Iterate([&](const Label& l)
-		{ money += l.money; });
+	labels.Iterate([&](Label* l)
+		{ money += l->money; });
 
 	return true;
 }
 
-bool Container::DrawBase(bool& erase, ID& move)
+bool Container::DrawExport() const
+{
+	ImGui::Text(" - ");
+	ImGui::SameLine();
+	ImGui::PushID(id.Data());
+	ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false);
+	ImGui::MenuItem(CurrentName()->c_str(), "", &exporting);
+	ImGui::PopItemFlag();
+	ImGui::PopID();
+	return exporting;
+}
+
+bool Container::DrawBase(float maxWidth, bool& erase, ID& move)
 {
 	bool ret = true;
-
 	bool reordered = false;
+	this->maxWidth = maxWidth;
 
 	ImGui::PushID(id.Data());
 	{
@@ -128,7 +151,7 @@ bool Container::DrawBase(bool& erase, ID& move)
 	}
 	ImGui::PopID();
 
-	ImGui::AddSpacing(0);
+	ImGui::RS::Spacing(0);
 
 	return ret;
 }
@@ -145,7 +168,7 @@ void Container::Save(FileManager::FileNode node) const
 	auto lnode = node.Access("labels");
 
 	labels.Iterate(
-		[&](const Label& l)
+		[&](Label* l)
 		{
 			// Push a new object
 			int index = lnode.Push(FileManager::File::Object);
@@ -157,20 +180,20 @@ void Container::Save(FileManager::FileNode node) const
 			auto newNode = lnode.Access(index);
 
 			// Add the values
-			newNode.Write("name", l.name);
-			newNode.Write("money", l.money);
+			newNode.Write("name", l->name);
+			newNode.Write("money", l->money);
 		}
 	);
 }
 
 std::string* Container::CurrentName()
 {
-	return !unified || labels.IsEmpty() ? &name : &labels[0].name;
+	return !unified || labels.IsEmpty() ? &name : &labels[0]->name;
 }
 
 const std::string* Container::CurrentName() const
 {
-	return !unified || labels.IsEmpty() ? &name : &labels[0].name;
+	return !unified || labels.IsEmpty() ? &name : &labels[0]->name;
 }
 
 const char* Container::TypeName() const
@@ -204,9 +227,9 @@ void Container::Export(std::ofstream& exp) const
 	{
 		exp << std::endl;
 		labels.Iterate(
-			[&](const Label& l)
+			[&](Label* l)
 			{
-				exp << " - " << l.name << ": " << l.money << " " << currency << std::endl << std::endl;
+				exp << " - " << l->name << ": " << l->money << " " << currency << std::endl << std::endl;
 			}
 		);
 	}
@@ -214,19 +237,23 @@ void Container::Export(std::ofstream& exp) const
 
 Container::Container(const std::string& name, bool hidden, bool open, bool unified, String* format, Configuration* config) :
 	id(ID::New()),
+	labelDrawID(ID::Empty),
 	money(0),
 	name(name),
 	hidden(hidden),
 	open(open),
 	unified(unified),
 	format(format),
+	maxWidth(maxWidth),
 	config(config)
 {
 }
 
 Container::Container(const FileManager::FileNode& node, String* format, Configuration* config) :
 	id(ID::New()),
+	labelDrawID(ID::Empty),
 	format(format),
+	maxWidth(maxWidth),
 	config(config)
 {
 	name = node.Read <std::string>("name");
@@ -238,9 +265,58 @@ Container::Container(const FileManager::FileNode& node, String* format, Configur
 	UpdateOpenState = true;
 }
 
-void Container::NewLabel(Label&& label)
+void Container::NewLabel(Label* label)
 {
 	if (!labels.IsEmpty() && !UpdateOpenState)
 		unified = false;
-	labels.PushBack(std::move(label));
+
+	labels.PushBack(label);
+}
+
+void Container::DrawUserMessage(Label* label)
+{
+	if (message.IsNull() || !labelDrawID.HasValue() || labelDrawID.Value() != label->id)
+		return;
+
+	ImVec4 col = ImVec4(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
+	ImGui::PushStyleColor(ImGuiCol_Text, col);
+	ImGui::PushTextWrapPos(maxWidth);
+	ImGui::TextWrapped(message.Str());
+	ImGui::PopTextWrapPos();
+	ImGui::PopStyleColor();
+}
+
+void Container::SetWarningMessage(Label* label, const char* message, float time, float fade)
+{
+	SetMessage(label, message, time, fade, Color(235, 235, 0, 255));
+}
+
+void Container::SetErrorMessage(Label* label, const char* message, float time, float fade)
+{
+	SetMessage(label, message, time, fade, Color::Red);
+}
+
+void Container::SetMessage(Label* label, const char* message, float time, float fade, const Color& c)
+{
+	if (!labelDrawID.HasValue())
+		return;
+	
+	color = c;
+	this->message = message;
+	labelDrawID = label->id;
+	CoroutineManager::Begin(RunMessage(time, fade));
+}
+
+Coroutine Container::RunMessage(float time, float fade)
+{
+	co_yield Yield::WaitForSeconds(time);
+
+	for (float i = 0; i < fade; i += App::DeltaTime())
+	{
+		color.a = (1 - (i / fade)) * 255;
+		co_yield Yield::WaitForNextFrame();
+	}
+
+	message = nullptr;
+	labelDrawID.Clear();
 }

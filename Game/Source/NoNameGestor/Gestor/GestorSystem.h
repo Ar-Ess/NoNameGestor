@@ -27,9 +27,11 @@ public:
 
 	bool Update();
 
-	bool Draw();
+	bool Draw(float width, Flag& enable);
 
 	void DrawExport() const;
+
+	void DrawCashFlow(float widthRatio, float initX) const;
 
 	bool Save(int index, FileManager::FileNode node) const;
 

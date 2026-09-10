@@ -36,12 +36,17 @@ private: // Functions
 	void LoadConfiguration();
 	void SaveRecentPath(StringView path);
 	void NewGestor();
+	bool RetrieveDeleteBackups(const DateTime& date, Array<FileManager::FileInfo>& ret);
+	bool RetrieveDeleteBackups(int amount, Array<FileManager::FileInfo>& ret);
 
 	void DrawMenuBar(bool& ret);
 	void DrawDocking(bool& ret);
 
 	void DrawPreferencesWindow(bool& ret);
+
 	void DrawMainWindow(bool& ret);
+		void DrawMainWindowGestors(Flag& enable);
+		void DrawMainWindowCashFlow();
 
 	void DrawToolbarWindow(bool& ret);
 
@@ -55,10 +60,17 @@ private: // Variables
 
 	// Config
 	Configuration config;
+	Flag enableTabs = Flag::AllFalse;
 
 	// Gestor
 	Vector<GestorSystem*, true> gestors;
 	int focusedGestor = 0;
+
+	// Cash Flow
+	int startMonthSelector = 0;
+	DateTime startDate;
+	int endMonthSelector = 13;
+	DateTime endDate;
 
 	// Shortcuts
 	bool ctrl = false, shft = false, n = false, 
