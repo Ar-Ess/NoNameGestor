@@ -194,7 +194,7 @@ void EconomyScene::SaveAs()
 		//TODO: Framework: Add trim function (opposite of Substring, it returns what is not selected by index & count)
 		//TODO: Framework: Solve the problem of similarity between Substring static and non-static
 		IGFD::FileDialogConfig fConfig;
-		fConfig.path = file.IsNew() ? (!App::DebugMode ? App::DataDirectory().Str() : config.defaultDialogDirectory.Str()) : file.Path().Substring(0u, file.Path().Length() - 4).Data();
+		fConfig.path = file.IsNew() ? (!App::DebugMode ? App::DataDirectory().Data() : config.defaultDialogDirectory.Str()) : file.Path().Substring(0u, file.Path().Length() - 4).Data();
 		fConfig.flags = ImGuiFileDialogFlags_ConfirmOverwrite | ImGuiFileDialogFlags_DisableCreateDirectoryButton;
 		fConfig.fileName = file.Name().Data();
 		ImGuiFileDialog::Instance()->OpenDialog("SaveAs", "Choose a path", ".nng", fConfig);

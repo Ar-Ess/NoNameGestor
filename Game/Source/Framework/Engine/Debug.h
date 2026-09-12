@@ -16,7 +16,7 @@ public:
 	template<typename... Args>
 	static void Log(const char* format, Args... args, std::source_location loc = std::source_location::current())
 	{
-		if (!DebugMode || format == nullptr) return;
+		if (format == nullptr) return;
 
 		static_assert((std::is_trivially_copyable_v<Args> && ...),
 			"Only trivial types allowed in printf-style Log");
@@ -34,7 +34,7 @@ public:
 	template<typename... Args>
 	static void Assert(bool condition, const char* format, Args... args, std::source_location loc = std::source_location::current())
 	{
-		if (condition || !DebugMode)
+		if (condition)
 			return;
 
 		String output;
@@ -57,7 +57,7 @@ public:
 	// format: text to output
 	static void Assert(bool condition, const char* format = nullptr, std::source_location loc = std::source_location::current())
 	{
-		if (condition || !DebugMode)
+		if (condition)
 			return;
 		
 		AssertInternal(format, loc, true);
@@ -68,5 +68,7 @@ private:
 	static void LogInternal(const char* msg, std::source_location loc);
 
 	static void AssertInternal(const char* msg, std::source_location loc, bool format);
+
+	static void RegisterOnFile(const char* msg, const char* msgTag);
 
 };

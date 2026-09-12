@@ -24,23 +24,37 @@ public:
 		PROGRESS
 	};
 
-	struct ModuleConfig
+	enum class ConfigType
 	{
-		void Enable(ModuleType module) const;
+		RELEASE_DEBUGGER_MODE = 9
+	};
 
-		void Disable(ModuleType module) const;
+	struct EngineConfig
+	{
+		void EnableModule(ModuleType module) const;
 
-		bool IsEnabled(ModuleType module) const;
+		void DisableModule(ModuleType module) const;
 
-		int Count() const;
+		bool IsModuleEnabled(ModuleType module) const;
+
+		void EnableConfig(ConfigType conf) const;
+
+		void DisableConfig(ConfigType conf) const;
+
+		bool IsConfigEnabled(ConfigType conf) const;
+
+		int CountEnabledModules() const;
+
+	public:
+		
+		String gameName = nullptr;
 
 	private:
 
-		mutable Flag moduleConfig = Flag::AllTrue;
-
+		mutable Flag config = Flag::AllTrue;
 	};
 
-	using ModuleConfigurator = void(*)(ModuleConfig&);
+	using EngineConfigurator = void(*)(EngineConfig&);
 
 public:
 
@@ -48,7 +62,7 @@ public:
 	// configurator is a ptr to a function that configures the modules.
 	// void ConfigModules(App::ModuleConfig& config) { config.Disable(App::ModuleType::AUDIO); }
 	// Leave nullptr to initialize all modules.
-	static int Run(int argc, char* args[], ModuleConfigurator configurator = nullptr);
+	static int Run(int argc, char* args[], EngineConfigurator configurator = nullptr);
 	
 	static void TargetFPS(unsigned int fps);
 	static unsigned int TargetFPS();
@@ -61,23 +75,27 @@ public:
 
 	static void Quit();
 
-	static const String& AppName();
-	static const String& ExecutablePath();
-	static const String& ExecutableDirectory();
-	static const String& ProjectDirectory();
-	static const String& DataDirectory();
-	static const String& AssetsPath();
-	static const String& ConfigurationPath();
-	static const String& ArchivesDirectory();
-	static const String& UserDirectory();
-	static const String& LogsDirectory();
-	static const String& WorkingDirectory();
-	static const String& OpenedFilePath();
-	static const bool IsAppLaunchedWithFile();
+	static StringView AppName();
+	static StringView ExecutablePath();
+	static StringView ExecutableDirectory();
+	static StringView ProjectDirectory();
+	static StringView DataDirectory();
+	static StringView AssetsDirectory();
+	static StringView ConfigurationPath();
+	static StringView ArchivesDirectory();
+	static StringView UserDirectory();
+	static StringView LogsDirectory();
+	static StringView OpenedFilePath();
+	static bool IsAppLaunchedWithFile();
+	// Returns if the app should internally behave as debug, even though it may be in Release mode.
+	// You may vary this behaviour on the initial EngineConfig "RELEASE_DEBUGGER_MODE" set to true.
+	static bool IsInternallyDebug();
 
 private:
 
-	App(int argc, char* args[], const ModuleConfig& config);
+	App(int argc, char* args[], int moduleCount);
+
+	bool Awake(const EngineConfig& config);
 
 	bool Start();
 
@@ -85,11 +103,15 @@ private:
 
 	bool CleanUp();
 
-	void GenerateAppPaths(int argc, char* args[]);
+	void ConfigureEngine(const EngineConfig& config);
 
-	void ConfigureModules(const ModuleConfig& config);
+	void GenerateAppPaths();
+	
+	void ConfigureModules(const EngineConfig& config);
 
 public:
+
+	static String GameName;
 
 	static const bool DebugMode;
 
@@ -110,14 +132,12 @@ private:
 	String dataDirectory = nullptr;
 
 	// Assets folder in debug, Assets.pak in release
-	String assetsPath = nullptr;
+	String assetsDirectory = nullptr;
 
 	String configurationPath = nullptr;
 	String archivesDirectory = nullptr;
 	String userDirectory = nullptr;
 	String logsDirectory = nullptr;
-
-	String workingDirectory = nullptr;
 
 	bool launchedWithFile = false;
 	String openedFilePath = nullptr;
@@ -136,6 +156,7 @@ private:
 
 	// Quit
 	bool quit = false;
+	bool releaseDebuggerMode = false;
 
 	static App* instance;
 

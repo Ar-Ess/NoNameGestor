@@ -20,7 +20,7 @@ void ImGui::RS::InitializeExtension()
 	auto& io = ImGui::GetIO();
 	io.Fonts->AddFontDefault();
 
-	String path = App::AssetsPath() + "Roboto-Regular.ttf";
+	String path = App::AssetsDirectory() + "Roboto-Regular.ttf";
 
 	InputTextFont = io.Fonts->AddFontFromFileTTF(path.Str(), 20.f);
 	PlusMinusButtonFont = io.Fonts->AddFontFromFileTTF(path.Str(), 20.f);
