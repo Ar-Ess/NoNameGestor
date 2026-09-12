@@ -87,5 +87,6 @@ private: // Variables
 	SDL_Renderer* renderer = nullptr;
 	bool preferencesWindow = false;
 	Chrono backupChrono;
+	int focussedTab = 0;
 
 };

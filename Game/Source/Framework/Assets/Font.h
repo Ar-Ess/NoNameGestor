@@ -32,5 +32,5 @@ private:
 
 	mutable Map<unsigned int, TTF_Font*> fontCache;
 	void* data = nullptr;
-	const int64_t& size = 0;
+	const int64_t size = 0;
 };

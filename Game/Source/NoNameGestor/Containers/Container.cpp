@@ -1,5 +1,6 @@
 #include "Container.h"
 
+#include "Framework/Engine/App.h"
 #include "Framework/Coroutine/CoroutineManager.h"
 #include "Framework/Render/Color.h"
 

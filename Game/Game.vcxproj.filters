@@ -56,7 +56,6 @@
     <ClCompile Include="Source\NoNameGestor\Containers\TotalContainer.cpp">
       <Filter>Containers</Filter>
     </ClCompile>
-    <ClCompile Include="Source\NoNameGestor\Containers\InputContainer.cpp" />
     <ClCompile Include="Source\NoNameGestor\Containers\FilterContainer.cpp">
       <Filter>Containers</Filter>
     </ClCompile>
@@ -64,6 +63,9 @@
       <Filter>Containers</Filter>
     </ClCompile>
     <ClCompile Include="Source\NoNameGestor\Containers\LimitContainer.cpp">
+      <Filter>Containers</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Containers\InputContainer.cpp">
       <Filter>Containers</Filter>
     </ClCompile>
   </ItemGroup>

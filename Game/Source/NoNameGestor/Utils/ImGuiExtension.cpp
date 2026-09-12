@@ -20,8 +20,7 @@ void ImGui::RS::InitializeExtension()
 	auto& io = ImGui::GetIO();
 	io.Fonts->AddFontDefault();
 
-	//TODO: Framework: Assets path must always be a Directory, because /Assets.pak is unreachable and non-useful internally
-	String path = App::AssetsPath() + "\\Roboto-Regular.ttf";
+	String path = App::AssetsPath() + "Roboto-Regular.ttf";
 
 	InputTextFont = io.Fonts->AddFontFromFileTTF(path.Str(), 20.f);
 	PlusMinusButtonFont = io.Fonts->AddFontFromFileTTF(path.Str(), 20.f);

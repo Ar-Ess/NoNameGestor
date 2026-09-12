@@ -9,6 +9,7 @@
 
 #include "NoNameGestor/External/imgui/imgui_internal.h"
 #include <filesystem>
+#include "Framework/Engine/App.h"
 
 GestorSystem::GestorSystem(int index, const char* name, float totalMoney, FileManager::File* file, Configuration* config, String* errorMessage) :
 	id(ID::New()),

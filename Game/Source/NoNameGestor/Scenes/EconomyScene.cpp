@@ -1,10 +1,10 @@
 #include "EconomyScene.h"
 
+#include "Framework/Engine/App.h"
 #include "Framework/Scenes/Startup.h"
 #include "Framework/Utils/Maths.h"
 #include "Framework/External/SDL/include/SDL_events.h"
 #include "Framework/External/SDL/include/SDL_render.h"
-//#include "Framework/Time/TimeSpan.h"
 
 #include "NoNameGestor/Gestor/GestorSystem.h"
 #include "NoNameGestor/Containers/ContainerHeader.h"
@@ -18,13 +18,13 @@
 #define NOMINMAX
 #include <windows.h>
 
-#include "NoNameGestor/Utils/TimeSpan.h"
+#include "Framework/Time/TimeSpan.h"
 #include "NoNameGestor/External/imgui/imgui_internal.h"
 
 #define VERSION 1.4f
 #define EXTENSION ".nng"
 #define NEW_FILE "New_File.nng"
-#define DEFAULT_BACKUP_CREATION_DIRECTORY App::DataDirectory() + "\\Backups\\"
+#define DEFAULT_BACKUP_CREATION_DIRECTORY App::DataDirectory() + "Backups\\"
 #define DEFAULT_FILE_DIALOG_DIRECTORY "C:\\"
 
 REGISTER_STARTUP_SCENE(EconomyScene);
@@ -647,8 +647,7 @@ bool EconomyScene::OldLoadInternal(StringView path)
 
 void EconomyScene::LoadConfiguration()
 {
-	//TODO: Framework Change: Directories must have "\\" at the end
-	String path = App::DataDirectory() + "\\config.nng";
+	String path = App::DataDirectory() + "config.nng";
 
 	configFile = FileManager::OpenFile(path, true);
 
@@ -1280,6 +1279,7 @@ void EconomyScene::DrawMainWindow(bool& ret)
 		{
 			if (ImGui::BeginTabItem("Gestors"))
 			{
+				focussedTab = 0;
 				enableTabs = Flag::AllFalse;
 				DrawMainWindowGestors(enableTabs);
 				ImGui::EndTabItem();
@@ -1287,6 +1287,7 @@ void EconomyScene::DrawMainWindow(bool& ret)
 
 			if (enableTabs[0] && ImGui::BeginTabItem("Cash Flow"))
 			{
+				focussedTab = 1;
 				DrawMainWindowCashFlow();
 				ImGui::EndTabItem();
 			}
@@ -1366,32 +1367,53 @@ void EconomyScene::DrawMainWindowCashFlow()
 	float wR = w / (float)total;
 
 	ImGui::RS::Spacing(2);
-	ImGui::PushItemWidth(60 + (138 * (1 - sds)));
+	float sliderWidth = 138 * (1 - sds);
+	ImGui::PushItemWidth(60 + sliderWidth);
 	ImGui::SliderFloat("##AAA", &sds, 1, 0, "");
 	ImGui::PopItemWidth();
 
-	ImGui::GetWindowDrawList()->AddLine(ImVec2(pos.x, pos.y), ImVec2(pos.x + w, pos.y), IM_COL32(255, 255, 255, 255), 2.0f);
+	ImGui::GetWindowDrawList()->AddLine(ImVec2(pos.x - 0.5f, pos.y + 22), ImVec2(pos.x + w + 0.5f, pos.y + 22), IM_COL32(255, 255, 255, 255), 2.0f);
 	for (int i = 0; i < total + 1; ++i)
 	{
+		DateTime monthDate = startDate + TimeSpan<>::From::Months(i);
 		float xPos = pos.x + (i * wR);
-		ImGui::GetWindowDrawList()->AddLine(ImVec2(xPos, pos.y - 16), ImVec2(xPos, pos.y), IM_COL32(255, 255, 255, 255), 2.0f);
-		ImGui::GetWindowDrawList()->AddLine(ImVec2(xPos, pos.y), ImVec2(xPos, pos.y + 300), IM_COL32(255, 255, 255, 100), 2.0f);
+		bool plotYear = i == 0 || i == total || monthDate.Month() == 1;
+		ImGui::GetWindowDrawList()->AddLine(ImVec2(xPos, pos.y + (plotYear ? -16 : 6)), ImVec2(xPos, pos.y + 22), IM_COL32(255, 255, 255, 255), 2.0f);
+		ImGui::GetWindowDrawList()->AddLine(ImVec2(xPos, pos.y + 22), ImVec2(xPos, pos.y + 300), IM_COL32(255, 255, 255, 100), 2.0f);
 		if (i == total)
 			continue;
 
-		ImGui::SetCursorPos(ImVec2(xPos - 62, pos.y - 38));
-		int month = (startDate.Month() + i) % 12;
-		if (month == 0) month = 12;
-		ImGui::Text(DateTime::MonthName(month));
+		ImVec2 retPos = ImVec2(xPos - 62, pos.y - 42);
+		if (plotYear)
+		{
+			ImGui::SetCursorPos(retPos);
+			ImGui::Text("\n%d\n%s", monthDate.Year(), monthDate.MonthName());
+		}
+		else
+		{
+			ImGui::SetCursorPos(retPos);
+			ImGui::Text("\n\n%s", monthDate.MonthName());
+		}
 	}
 
-	ImGui::RS::Spacing(2);
+	ImGui::SetCursorPos(ImVec2(8, pos.y - 16));
+	
+	static int comboi = 0;
+	auto lambda = [](void* gestors, int index) -> const char* { return index == 0 ? "All" : (*(Vector<GestorSystem*, true>*)gestors)[index - 1]->Name().Data(); };
+	ImGui::PushItemWidth(60 + sliderWidth);
+	ImGui::Combo("##CashFlowTabBar", &comboi, lambda, &gestors, gestors.Size() + 1);
+	ImGui::PopItemWidth();
 
-	gestors.Iterate(
-		[&](GestorSystem* g) {
-			g->DrawCashFlow(wR, pos.x);
-		}
-	);
+	ImGui::RS::Spacing(1);
+
+	if (comboi == 0)
+		gestors.Iterate(
+			[&](GestorSystem* g) {
+				g->DrawCashFlow(wR, pos.x);
+			}
+		);
+	else
+		gestors[comboi - 1]->DrawCashFlow(wR, pos.x);
 }
 
 void EconomyScene::DrawToolbarWindow(bool& ret)
@@ -1402,6 +1424,8 @@ void EconomyScene::DrawToolbarWindow(bool& ret)
 	if (ImGui::Begin("Toolbar", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar))
 	{
 		bool action = false;
+
+		ImGui::BeginDisabled(focussedTab != 0);
 
 		if (ImGui::Button("FILTER"))
 		{
@@ -1430,6 +1454,8 @@ void EconomyScene::DrawToolbarWindow(bool& ret)
 				->NewLabel();
 			action = true;
 		}
+
+		ImGui::EndDisabled();
 
 		if (action) Container::UpdateOpenState = true;
 	}

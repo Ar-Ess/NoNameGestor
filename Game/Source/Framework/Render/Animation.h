@@ -51,7 +51,7 @@ private:
 
 	Animation(TextureData* texture, const SpriteSheet& sheet);
 
-	const Rect& Process(float dt);
+	const Rect Process(float dt);
 
 public:
 	

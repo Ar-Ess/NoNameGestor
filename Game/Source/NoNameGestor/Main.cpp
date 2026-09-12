@@ -3,6 +3,7 @@
 static void ModuleConfig(App::ModuleConfig& config)
 {
 	config.Disable(App::ModuleType::RENDER);
+	config.Disable(App::ModuleType::GUI);
 }
 
 int main(int argc, char* args[])

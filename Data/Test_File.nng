@@ -121,11 +121,15 @@
                     "hide": false,
                     "labels": [
                         {
-                            "money": 0.0,
-                            "name": "New Const"
+                            "money": 600.0,
+                            "name": "New Const",
+                            "offset_months": 0,
+                            "per_month": 200.0,
+                            "runout_date": 63930044350000,
+                            "runout_money": 600.0
                         }
                     ],
-                    "money": 0.0,
+                    "money": 600.0,
                     "name": "New Container",
                     "open": true,
                     "type": 6,

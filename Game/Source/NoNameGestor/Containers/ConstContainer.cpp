@@ -13,12 +13,13 @@
 
 #include <cmath>
 
-ConstContainer::ConstLabel::ConstLabel(const std::string& name, float money, float perMonth, const DateTime& expectedRunoutDate, int offsetMonths) :
-	Label(name, money), perMonth(perMonth), expectedRunoutDate(expectedRunoutDate), offsetMonths(offsetMonths)
+ConstContainer::ConstLabel::ConstLabel(const std::string& name, float money, float perMonth, const DateTime& expectedRunoutDate, float expectedRunoutMoney, int offsetMonths) :
+	Label(name, money), perMonth(perMonth), expectedRunoutDate(expectedRunoutDate), expectedRunoutMoney(expectedRunoutMoney), offsetMonths(offsetMonths)
 {
 	availableMoney = 0;
 	finalPlannedMonths = 0;
 	maxPlannedMonths = 0;
+
 	//TODO: Framework: Make TimeSpan accept uint64_t as a value
 	//monthCount = TimeSpan<>::From::Time(0, 0, 0, 0, 0, m, y);
 }
@@ -74,7 +75,11 @@ ConstContainer::ConstContainer(const FileManager::FileNode& node, String* format
 
 		String name = node.Read<String>("name");
 		float money = node.Read<float>("money");
-		NewLabel(name.Str(), money);
+		float perMonth = node.Read<float>("per_month");
+		int offsetMonths = node.Read<int>("offset_months");
+		uint64_t ms = node.Read<uint64_t>("runout_date");
+		float runoutMoney = node.Read<float>("runout_money");
+		NewLabel(name.Str(), money, perMonth, DateTime(ms), runoutMoney, offsetMonths);
 	}
 }
 
@@ -310,7 +315,7 @@ void ConstContainer::Draw()
 				// Spacing
 				ImGui::RS::Spacing();
 
-				//TODO: fer més bonic i posar un offset també
+				//TODO: fer més bonic i posar un offset central al botó també
 				if (ImGui::Button("Done"))
 				{
 					select = nullptr;
@@ -337,15 +342,34 @@ void ConstContainer::DrawCashFlow(float widthRatio, float initX) const
 			ImGui::RS::Separator();
 			pos.x += initX - 8;
 			pos.y += 16;
-			float width = widthRatio * l->finalPlannedMonths;
+			float width = (widthRatio * l->finalPlannedMonths) +( widthRatio * (l->availableMoney / l->perMonth));
 			ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(pos.x, pos.y), ImVec2(pos.x + width, pos.y - 15), IM_COL32(80, 140, 255, 200));
 		}
 	);
 }
 
-void ConstContainer::NewLabel(const std::string& name, float money, float perMonth, const DateTime& expectedRunoutDate, int offsetMonths)
+void ConstContainer::Save(FileManager::FileNode node) const
 {
-	Container::NewLabel(new ConstLabel(name, money, perMonth, expectedRunoutDate, offsetMonths));
+	Container::Save(node);
+
+	auto lnode = node.Access("labels");
+	labels.Iterate(
+		[&](Label* label, int i)
+		{
+			auto inode = lnode.Access(i);
+			ConstLabel* l = (ConstLabel*)label;
+			inode.Write("per_month", l->perMonth);
+			inode.Write("offset_months", l->offsetMonths);
+			//TODO: Framework: Open internal milliseconds as a returnable info
+			inode.Write("runout_date", -l->expectedRunoutDate.MsUntil(0));
+			inode.Write("runout_money", l->expectedRunoutMoney);
+		}
+	);
+}
+
+void ConstContainer::NewLabel(const std::string& name, float money, float perMonth, const DateTime& expectedRunoutDate, float expectedRunoutMoney, int offsetMonths)
+{
+	Container::NewLabel(new ConstLabel(name, money, perMonth, expectedRunoutDate, expectedRunoutMoney, offsetMonths));
 }
 
 const char* ConstContainer::TypeName() const

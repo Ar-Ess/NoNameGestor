@@ -1,12 +1,14 @@
 #pragma once
 
-#include "Framework/Engine/App.h"
-
+#include "Framework/Data/String.h"
 #include <source_location>
 #include <type_traits>
 
 class Debug
 {
+
+	static const bool DebugMode;
+
 public:
 	// Logs a comment to Output
 	// format: text to output. To add variables, use %d (ints), %s(const char*), %f(floats)...
@@ -32,7 +34,7 @@ public:
 	template<typename... Args>
 	static void Assert(bool condition, const char* format, Args... args, std::source_location loc = std::source_location::current())
 	{
-		if (condition || !App::DebugMode)
+		if (condition || !DebugMode)
 			return;
 
 		String output;
@@ -55,7 +57,7 @@ public:
 	// format: text to output
 	static void Assert(bool condition, const char* format = nullptr, std::source_location loc = std::source_location::current())
 	{
-		if (condition || !App::DebugMode)
+		if (condition || !DebugMode)
 			return;
 		
 		AssertInternal(format, loc, true);
