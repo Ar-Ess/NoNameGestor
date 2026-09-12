@@ -16,7 +16,7 @@ public:
 	template<typename... Args>
 	static void Log(const char* format, Args... args, std::source_location loc = std::source_location::current())
 	{
-		if (!App::DebugMode || format == nullptr) return;
+		if (!DebugMode || format == nullptr) return;
 
 		static_assert((std::is_trivially_copyable_v<Args> && ...),
 			"Only trivial types allowed in printf-style Log");
