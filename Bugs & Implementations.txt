@@ -1,9 +1,11 @@
 =================[BUGS]==================
 1. [FIXED] Hidden filters do not update their sum when hovering the arrow
 2. [FIXED] Assure that the backup overwrittes itself in the same say, or it creates 2 versions
-3. Backup timer does not work properly. The timer view has really high values.
+3. Backup timer does not work properly. The timer view has really high values. Only happens out of Visual Studio.
 4. [FIXED] El Drag&Drop peta el programa
 5. [FIXED] Eliminar labels no funciona
+6. Quan "desunifiquem", no posar el nom al primer label, però si "unifiquem" si posar el nom al container.
+7. Els containers no s'eliminen.
 
 ============[IMPLEMENTATIONS]============
 1. [DONE] Que un fitxer puguis tenir diferents comptes de banc

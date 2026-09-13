@@ -71,6 +71,7 @@ private: // Variables
 	DateTime startDate;
 	int endMonthSelector = 13;
 	DateTime endDate;
+	float finalY = 0;
 
 	// Shortcuts
 	bool ctrl = false, shft = false, n = false, 

@@ -1379,7 +1379,7 @@ void EconomyScene::DrawMainWindowCashFlow()
 		float xPos = pos.x + (i * wR);
 		bool plotYear = i == 0 || i == total || monthDate.Month() == 1;
 		ImGui::GetWindowDrawList()->AddLine(ImVec2(xPos, pos.y + (plotYear ? -16 : 6)), ImVec2(xPos, pos.y + 22), IM_COL32(255, 255, 255, 255), 2.0f);
-		ImGui::GetWindowDrawList()->AddLine(ImVec2(xPos, pos.y + 22), ImVec2(xPos, pos.y + 300), IM_COL32(255, 255, 255, 100), 2.0f);
+		ImGui::GetWindowDrawList()->AddLine(ImVec2(xPos, pos.y + 22), ImVec2(xPos, finalY == 0 ? pos.y : finalY + 14), IM_COL32(255, 255, 255, 100), 2.0f);
 		if (i == total)
 			continue;
 
@@ -1414,6 +1414,8 @@ void EconomyScene::DrawMainWindowCashFlow()
 		);
 	else
 		gestors[comboi - 1]->DrawCashFlow(wR, pos.x);
+
+	finalY = ImGui::GetCursorPosY();
 }
 
 void EconomyScene::DrawToolbarWindow(bool& ret)

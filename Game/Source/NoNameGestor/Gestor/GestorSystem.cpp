@@ -92,12 +92,11 @@ bool GestorSystem::Draw(float maxWidth, Flag& enable)
 		{
 			if (c->Type() == ContainerType::CONSTANT) enable(0, true);
 
-			bool ret = c->DrawBase(maxWidth, erase, move);
+			c->DrawBase(maxWidth, erase, move);
 
-			if (erase || !move.IsEmpty())
+			if (index == -1 && (erase || !move.IsEmpty()))
 				index = i;
 
-			return ret;
 		}
 	);
 
@@ -106,6 +105,10 @@ bool GestorSystem::Draw(float maxWidth, Flag& enable)
 		int i = containers.Find([&](const Container* c) { return c->id == move; });
 		Debug::Assert(i != -1, "Container Drag&Drop Error: Couldn't find the container by ID.");
 		MoveContainer(i, index);
+	}
+	else if (erase && index != -1)
+	{
+		containers.Erase(index);
 	}
 
 	Container::UpdateOpenState = index != -1;

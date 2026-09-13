@@ -39,9 +39,8 @@ bool Container::DrawExport() const
 	return exporting;
 }
 
-bool Container::DrawBase(float maxWidth, bool& erase, ID& move)
+void Container::DrawBase(float maxWidth, bool& erase, ID& move)
 {
-	bool ret = true;
 	bool reordered = false;
 	this->maxWidth = maxWidth;
 
@@ -74,10 +73,7 @@ bool Container::DrawBase(float maxWidth, bool& erase, ID& move)
 		{
 			// Delete Container
 			if (ImGui::MenuItem("Delete"))
-			{
 				erase = true;
-				ret = false;
-			}
 
 			// Unify Container
 			if (labels.Size() <= 1) ImGui::MenuItem("Unify", "", &unified);
@@ -128,7 +124,6 @@ bool Container::DrawBase(float maxWidth, bool& erase, ID& move)
 			if (payload != nullptr)
 			{
 				move = *(ID*)payload->Data;
-				ret = false;
 			}
 			ImGui::EndDragDropTarget();
 		}
@@ -150,8 +145,6 @@ bool Container::DrawBase(float maxWidth, bool& erase, ID& move)
 	ImGui::PopID();
 
 	ImGui::RS::Spacing(0);
-
-	return ret;
 }
 
 void Container::Save(FileManager::FileNode node) const

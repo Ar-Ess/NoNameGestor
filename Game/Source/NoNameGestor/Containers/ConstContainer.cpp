@@ -352,14 +352,14 @@ void ConstContainer::DrawCashFlow(float widthRatio, float initX) const
 					ImGui::Dummy(ImVec2(0, 0)); ImGui::SameLine(33);
 					ImGui::Text(label->name.c_str());
 					ImGui::RS::Separator();
-					if (l->money < 0.5f)
-						return true;
-
-					ImVec2 pos = ImGui::GetCursorPos();
-					pos.x += initX - 8;
-					pos.y += 11;
-					float width = (widthRatio * l->finalPlannedMonths) + (widthRatio * (l->availableMoney / l->perMonth));
-					ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(pos.x, pos.y), ImVec2(pos.x + width, pos.y - 15), IM_COL32(80, 140, 255, 200));
+					if (l->money >= 0.5f)
+					{
+						ImVec2 pos = ImGui::GetCursorPos();
+						pos.x += initX - 8;
+						pos.y += 11;
+						float width = (widthRatio * l->finalPlannedMonths) + (widthRatio * (l->availableMoney / l->perMonth));
+						ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(pos.x, pos.y), ImVec2(pos.x + width, pos.y - 15), IM_COL32(80, 140, 255, 200));
+					}
 				}
 				ImGui::PopID();
 			}

@@ -25,7 +25,7 @@ public: // Functions
 
 	virtual bool Update(Aggregate& agg);
 
-	bool DrawBase(float maxWidth, bool& erase, ID& move);
+	void DrawBase(float maxWidth, bool& erase, ID& move);
 
 	virtual void Draw() {}
 
