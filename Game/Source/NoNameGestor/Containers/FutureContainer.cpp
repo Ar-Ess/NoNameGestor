@@ -40,6 +40,8 @@ void FutureContainer::Draw()
 {
 	if (hidden) ImGui::BeginDisabled();
 
+	int erase = -1;
+
 	labels.Iterate(
 		[&](Label* l, int i, int size)
 		{
@@ -53,7 +55,11 @@ void FutureContainer::Draw()
 				float width = 100.0f;
 				if (!unified)
 				{
-					if (size > 1) { if (ImGui::Button("X")) { labels.Erase(i); return false; } }
+					if (size > 1)
+					{
+						if (ImGui::Button("X"))
+							erase = i;
+					}
 					else ImGui::Dummy({ 15, 0 });
 
 					ImGui::SameLine();
@@ -75,6 +81,8 @@ void FutureContainer::Draw()
 			ImGui::PopID();
 		}
 	);
+
+	if (erase != -1) labels.Erase(erase);
 
 	if (hidden) ImGui::EndDisabled();
 }

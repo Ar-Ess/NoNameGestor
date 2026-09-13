@@ -72,20 +72,20 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)Build\$(Configuration)</OutDir>
-    <TargetName>NoNameGestor</TargetName>
+    <TargetName>NoNameGestor_1v4</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <TargetName>NoNameGestor</TargetName>
+    <TargetName>NoNameGestor_1v4</TargetName>
     <OutDir>$(SolutionDir)Build\$(Configuration)</OutDir>
     <IntDir>$(SolutionDir)Build\$(Configuration)\Obj</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)Build\$(Configuration)</OutDir>
     <IntDir>$(SolutionDir)Build\$(Configuration)\Obj</IntDir>
-    <TargetName>NoNameGestor</TargetName>
+    <TargetName>NoNameGestor_1v4</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <TargetName>NoNameGestor</TargetName>
+    <TargetName>NoNameGestor_1v4</TargetName>
     <OutDir>$(SolutionDir)Build\$(Configuration)</OutDir>
     <IntDir>$(SolutionDir)Build\$(Configuration)\Obj</IntDir>
   </PropertyGroup>

@@ -329,6 +329,40 @@ public:
 		return allGood;
 	}
 
+	bool Move(int index, int position)
+	{
+		//| O | O | O | O | O |
+		//  0   1   2   3   4
+		//0   1   2   3   4   5
+		//  0   1   2   n   3
+		//  0   1   n   2   3
+		//  0   n   1   2   3
+		//  n   0   1   2   3
+
+		if (index < 0 || index >= size || position < 0 || position > size)
+			return false;
+
+		if (index == position || (index == 0 && position == 1) || (index == (size - 1) && position == size))
+			return true;
+
+		T indexValue;
+		PlaceValue(&indexValue, std::move(data[index]), false);
+		if (index < position)
+		{
+			for (int i = index; i < position - 1; ++i)
+				PlaceValue(data + i, std::move(data[i + 1]), false);
+			PlaceValue(data + position - 1, indexValue, false);
+		}
+		else
+		{
+			for (int i = index; i > position; --i)
+				PlaceValue(data + i, std::move(data[i - 1]), false);
+			PlaceValue(data + position, std::move(indexValue), false);
+		}
+
+		return true;
+	}
+
 	T& At(int index)
 	{
 		Debug::Assert(!IsEmpty(), "This Vector is empty!");

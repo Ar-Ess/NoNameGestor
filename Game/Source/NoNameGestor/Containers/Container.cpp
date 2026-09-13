@@ -20,14 +20,11 @@ Container::~Container()
 
 bool Container::Update(Aggregate& agg)
 {
-	if (hidden)
-		return false;
-
 	money = 0;
 	labels.Iterate([&](Label* l)
 		{ money += l->money; });
 
-	return true;
+	return !hidden;
 }
 
 bool Container::DrawExport() const

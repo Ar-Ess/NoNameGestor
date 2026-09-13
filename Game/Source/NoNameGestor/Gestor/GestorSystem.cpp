@@ -103,17 +103,12 @@ bool GestorSystem::Draw(float maxWidth, Flag& enable)
 
 	if (!move.IsEmpty())
 	{
-		int i = containers.Find([&](const Container* c) { return c->id == id; });
+		int i = containers.Find([&](const Container* c) { return c->id == move; });
 		Debug::Assert(i != -1, "Container Drag&Drop Error: Couldn't find the container by ID.");
 		MoveContainer(i, index);
 	}
 
-	if (index != -1)
-	{
-		containers.Erase(index);
-		Container::UpdateOpenState = true;
-	}
-	else Container::UpdateOpenState = false;
+	Container::UpdateOpenState = index != -1;
 
 	ImGui::RS::Spacing(2);
 	ImGui::RS::Separator();
@@ -289,7 +284,5 @@ void GestorSystem::MoveContainer(unsigned short index, unsigned short position)
 	Debug::Assert(index >= 0 && index < containers.Size());
 	Debug::Assert(position >= 0 && position < containers.Size());
 
-	Container* c = containers[index];
-	containers.Insert(c, position);
-	containers.Erase(index > position ? index + 1 : index);
+	containers.Move(index, position);
 }

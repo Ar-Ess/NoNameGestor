@@ -167,6 +167,8 @@ void ConstContainer::Draw()
 
 	if (hidden) ImGui::BeginDisabled();
 
+	int erase = -1;
+
 	labels.Iterate(
 		[&](Label* label, int i, int size)
 		{
@@ -182,7 +184,11 @@ void ConstContainer::Draw()
 				float width = 100.0f;
 				if (!unified)
 				{
-					if (size > 1) { if (ImGui::Button("X")) { labels.Erase(i); return false; } }
+					if (size > 1)
+					{
+						if (ImGui::Button("X"))
+							erase = i;
+					}
 					else ImGui::Dummy({ 15, 0 });
 
 					ImGui::SameLine();
@@ -234,6 +240,8 @@ void ConstContainer::Draw()
 			DrawUserMessage(label);
 		}
 	);
+
+	if (erase != -1) labels.Erase(erase);
 
 	if (hidden) ImGui::EndDisabled();
 
@@ -332,20 +340,32 @@ void ConstContainer::Draw()
 
 void ConstContainer::DrawCashFlow(float widthRatio, float initX) const
 {
-	labels.Iterate(
-		[&](Label* label)
-		{
-			ConstLabel* l = (ConstLabel*)label;
+	ImGui::PushID(id.Data());
+	if (ImGui::CollapsingHeader(name.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_DrawLinesNone))
+	{
+		labels.Iterate(
+			[&](Label* label)
+			{
+				ConstLabel* l = (ConstLabel*)label;
+				ImGui::PushID(l->id.Data());
+				{
+					ImGui::Dummy(ImVec2(0, 0)); ImGui::SameLine(33);
+					ImGui::Text(label->name.c_str());
+					ImGui::RS::Separator();
+					if (l->money < 0.5f)
+						return true;
 
-			ImGui::Text(label->name.c_str());
-			ImVec2 pos = ImGui::GetCursorPos();
-			ImGui::RS::Separator();
-			pos.x += initX - 8;
-			pos.y += 16;
-			float width = (widthRatio * l->finalPlannedMonths) +( widthRatio * (l->availableMoney / l->perMonth));
-			ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(pos.x, pos.y), ImVec2(pos.x + width, pos.y - 15), IM_COL32(80, 140, 255, 200));
-		}
-	);
+					ImVec2 pos = ImGui::GetCursorPos();
+					pos.x += initX - 8;
+					pos.y += 11;
+					float width = (widthRatio * l->finalPlannedMonths) + (widthRatio * (l->availableMoney / l->perMonth));
+					ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(pos.x, pos.y), ImVec2(pos.x + width, pos.y - 15), IM_COL32(80, 140, 255, 200));
+				}
+				ImGui::PopID();
+			}
+		);
+	}
+	ImGui::PopID();
 }
 
 void ConstContainer::Save(FileManager::FileNode node) const
