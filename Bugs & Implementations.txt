@@ -6,6 +6,10 @@
 5. [FIXED] Eliminar labels no funciona
 6. Quan "desunifiquem", no posar el nom al primer label, però si "unifiquem" si posar el nom al container.
 7. Els containers no s'eliminen.
+8. La pestanya de cash flow no s'adapta a la width de la window. Hauria de poder tenir més mesos disponibles com més width hi ha.
+9. El cash flow ha de mostrar en el pròpi mes els diners que es van gastant, no a l'últim més (només si està activat el runout)
+10. Quan un const està al màxim, el multiplicador compta 1 mes de més, fent que l'offset arribi a més diners dels que toquen.
+11. Const té interaccions rares quan hi ha runout i quan hi ha const. Crec que val la pena separarlos en 2 filtres: Runout i Const
 
 ============[IMPLEMENTATIONS]============
 1. [DONE] Que un fitxer puguis tenir diferents comptes de banc
@@ -14,3 +18,4 @@
 4. Crear un específic que es digui Emergency i que sigui igual que el CONST, però aquest sí et demana exactament quants mesos vols tenir d'emergència i no et deixa posar-ne més a no ser que tu li indiquis més mesos. Aquest en el plot apareixerà sempre a partir de quan els altres CONST acabin.
 5. A lo millor posar un camp per definir "quants diners gastes per més" a configuració? Així es pot calcular tot a partir d'allà. Però això potser seria un altre programa apart o un altre "apartat".
 6. Idea Modificació del 4. A lo millor l'apartat d'Emergency s'ha de demanar que tingui dins per separat els valors d'emergència igual que els de CONST, i busqui per nom si el de CONST té el mateix de EMERGENCY i llavors el plot, com que compara els noms, pot després posar en el plot el rectanglet després d'aquest CONST en concret. Sempre i quan tinguin el mateix nom.
+7. Add a way to show the "last modification date" of the opened file, as well as the "creation date" and a way to show the explorer where the file is located.
