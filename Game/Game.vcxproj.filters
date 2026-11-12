@@ -68,6 +68,12 @@
     <ClCompile Include="Source\NoNameGestor\Containers\InputContainer.cpp">
       <Filter>Containers</Filter>
     </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Audio\AudioDevice.cpp">
+      <Filter>Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Audio\CaptureDevice.cpp">
+      <Filter>Audio</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -175,6 +181,15 @@
     <ClInclude Include="Source\NoNameGestor\Containers\ConstContainer.h">
       <Filter>Containers</Filter>
     </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\Miniaudio\miniaudio.h">
+      <Filter>External\Miniaudio</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Audio\AudioDevice.h">
+      <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Audio\CaptureDevice.h">
+      <Filter>Audio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="External">
@@ -200,6 +215,12 @@
     </Filter>
     <Filter Include="Gestor">
       <UniqueIdentifier>{d2f97dcd-31f7-4831-91d3-90cdf8b6a573}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\Miniaudio">
+      <UniqueIdentifier>{1a7d120c-d18a-4431-9326-204c647f98a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Audio">
+      <UniqueIdentifier>{3d1ce504-1db4-49bf-8f64-0c10c1f9e9d3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -11,6 +11,8 @@ class FileManager;
 struct ImFont;
 struct SDL_Renderer;
 
+#include "NoNameGestor/Audio/CaptureDevice.h"
+
 class EconomyScene : public Scene
 {
 public:
@@ -89,5 +91,7 @@ private: // Variables
 	bool preferencesWindow = false;
 	Chrono backupChrono;
 	int focussedTab = 0;
+
+	CaptureDevice* d = nullptr;
 
 };

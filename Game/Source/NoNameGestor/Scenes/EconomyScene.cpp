@@ -31,6 +31,8 @@ REGISTER_STARTUP_SCENE(EconomyScene);
 
 bool EconomyScene::Awake()
 {
+	d = new CaptureDevice;
+
 	// Create the renderer
 	renderer = SDL_CreateRenderer(Window::window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
@@ -90,6 +92,8 @@ bool EconomyScene::Start()
 
 bool EconomyScene::Update(float dt)
 {
+	d->Update();
+
 	bool ret = true;
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
@@ -164,6 +168,8 @@ bool EconomyScene::CleanUp()
 		SDL_DestroyRenderer(renderer);
 		renderer = nullptr;
 	}
+
+	delete d;
 
 	return true;
 }
@@ -1263,6 +1269,8 @@ void EconomyScene::DrawMainWindow(bool& ret)
 
 	if (ImGui::Begin("##MainWindow", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus))
 	{
+		d->Draw();
+
 		ImGui::RS::Spacing(0);
 		ImGui::PushFont(ImGui::RS::InputTextFont);
 		ImGui::Text(file.Name().Data());
