@@ -2,5 +2,5 @@
 	path = Game/Source/NoNameGestor/External/libfvad
 	url = https://github.com/dpirch/libfvad.git
 [submodule "Game/Source/ProjectName/External/whisper.cpp"]
-	path = Game/Source/ProjectName/External/whisper.cpp
+	path = Game/Source/NoNameGestor/External/whisper.cpp
 	url = https://github.com/ggml-org/whisper.cpp.git
