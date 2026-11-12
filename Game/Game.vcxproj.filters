@@ -74,6 +74,45 @@
     <ClCompile Include="Source\NoNameGestor\Audio\CaptureDevice.cpp">
       <Filter>Audio</Filter>
     </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\fvad.c">
+      <Filter>External\libfvad</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\signal_processing\division_operations.c">
+      <Filter>External\libfvad</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\signal_processing\energy.c">
+      <Filter>External\libfvad</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\signal_processing\get_scaling_square.c">
+      <Filter>External\libfvad</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\signal_processing\resample_48khz.c">
+      <Filter>External\libfvad</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\signal_processing\resample_by_2_internal.c">
+      <Filter>External\libfvad</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\signal_processing\resample_fractional.c">
+      <Filter>External\libfvad</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\signal_processing\spl_inl.c">
+      <Filter>External\libfvad</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\vad\vad_core.c">
+      <Filter>External\libfvad</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\vad\vad_filterbank.c">
+      <Filter>External\libfvad</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\vad\vad_gmm.c">
+      <Filter>External\libfvad</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\vad\vad_sp.c">
+      <Filter>External\libfvad</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Audio\SpeechSegmenter.cpp">
+      <Filter>Audio</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -190,6 +229,33 @@
     <ClInclude Include="Source\NoNameGestor\Audio\CaptureDevice.h">
       <Filter>Audio</Filter>
     </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\libfvad\src\signal_processing\resample_by_2_internal.h">
+      <Filter>External\libfvad</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\libfvad\src\signal_processing\signal_processing_library.h">
+      <Filter>External\libfvad</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\libfvad\src\signal_processing\spl_inl.h">
+      <Filter>External\libfvad</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\libfvad\src\vad\vad_core.h">
+      <Filter>External\libfvad</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\libfvad\src\vad\vad_filterbank.h">
+      <Filter>External\libfvad</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\libfvad\src\vad\vad_gmm.h">
+      <Filter>External\libfvad</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\libfvad\src\vad\vad_sp.h">
+      <Filter>External\libfvad</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\External\libfvad\src\common.h">
+      <Filter>External\libfvad</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Audio\SpeechSegmenter.h">
+      <Filter>Audio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="External">
@@ -221,6 +287,9 @@
     </Filter>
     <Filter Include="Audio">
       <UniqueIdentifier>{3d1ce504-1db4-49bf-8f64-0c10c1f9e9d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\libfvad">
+      <UniqueIdentifier>{ed98e2c9-3d3f-4350-8a44-42ff0a00d122}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

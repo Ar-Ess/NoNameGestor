@@ -176,6 +176,7 @@
   <ItemGroup>
     <ClCompile Include="Source\NoNameGestor\Audio\AudioDevice.cpp" />
     <ClCompile Include="Source\NoNameGestor\Audio\CaptureDevice.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Audio\SpeechSegmenter.cpp" />
     <ClCompile Include="Source\NoNameGestor\Containers\ConstContainer.cpp" />
     <ClCompile Include="Source\NoNameGestor\Containers\Container.cpp" />
     <ClCompile Include="Source\NoNameGestor\Containers\FilterContainer.cpp" />
@@ -192,6 +193,18 @@
     <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_stdlib.cpp" />
     <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_tables.cpp" />
     <ClCompile Include="Source\NoNameGestor\External\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\fvad.c" />
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\signal_processing\division_operations.c" />
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\signal_processing\energy.c" />
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\signal_processing\get_scaling_square.c" />
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\signal_processing\resample_48khz.c" />
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\signal_processing\resample_by_2_internal.c" />
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\signal_processing\resample_fractional.c" />
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\signal_processing\spl_inl.c" />
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\vad\vad_core.c" />
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\vad\vad_filterbank.c" />
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\vad\vad_gmm.c" />
+    <ClCompile Include="Source\NoNameGestor\External\libfvad\src\vad\vad_sp.c" />
     <ClCompile Include="Source\NoNameGestor\Gestor\GestorSystem.cpp" />
     <ClCompile Include="Source\NoNameGestor\Main.cpp" />
     <ClCompile Include="Source\NoNameGestor\Scenes\EconomyScene.cpp" />
@@ -202,6 +215,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\AudioDevice.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\CaptureDevice.h" />
+    <ClInclude Include="Source\NoNameGestor\Audio\SpeechSegmenter.h" />
     <ClInclude Include="Source\NoNameGestor\Containers\ConstContainer.h" />
     <ClInclude Include="Source\NoNameGestor\Containers\Container.h" />
     <ClInclude Include="Source\NoNameGestor\Containers\ContainerEnum.h" />
@@ -223,6 +237,14 @@
     <ClInclude Include="Source\NoNameGestor\External\imgui\imstb_rectpack.h" />
     <ClInclude Include="Source\NoNameGestor\External\imgui\imstb_textedit.h" />
     <ClInclude Include="Source\NoNameGestor\External\imgui\imstb_truetype.h" />
+    <ClInclude Include="Source\NoNameGestor\External\libfvad\src\common.h" />
+    <ClInclude Include="Source\NoNameGestor\External\libfvad\src\signal_processing\resample_by_2_internal.h" />
+    <ClInclude Include="Source\NoNameGestor\External\libfvad\src\signal_processing\signal_processing_library.h" />
+    <ClInclude Include="Source\NoNameGestor\External\libfvad\src\signal_processing\spl_inl.h" />
+    <ClInclude Include="Source\NoNameGestor\External\libfvad\src\vad\vad_core.h" />
+    <ClInclude Include="Source\NoNameGestor\External\libfvad\src\vad\vad_filterbank.h" />
+    <ClInclude Include="Source\NoNameGestor\External\libfvad\src\vad\vad_gmm.h" />
+    <ClInclude Include="Source\NoNameGestor\External\libfvad\src\vad\vad_sp.h" />
     <ClInclude Include="Source\NoNameGestor\External\Miniaudio\miniaudio.h" />
     <ClInclude Include="Source\NoNameGestor\Gestor\Aggregate.h" />
     <ClInclude Include="Source\NoNameGestor\Gestor\Configuration.h" />

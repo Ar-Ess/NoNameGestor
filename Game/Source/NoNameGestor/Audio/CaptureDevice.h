@@ -1,5 +1,6 @@
 #pragma once
 
+#include "NoNameGestor/Audio/SpeechSegmenter.h"
 #include "NoNameGestor/Audio/AudioDevice.h"
 
 struct ma_device;
@@ -26,6 +27,11 @@ private:
 	float level = 0;
 
 	std::vector<float> scratch;
+
+	SpeechSegmenter segmenter;
+
+	bool ringBufferInitialized = false;
+	bool deviceInitialized = false;
 
 };
 

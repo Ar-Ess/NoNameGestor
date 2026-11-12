@@ -4,6 +4,7 @@
 #include "NoNameGestor/External/Miniaudio/miniaudio.h"
 
 #include "NoNameGestor/External/imgui/imgui_internal.h"
+#include <algorithm>
 
 void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
 {
@@ -40,6 +41,8 @@ CaptureDevice::CaptureDevice()
     if (ma_pcm_rb_init(ma_format_f32, 1, samples * duration, NULL, NULL, &ringBuffer) != MA_SUCCESS)
         return; // Error
 
+    ringBufferInitialized = true;
+
     device = new ma_device;
     ma_device_config dConfig = ma_device_config_init(ma_device_type_capture);
 
@@ -52,6 +55,8 @@ CaptureDevice::CaptureDevice()
     if (ma_device_init(NULL, &dConfig, device) != MA_SUCCESS)
         return;  // Failed to initialize the device.
 
+    deviceInitialized = true;
+
     if (ma_device_start(device) != MA_SUCCESS)
         return; // Failed to start device.
 
@@ -62,11 +67,14 @@ CaptureDevice::~CaptureDevice()
 {
     if (device != nullptr)
     {
-        ma_device_uninit(device);
+        if (deviceInitialized)
+            ma_device_uninit(device);
+
         delete device;
     }
 
-    ma_pcm_rb_uninit(&ringBuffer);
+    if (ringBufferInitialized)
+        ma_pcm_rb_uninit(&ringBuffer);
 }
 
 // Copia fins a maxFrames mostres a dst. Retorna quantes n'ha copiat.
@@ -99,8 +107,12 @@ void CaptureDevice::Update()
     float* data = scratch.data();
     while ((n = Read(scratch.data(), 4096)) > 0)
     {
+        // Alimentem el detector de veu.
+        segmenter.Process(data, n);
+
         for (size_t i = 0; i < n; ++i)
             sum += data[i] * data[i];
+
         count += n;
     }
 
@@ -110,6 +122,68 @@ void CaptureDevice::Update()
 
 void CaptureDevice::Draw()
 {
-    ImGui::ProgressBar(level * 3.f, ImVec2(200, 20));
-}
+    // Nivell d'àudio.
+    ImGui::ProgressBar(
+        std::clamp(level * 3.f, 0.f, 1.f),
+        ImVec2(200, 20),
+        "Input RMS"
+    );
 
+    ImGui::SameLine();
+
+    // Estat del segmentador.
+    if (!segmenter.IsValid())
+    {
+        ImGui::TextColored(
+            ImVec4(1.f, 0.2f, 0.2f, 1.f),
+            "VAD: Error"
+        );
+    }
+    else if (segmenter.IsSpeaking())
+    {
+        ImGui::TextColored(
+            ImVec4(0.2f, 1.f, 0.2f, 1.f),
+            "Speaking"
+        );
+    }
+    else if (segmenter.IsPending())
+    {
+        ImGui::TextColored(
+            ImVec4(1.f, 0.8f, 0.2f, 1.f),
+            "Pending..."
+        );
+    }
+    else
+    {
+        ImGui::TextDisabled("Silence");
+    }
+
+    ImGui::Separator();
+
+    // Estadístiques de segmentació.
+    ImGui::Text(
+        "Completed segments: %llu",
+        static_cast<unsigned long long>(
+            segmenter.GetTotalSegmentsCompleted()
+            )
+    );
+
+    ImGui::Text(
+        "Segments waiting: %llu",
+        static_cast<unsigned long long>(
+            segmenter.GetCompletedSegmentCount()
+            )
+    );
+
+    if (segmenter.GetTotalSegmentsCompleted() > 0)
+    {
+        ImGui::Text(
+            "Last segment duration: %.2f seconds",
+            segmenter.GetLastSegmentDurationSeconds()
+        );
+    }
+    else
+    {
+        ImGui::TextDisabled("Last segment duration: --");
+    }
+}
