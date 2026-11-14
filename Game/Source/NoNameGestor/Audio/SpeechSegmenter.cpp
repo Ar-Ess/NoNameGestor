@@ -4,7 +4,7 @@
 #include <cmath>
 #include <utility>
 
-#include "NoNameGestor/Audio/Transcriber.h"
+#include "NoNameGestor/Audio/ThreadWorker.h"
 #include "NoNameGestor/External/whisper.cpp/include/whisper.h"
 
 SpeechSegmenter::SpeechSegmenter()
@@ -24,7 +24,7 @@ SpeechSegmenter::SpeechSegmenter()
     whisper_context_params params = whisper_context_default_params();
     ctx = whisper_init_from_file_with_params("ggml-base.en.bin", params);
 
-    transcriber = new Transcriber<Segment, Transcription>(
+    transcriber = new ThreadWorker<Segment, Transcription>(
         [&](Segment& segment)
         {
             // Whisper es queixa si l'àudio dura menys d'1 s: afegim silenci fins a ~1,1 s.
@@ -45,6 +45,8 @@ SpeechSegmenter::SpeechSegmenter()
             wp.print_realtime = false;
             wp.print_timestamps = false;
             wp.print_special = false;
+            wp.suppress_blank = true;
+            wp.suppress_nst = true;
 
             auto t0 = std::chrono::steady_clock::now();
             int rc = whisper_full(ctx, wp, audio.data(), (int)audio.size());
@@ -342,17 +344,12 @@ bool SpeechSegmenter::TryPopSegment(Segment& segment)
     return true;
 }
 
-void SpeechSegmenter::PollTranscriptions()
+bool SpeechSegmenter::TryPopTranscription(Transcription& tran)
 {
     if (transcriber == nullptr)
-        return;
+        return false;
 
-    Transcription t;
-    while (transcriber->TryPop(t))
-    {
-        lastText = std::move(t.text);
-        lastTranscribeMs = t.ms;
-    }
+    return transcriber->TryPop(tran);
 }
 
 size_t SpeechSegmenter::MillisecondsToFrames(uint32_t ms)

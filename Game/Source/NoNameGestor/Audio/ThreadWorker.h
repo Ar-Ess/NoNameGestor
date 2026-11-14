@@ -8,14 +8,14 @@
 #include <functional>
 
 template<class In, class Out>
-class Transcriber
+class ThreadWorker
 {
 public:
 
-    Transcriber(std::function<Out(In&)> func) : process(func), thread([this] { Run(); })
+    ThreadWorker(std::function<Out(In&)> func) : process(func), thread([this] { Run(); })
     { }
 
-    ~Transcriber()
+    ~ThreadWorker()
     {
         {
             std::lock_guard<std::mutex> lock(mtx);

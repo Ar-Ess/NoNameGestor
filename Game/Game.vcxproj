@@ -186,9 +186,14 @@ ggml-cpu.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\NoNameGestor\Audio\ActionRegistry.cpp" />
     <ClCompile Include="Source\NoNameGestor\Audio\AudioDevice.cpp" />
     <ClCompile Include="Source\NoNameGestor\Audio\CaptureDevice.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Audio\Interpreter.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Audio\ActionResolver.cpp" />
     <ClCompile Include="Source\NoNameGestor\Audio\SpeechSegmenter.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Audio\VoiceManager.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Audio\VoiceSynth.cpp" />
     <ClCompile Include="Source\NoNameGestor\Containers\ConstContainer.cpp" />
     <ClCompile Include="Source\NoNameGestor\Containers\Container.cpp" />
     <ClCompile Include="Source\NoNameGestor\Containers\FilterContainer.cpp" />
@@ -225,10 +230,17 @@ ggml-cpu.lib</AdditionalDependencies>
     <ClCompile Include="Source\NoNameGestor\Utils\ImGuiExtension.cpp" />
     <ClCompile Include="Source\NoNameGestor\Utils\LogFunction.cpp" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Source\NoNameGestor\Audio\ActionRegistry.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\AudioDevice.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\CaptureDevice.h" />
+    <ClInclude Include="Source\NoNameGestor\Audio\Intent.h" />
+    <ClInclude Include="Source\NoNameGestor\Audio\Interpreter.h" />
+    <ClInclude Include="Source\NoNameGestor\Audio\ActionResolver.h" />
+    <ClInclude Include="Source\NoNameGestor\Audio\Response.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\SpeechSegmenter.h" />
-    <ClInclude Include="Source\NoNameGestor\Audio\Transcriber.h" />
+    <ClInclude Include="Source\NoNameGestor\Audio\ThreadWorker.h" />
+    <ClInclude Include="Source\NoNameGestor\Audio\VoiceManager.h" />
+    <ClInclude Include="Source\NoNameGestor\Audio\VoiceSynth.h" />
     <ClInclude Include="Source\NoNameGestor\Containers\ConstContainer.h" />
     <ClInclude Include="Source\NoNameGestor\Containers\Container.h" />
     <ClInclude Include="Source\NoNameGestor\Containers\ContainerEnum.h" />
@@ -259,6 +271,7 @@ ggml-cpu.lib</AdditionalDependencies>
     <ClInclude Include="Source\NoNameGestor\External\libfvad\src\vad\vad_gmm.h" />
     <ClInclude Include="Source\NoNameGestor\External\libfvad\src\vad\vad_sp.h" />
     <ClInclude Include="Source\NoNameGestor\External\Miniaudio\miniaudio.h" />
+    <ClCompile Include="Source\NoNameGestor\External\Miniaudio\MiniaudioImpl.cpp" />
     <ClInclude Include="Source\NoNameGestor\Gestor\Aggregate.h" />
     <ClInclude Include="Source\NoNameGestor\Gestor\Configuration.h" />
     <ClInclude Include="Source\NoNameGestor\Gestor\Currency.h" />

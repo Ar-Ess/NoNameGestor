@@ -10,7 +10,7 @@
 #include "NoNameGestor/External/libfvad/include/fvad.h"
 
 struct whisper_context;
-template<class In, class Out> class Transcriber;
+template<class In, class Out> class ThreadWorker;
 
 class SpeechSegmenter
 {
@@ -62,7 +62,7 @@ public:
 
     // Recupera una frase quan ha acabat.
     bool TryPopSegment(Segment& segment);
-    void PollTranscriptions();
+    bool TryPopTranscription(Transcription& transcription);
 
     // Configuració del segmentador.
     void SetPreRollMs(uint32_t ms);
@@ -86,16 +86,6 @@ public:
         return lastSegmentDurationSeconds;
     }
 
-    double GetLastTranscribeMs() const
-    {
-        return lastTranscribeMs;
-    }
-
-    std::string GetLastText() const
-    {
-        return lastText;
-    }
-
 private:
 
     // ===== Processament intern =====
@@ -113,8 +103,6 @@ private:
     void PushPreRoll();
 
     static size_t MillisecondsToFrames(uint32_t ms);
-
-    
 
 private:
 
@@ -171,7 +159,5 @@ private:
 
     // ===== Transcribe =====
     whisper_context* ctx = nullptr;
-    Transcriber<Segment, Transcription>* transcriber = nullptr;
-    double lastTranscribeMs = 0.0;
-    std::string lastText;
+    ThreadWorker<Segment, Transcription>* transcriber = nullptr;
 };

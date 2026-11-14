@@ -9,7 +9,7 @@ class CaptureDevice : public AudioDevice
 {
 public:
 
-	CaptureDevice();
+	CaptureDevice(std::deque<std::string>& sentences);
 	~CaptureDevice() override;
 
 	bool Start() override { return true; }
@@ -23,6 +23,7 @@ public:
 private:
 
 	ma_device* device = nullptr;
+	void* ringBuffer = nullptr;
 
 	float level = 0;
 
@@ -32,6 +33,11 @@ private:
 
 	bool ringBufferInitialized = false;
 	bool deviceInitialized = false;
+
+	double lastTranscribeMs = 0.0;
+	std::string lastText;
+
+	std::deque<std::string>& sentences;
 
 };
 

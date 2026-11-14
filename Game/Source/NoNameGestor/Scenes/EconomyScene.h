@@ -10,8 +10,7 @@
 class FileManager;
 struct ImFont;
 struct SDL_Renderer;
-
-#include "NoNameGestor/Audio/CaptureDevice.h"
+class VoiceManager;
 
 class EconomyScene : public Scene
 {
@@ -92,6 +91,6 @@ private: // Variables
 	Chrono backupChrono;
 	int focussedTab = 0;
 
-	CaptureDevice* d = nullptr;
+	VoiceManager* voice = nullptr;
 
 };

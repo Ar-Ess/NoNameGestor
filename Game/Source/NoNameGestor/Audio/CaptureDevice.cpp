@@ -1,11 +1,10 @@
 #include "CaptureDevice.h"
 
-#define MINIAUDIO_IMPLEMENTATION
 #include "NoNameGestor/External/Miniaudio/miniaudio.h"
 #include "NoNameGestor/External/imgui/imgui_internal.h"
 #include <algorithm>
 
-void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
+static void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
 {
     ma_pcm_rb* rb = (ma_pcm_rb*)pDevice->pUserData;
     const float* in = (const float*)pInput;
@@ -30,16 +29,16 @@ void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uin
     (void)pOutput;
 }
 
-ma_pcm_rb ringBuffer;
-
-CaptureDevice::CaptureDevice()
+CaptureDevice::CaptureDevice(std::deque<std::string>& sentences) :
+    sentences(sentences)
 {
     scratch.resize(4096);
     
     const ma_uint32 samples = 16000;
     const ma_uint32 duration = 10;
 
-    if (ma_pcm_rb_init(ma_format_f32, 1, samples * duration, NULL, NULL, &ringBuffer) != MA_SUCCESS)
+    ma_pcm_rb* rb = new ma_pcm_rb;
+    if (ma_pcm_rb_init(ma_format_f32, 1, samples * duration, NULL, NULL, rb) != MA_SUCCESS)
         return; // Error
 
     ringBufferInitialized = true;
@@ -47,11 +46,13 @@ CaptureDevice::CaptureDevice()
     device = new ma_device;
     ma_device_config dConfig = ma_device_config_init(ma_device_type_capture);
 
-    dConfig.capture.format = ringBuffer.format;
-    dConfig.capture.channels = ringBuffer.channels;
+    dConfig.capture.format = rb->format;
+    dConfig.capture.channels = rb->channels;
     dConfig.sampleRate = samples;
     dConfig.dataCallback = data_callback;
-    dConfig.pUserData = &ringBuffer;
+    dConfig.pUserData = rb;
+
+    ringBuffer = rb;
 
     if (ma_device_init(NULL, &dConfig, device) != MA_SUCCESS)
         return;  // Failed to initialize the device.
@@ -74,7 +75,10 @@ CaptureDevice::~CaptureDevice()
     }
 
     if (ringBufferInitialized)
-        ma_pcm_rb_uninit(&ringBuffer);
+    {
+        ma_pcm_rb_uninit((ma_pcm_rb*)ringBuffer);
+        delete (ma_pcm_rb*)ringBuffer;
+    }
 
 }
 
@@ -88,11 +92,11 @@ size_t CaptureDevice::Read(float* dst, size_t maxFrames)
         ma_uint32 chunk = (ma_uint32)(maxFrames - total);
         void* pRead = nullptr;
 
-        if (ma_pcm_rb_acquire_read(&ringBuffer, &chunk, &pRead) != MA_SUCCESS || chunk == 0)
+        if (ma_pcm_rb_acquire_read((ma_pcm_rb*)ringBuffer, &chunk, &pRead) != MA_SUCCESS || chunk == 0)
             break;  // no queda res per llegir
 
         ma_copy_pcm_frames(dst + total, pRead, chunk, ma_format_f32, 1);
-        ma_pcm_rb_commit_read(&ringBuffer, chunk);
+        ma_pcm_rb_commit_read((ma_pcm_rb*)ringBuffer, chunk);
 
         total += chunk;
     }
@@ -126,7 +130,13 @@ void CaptureDevice::Update()
         segmenter.Transcribe(std::move(seg));
     }
 
-    segmenter.PollTranscriptions();
+    SpeechSegmenter::Transcription tran;
+    while (segmenter.TryPopTranscription(tran))
+    {
+        lastText = tran.text;
+        lastTranscribeMs = tran.ms;
+        sentences.push_back(tran.text);
+    }
 
     if (count > 0)
         level = (float)std::sqrt(sum / count);   // membre float, el que dibuixes a ImGui
@@ -151,7 +161,7 @@ void CaptureDevice::Draw()
 
     ImGui::Separator();
 
-    ImGui::Text("Last Text (%.0f ms): \"%s\"", segmenter.GetLastTranscribeMs(), segmenter.GetLastText().c_str());
+    ImGui::Text("Last Text (%.0f ms): \"%s\"", lastTranscribeMs, lastText.c_str());
 
     // Estadístiques de segmentació.
     ImGui::Text("Completed segments: %llu", static_cast<unsigned long long>(segmenter.GetTotalSegmentsCompleted()));

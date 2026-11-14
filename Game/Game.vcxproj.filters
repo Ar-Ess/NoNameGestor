@@ -113,6 +113,24 @@
     <ClCompile Include="Source\NoNameGestor\Audio\SpeechSegmenter.cpp">
       <Filter>Audio</Filter>
     </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Audio\Interpreter.cpp">
+      <Filter>Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Audio\VoiceManager.cpp">
+      <Filter>Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Audio\ActionResolver.cpp">
+      <Filter>Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Audio\ActionRegistry.cpp">
+      <Filter>Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Audio\VoiceSynth.cpp">
+      <Filter>Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\External\Miniaudio\MiniaudioImpl.cpp">
+      <Filter>External\Miniaudio</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -256,7 +274,28 @@
     <ClInclude Include="Source\NoNameGestor\Audio\SpeechSegmenter.h">
       <Filter>Audio</Filter>
     </ClInclude>
-    <ClInclude Include="Source\NoNameGestor\Audio\Transcriber.h">
+    <ClInclude Include="Source\NoNameGestor\Audio\ThreadWorker.h">
+      <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Audio\Interpreter.h">
+      <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Audio\VoiceManager.h">
+      <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Audio\Intent.h">
+      <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Audio\ActionResolver.h">
+      <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Audio\ActionRegistry.h">
+      <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Audio\Response.h">
+      <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Audio\VoiceSynth.h">
       <Filter>Audio</Filter>
     </ClInclude>
   </ItemGroup>
@@ -293,9 +332,6 @@
     </Filter>
     <Filter Include="External\libfvad">
       <UniqueIdentifier>{ed98e2c9-3d3f-4350-8a44-42ff0a00d122}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="External\Whisper">
-      <UniqueIdentifier>{8c18d294-cfe6-43a2-9be0-7de1d5c955f3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -29,9 +29,11 @@
 
 REGISTER_STARTUP_SCENE(EconomyScene);
 
+#include "NoNameGestor/Audio/VoiceManager.h"
+
 bool EconomyScene::Awake()
 {
-	d = new CaptureDevice;
+	voice = new VoiceManager;
 
 	// Create the renderer
 	renderer = SDL_CreateRenderer(Window::window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
@@ -92,7 +94,7 @@ bool EconomyScene::Start()
 
 bool EconomyScene::Update(float dt)
 {
-	d->Update();
+	voice->Update();
 
 	bool ret = true;
 	SDL_Event event;
@@ -169,7 +171,7 @@ bool EconomyScene::CleanUp()
 		renderer = nullptr;
 	}
 
-	delete d;
+	delete voice;
 
 	return true;
 }
@@ -1269,7 +1271,7 @@ void EconomyScene::DrawMainWindow(bool& ret)
 
 	if (ImGui::Begin("##MainWindow", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus))
 	{
-		d->Draw();
+		voice->Draw();
 
 		ImGui::RS::Spacing(0);
 		ImGui::PushFont(ImGui::RS::InputTextFont);
