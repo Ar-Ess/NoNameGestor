@@ -104,8 +104,11 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Framework.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;winmm.lib;setupapi.lib;cfgmgr32.lib;version.lib;imm32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)Source\Framework\lib\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Framework.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;winmm.lib;setupapi.lib;cfgmgr32.lib;version.lib;imm32.lib;whisper.lib;
+ggml.lib;
+ggml-base.lib;
+ggml-cpu.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)Source\Framework\lib\$(Configuration);$(ProjectDir)Source\NoNameGestor\External\whisper.cpp\build\src\Release;$(ProjectDir)Source\NoNameGestor\External\whisper.cpp\build\ggml\src\Release</AdditionalLibraryDirectories>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
@@ -124,8 +127,11 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Framework.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;winmm.lib;setupapi.lib;cfgmgr32.lib;version.lib;imm32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)Source\Framework\lib\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Framework.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;winmm.lib;setupapi.lib;cfgmgr32.lib;version.lib;imm32.lib;whisper.lib;
+ggml.lib;
+ggml-base.lib;
+ggml-cpu.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)Source\Framework\lib\$(Configuration);$(ProjectDir)Source\NoNameGestor\External\whisper.cpp\build\src\Release;$(ProjectDir)Source\NoNameGestor\External\whisper.cpp\build\ggml\src\Release</AdditionalLibraryDirectories>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
@@ -146,8 +152,11 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>Framework.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;winmm.lib;setupapi.lib;cfgmgr32.lib;version.lib;imm32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)Source\Framework\lib\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Framework.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;winmm.lib;setupapi.lib;cfgmgr32.lib;version.lib;imm32.lib;whisper.lib;
+ggml.lib;
+ggml-base.lib;
+ggml-cpu.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)Source\Framework\lib\$(Configuration);$(ProjectDir)Source\NoNameGestor\External\whisper.cpp\build\src\Release;$(ProjectDir)Source\NoNameGestor\External\whisper.cpp\build\ggml\src\Release</AdditionalLibraryDirectories>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
@@ -168,8 +177,11 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>Framework.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;winmm.lib;setupapi.lib;cfgmgr32.lib;version.lib;imm32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)Source\Framework\lib\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Framework.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;winmm.lib;setupapi.lib;cfgmgr32.lib;version.lib;imm32.lib;whisper.lib;
+ggml.lib;
+ggml-base.lib;
+ggml-cpu.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)Source\Framework\lib\$(Configuration);$(ProjectDir)Source\NoNameGestor\External\whisper.cpp\build\src\Release;$(ProjectDir)Source\NoNameGestor\External\whisper.cpp\build\ggml\src\Release</AdditionalLibraryDirectories>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
@@ -216,6 +228,7 @@
     <ClInclude Include="Source\NoNameGestor\Audio\AudioDevice.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\CaptureDevice.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\SpeechSegmenter.h" />
+    <ClInclude Include="Source\NoNameGestor\Audio\Transcriber.h" />
     <ClInclude Include="Source\NoNameGestor\Containers\ConstContainer.h" />
     <ClInclude Include="Source\NoNameGestor\Containers\Container.h" />
     <ClInclude Include="Source\NoNameGestor\Containers\ContainerEnum.h" />

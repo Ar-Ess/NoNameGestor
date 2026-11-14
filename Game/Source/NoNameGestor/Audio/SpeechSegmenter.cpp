@@ -4,6 +4,9 @@
 #include <cmath>
 #include <utility>
 
+#include "NoNameGestor/Audio/Transcriber.h"
+#include "NoNameGestor/External/whisper.cpp/include/whisper.h"
+
 SpeechSegmenter::SpeechSegmenter()
 {
     inst = fvad_new();
@@ -17,6 +20,64 @@ SpeechSegmenter::SpeechSegmenter()
         fvad_free(inst);
         inst = nullptr;
     }
+
+    whisper_context_params params = whisper_context_default_params();
+    ctx = whisper_init_from_file_with_params("ggml-base.en.bin", params);
+
+    transcriber = new Transcriber<Segment, Transcription>(
+        [&](Segment& segment)
+        {
+            // Whisper es queixa si l'àudio dura menys d'1 s: afegim silenci fins a ~1,1 s.
+            std::vector<float> audio = segment.samples;
+            const size_t minSamples = 17600; // 1,1 s a 16 kHz
+            if (audio.size() < minSamples)
+                audio.resize(minSamples, 0.0f);
+
+            whisper_full_params wp = whisper_full_default_params(WHISPER_SAMPLING_GREEDY);
+
+            wp.language = "en";
+            wp.translate = false;
+            wp.n_threads = (int)std::min(4u, std::max(1u, std::thread::hardware_concurrency()));
+            wp.no_context = true; // cada frase comença de zero
+            wp.single_segment = true; // pensat per a frases curtes
+            wp.no_timestamps = true;
+            wp.print_progress = false;
+            wp.print_realtime = false;
+            wp.print_timestamps = false;
+            wp.print_special = false;
+
+            auto t0 = std::chrono::steady_clock::now();
+            int rc = whisper_full(ctx, wp, audio.data(), (int)audio.size());
+            auto t1 = std::chrono::steady_clock::now();
+
+            Transcription result;
+
+            result.ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
+
+            if (rc != 0)
+            {
+                result.text = {};
+                return result;
+            }
+
+            std::string text;
+            const int n = whisper_full_n_segments(ctx);
+            for (int i = 0; i < n; ++i)
+                text += whisper_full_get_segment_text(ctx, i);
+
+            // Whisper sol posar un espai al davant.
+            size_t start = text.find_first_not_of(" \t\n");
+            if (start == std::string::npos)
+            {
+                result.text = {};
+                return result;
+            }
+
+            size_t end = text.find_last_not_of(" \t\n");
+            result.text = text.substr(start, end - start + 1);
+            return result;
+        }
+    );
 }
 
 SpeechSegmenter::~SpeechSegmenter()
@@ -26,6 +87,12 @@ SpeechSegmenter::~SpeechSegmenter()
         fvad_free(inst);
         inst = nullptr;
     }
+
+    if (transcriber != nullptr)
+        delete transcriber;
+
+    if (ctx != nullptr)
+        whisper_free(ctx);
 }
 
 void SpeechSegmenter::Process(const float* samples, size_t n)
@@ -52,6 +119,14 @@ void SpeechSegmenter::Process(const float* samples, size_t n)
             filled = 0;
         }
     }
+}
+
+void SpeechSegmenter::Transcribe(Segment&& segment)
+{
+    if (ctx == nullptr || segment.samples.empty())
+        return;
+
+    transcriber->Push(segment);
 }
 
 bool SpeechSegmenter::DetectVoice()
@@ -139,16 +214,18 @@ void SpeechSegmenter::ProcessFrame()
 
     case State::Speaking:
     {
-        // Sempre guardem el frame, també si és silenci.
-        currentSamples.insert(
-            currentSamples.end(),
-            floatFrame.begin(),
-            floatFrame.end()
-        );
+        currentSamples.insert(currentSamples.end(), floatFrame.begin(), floatFrame.end());
 
+        // 1. Límit de durada: independent de si hi ha veu o silenci.
+        if (currentSamples.size() >= MaxSpeechFrames * FrameSamples)
+        {
+            FinishSpeech();
+            break;
+        }
+
+        // 2. Hangover normal.
         if (voiced)
         {
-            // La veu ha tornat: reiniciem el hangover.
             hangoverSilenceFrames = 0;
         }
         else
@@ -156,9 +233,7 @@ void SpeechSegmenter::ProcessFrame()
             ++hangoverSilenceFrames;
 
             if (hangoverSilenceFrames >= hangoverFrames)
-            {
                 FinishSpeech();
-            }
         }
 
         break;
@@ -217,12 +292,19 @@ void SpeechSegmenter::FinishSpeech()
     {
         Segment segment;
 
+        if (hangoverSilenceFrames > TailKeepFrames)
+        {
+            size_t removeFrames = hangoverSilenceFrames - TailKeepFrames;
+            size_t removeSamples = removeFrames * FrameSamples;
+            if (removeSamples < currentSamples.size())
+                currentSamples.resize(currentSamples.size() - removeSamples);
+        }
+
         // Transferim la propietat de les mostres al segment.
         segment.samples = std::move(currentSamples);
 
         lastSegmentDurationSeconds = segment.GetDurationSeconds();
         ++totalSegmentsCompleted;
-
         completedSegments.push_back(std::move(segment));
     }
 
@@ -258,6 +340,19 @@ bool SpeechSegmenter::TryPopSegment(Segment& segment)
     completedSegments.pop_front();
 
     return true;
+}
+
+void SpeechSegmenter::PollTranscriptions()
+{
+    if (transcriber == nullptr)
+        return;
+
+    Transcription t;
+    while (transcriber->TryPop(t))
+    {
+        lastText = std::move(t.text);
+        lastTranscribeMs = t.ms;
+    }
 }
 
 size_t SpeechSegmenter::MillisecondsToFrames(uint32_t ms)

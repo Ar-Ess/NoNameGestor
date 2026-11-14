@@ -5,7 +5,12 @@
 #include <array>
 #include <deque>
 #include <vector>
+#include <string>
+#include <thread>
 #include "NoNameGestor/External/libfvad/include/fvad.h"
+
+struct whisper_context;
+template<class In, class Out> class Transcriber;
 
 class SpeechSegmenter
 {
@@ -26,6 +31,12 @@ public:
         }
     };
 
+    struct Transcription
+    {
+        std::string text;
+        double ms = 0.0;
+    };
+
 private:
 
     enum class State
@@ -41,6 +52,7 @@ public:
     ~SpeechSegmenter();
 
     void Process(const float* samples, size_t n);
+    void Transcribe(Segment&& segment);
 
     // Estat públic.
     bool IsSpeaking() const { return state == State::Speaking; }
@@ -50,7 +62,7 @@ public:
 
     // Recupera una frase quan ha acabat.
     bool TryPopSegment(Segment& segment);
-
+    void PollTranscriptions();
 
     // Configuració del segmentador.
     void SetPreRollMs(uint32_t ms);
@@ -74,6 +86,16 @@ public:
         return lastSegmentDurationSeconds;
     }
 
+    double GetLastTranscribeMs() const
+    {
+        return lastTranscribeMs;
+    }
+
+    std::string GetLastText() const
+    {
+        return lastText;
+    }
+
 private:
 
     // ===== Processament intern =====
@@ -92,14 +114,16 @@ private:
 
     static size_t MillisecondsToFrames(uint32_t ms);
 
+    
+
 private:
 
     // Configuració d'àudio.
     static constexpr uint32_t SampleRate = 16000;
     static constexpr size_t FrameSamples = 320;
     static constexpr uint32_t FrameDurationMs = 20;
-
-    static constexpr int SilenceBlocksToStop = 25;
+    static constexpr uint32_t MaxSpeechFrames = 750;
+    static constexpr uint32_t TailKeepFrames = 8;
 
     // ===== VAD intern =====
 
@@ -145,4 +169,9 @@ private:
     size_t totalSegmentsCompleted = 0;
     double lastSegmentDurationSeconds = 0.0;
 
+    // ===== Transcribe =====
+    whisper_context* ctx = nullptr;
+    Transcriber<Segment, Transcription>* transcriber = nullptr;
+    double lastTranscribeMs = 0.0;
+    std::string lastText;
 };

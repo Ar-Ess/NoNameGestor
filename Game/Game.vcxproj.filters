@@ -256,6 +256,9 @@
     <ClInclude Include="Source\NoNameGestor\Audio\SpeechSegmenter.h">
       <Filter>Audio</Filter>
     </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Audio\Transcriber.h">
+      <Filter>Audio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="External">
@@ -290,6 +293,9 @@
     </Filter>
     <Filter Include="External\libfvad">
       <UniqueIdentifier>{ed98e2c9-3d3f-4350-8a44-42ff0a00d122}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\Whisper">
+      <UniqueIdentifier>{8c18d294-cfe6-43a2-9be0-7de1d5c955f3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

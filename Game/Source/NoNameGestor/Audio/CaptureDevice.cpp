@@ -2,7 +2,6 @@
 
 #define MINIAUDIO_IMPLEMENTATION
 #include "NoNameGestor/External/Miniaudio/miniaudio.h"
-
 #include "NoNameGestor/External/imgui/imgui_internal.h"
 #include <algorithm>
 
@@ -35,6 +34,8 @@ ma_pcm_rb ringBuffer;
 
 CaptureDevice::CaptureDevice()
 {
+    scratch.resize(4096);
+    
     const ma_uint32 samples = 16000;
     const ma_uint32 duration = 10;
 
@@ -60,7 +61,6 @@ CaptureDevice::CaptureDevice()
     if (ma_device_start(device) != MA_SUCCESS)
         return; // Failed to start device.
 
-    scratch.resize(4096);
 }
 
 CaptureDevice::~CaptureDevice()
@@ -75,6 +75,7 @@ CaptureDevice::~CaptureDevice()
 
     if (ringBufferInitialized)
         ma_pcm_rb_uninit(&ringBuffer);
+
 }
 
 // Copia fins a maxFrames mostres a dst. Retorna quantes n'ha copiat.
@@ -100,6 +101,9 @@ size_t CaptureDevice::Read(float* dst, size_t maxFrames)
 
 void CaptureDevice::Update()
 {
+    if (!deviceInitialized)
+        return;
+
     double sum = 0.0;
     size_t count = 0;
 
@@ -116,6 +120,14 @@ void CaptureDevice::Update()
         count += n;
     }
 
+    SpeechSegmenter::Segment seg;
+    while (segmenter.TryPopSegment(seg))
+    {
+        segmenter.Transcribe(std::move(seg));
+    }
+
+    segmenter.PollTranscriptions();
+
     if (count > 0)
         level = (float)std::sqrt(sum / count);   // membre float, el que dibuixes a ImGui
 }
@@ -123,67 +135,31 @@ void CaptureDevice::Update()
 void CaptureDevice::Draw()
 {
     // Nivell d'àudio.
-    ImGui::ProgressBar(
-        std::clamp(level * 3.f, 0.f, 1.f),
-        ImVec2(200, 20),
-        "Input RMS"
-    );
+    ImGui::ProgressBar(std::clamp(level * 3.f, 0.f, 1.f), ImVec2(200, 20), "Input RMS");
 
     ImGui::SameLine();
 
     // Estat del segmentador.
     if (!segmenter.IsValid())
-    {
-        ImGui::TextColored(
-            ImVec4(1.f, 0.2f, 0.2f, 1.f),
-            "VAD: Error"
-        );
-    }
+        ImGui::TextColored(ImVec4(1.f, 0.2f, 0.2f, 1.f), "VAD: Error");
     else if (segmenter.IsSpeaking())
-    {
-        ImGui::TextColored(
-            ImVec4(0.2f, 1.f, 0.2f, 1.f),
-            "Speaking"
-        );
-    }
+        ImGui::TextColored(ImVec4(0.2f, 1.f, 0.2f, 1.f), "Speaking");
     else if (segmenter.IsPending())
-    {
-        ImGui::TextColored(
-            ImVec4(1.f, 0.8f, 0.2f, 1.f),
-            "Pending..."
-        );
-    }
+        ImGui::TextColored(ImVec4(1.f, 0.8f, 0.2f, 1.f), "Pending...");
     else
-    {
         ImGui::TextDisabled("Silence");
-    }
 
     ImGui::Separator();
 
-    // Estadístiques de segmentació.
-    ImGui::Text(
-        "Completed segments: %llu",
-        static_cast<unsigned long long>(
-            segmenter.GetTotalSegmentsCompleted()
-            )
-    );
+    ImGui::Text("Last Text (%.0f ms): \"%s\"", segmenter.GetLastTranscribeMs(), segmenter.GetLastText().c_str());
 
-    ImGui::Text(
-        "Segments waiting: %llu",
-        static_cast<unsigned long long>(
-            segmenter.GetCompletedSegmentCount()
-            )
-    );
+    // Estadístiques de segmentació.
+    ImGui::Text("Completed segments: %llu", static_cast<unsigned long long>(segmenter.GetTotalSegmentsCompleted()));
+
+    ImGui::Text("Segments waiting: %llu", static_cast<unsigned long long>(segmenter.GetCompletedSegmentCount()));
 
     if (segmenter.GetTotalSegmentsCompleted() > 0)
-    {
-        ImGui::Text(
-            "Last segment duration: %.2f seconds",
-            segmenter.GetLastSegmentDurationSeconds()
-        );
-    }
+        ImGui::Text("Last segment duration: %.2f seconds", segmenter.GetLastSegmentDurationSeconds());
     else
-    {
         ImGui::TextDisabled("Last segment duration: --");
-    }
 }
