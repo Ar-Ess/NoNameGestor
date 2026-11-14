@@ -2,7 +2,11 @@
 #include "NoNameGestor/External/imgui/imgui_internal.h"
 
 VoiceManager::VoiceManager() :
-	device(new CaptureDevice(sentences)), interpreter(new Interpreter), resolver(new ActionResolver), registry(new ActionRegistry), synth(new VoiceSynth)
+	device(new CaptureDevice(sentences)),
+	interpreter(new Interpreter),
+	resolver(new ActionResolver),
+	registry(new ActionRegistry),
+	synth(new VoiceSynth)
 {
 	resolver->AddInstruction("describe_project", { "Describe the project", "What is the project state?" });
 	registry->Register("describe_project", [](const Intent& intent) { return Response{ "This is my description of your project." }; });
@@ -10,6 +14,7 @@ VoiceManager::VoiceManager() :
 
 VoiceManager::~VoiceManager()
 {
+	End();
 	delete device;
 	delete interpreter;
 	delete resolver;
@@ -17,8 +22,21 @@ VoiceManager::~VoiceManager()
 	delete synth;
 }
 
+void VoiceManager::Start()
+{
+	if (active)
+		return;
+
+	device->Start();
+	synth->Start();
+	active = true;
+}
+
 void VoiceManager::Update()
 {
+	if (!active)
+		return;
+
 	device->Update();
 	
 	std::string sentence;
@@ -44,12 +62,27 @@ void VoiceManager::Update()
 
 void VoiceManager::Draw()
 {
+	if (!active)
+		return;
+
 	device->Draw();
 	interpreter->Draw();
 
 	ImGui::Text("Responses:");
 	for (const Response& r : responses)
 		ImGui::TextUnformatted(r.text.c_str());
+}
+
+void VoiceManager::End()
+{
+	if (!active)
+		return;
+
+	device->Stop();
+	synth->Stop();
+	active = false;
+	sentences.clear();
+	responses.clear();
 }
 
 bool VoiceManager::TryPopSentence(std::string& sentence)

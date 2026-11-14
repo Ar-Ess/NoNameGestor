@@ -12,13 +12,13 @@ class VoiceSynth
 {
 public:
 
-	VoiceSynth();
 	~VoiceSynth();
 
+	void Start();
+	void Stop();
+
 	void Generate(Response&& response);
-
 	void Speak();
-
 	void Fill(float* out, size_t frames);
 
 private:

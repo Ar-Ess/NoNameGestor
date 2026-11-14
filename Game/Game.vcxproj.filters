@@ -68,9 +68,6 @@
     <ClCompile Include="Source\NoNameGestor\Containers\InputContainer.cpp">
       <Filter>Containers</Filter>
     </ClCompile>
-    <ClCompile Include="Source\NoNameGestor\Audio\AudioDevice.cpp">
-      <Filter>Audio</Filter>
-    </ClCompile>
     <ClCompile Include="Source\NoNameGestor\Audio\CaptureDevice.cpp">
       <Filter>Audio</Filter>
     </ClCompile>
@@ -240,9 +237,6 @@
     </ClInclude>
     <ClInclude Include="Source\NoNameGestor\External\Miniaudio\miniaudio.h">
       <Filter>External\Miniaudio</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\NoNameGestor\Audio\AudioDevice.h">
-      <Filter>Audio</Filter>
     </ClInclude>
     <ClInclude Include="Source\NoNameGestor\Audio\CaptureDevice.h">
       <Filter>Audio</Filter>

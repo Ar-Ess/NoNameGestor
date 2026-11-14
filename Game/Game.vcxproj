@@ -187,7 +187,6 @@ ggml-cpu.lib</AdditionalDependencies>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source\NoNameGestor\Audio\ActionRegistry.cpp" />
-    <ClCompile Include="Source\NoNameGestor\Audio\AudioDevice.cpp" />
     <ClCompile Include="Source\NoNameGestor\Audio\CaptureDevice.cpp" />
     <ClCompile Include="Source\NoNameGestor\Audio\Interpreter.cpp" />
     <ClCompile Include="Source\NoNameGestor\Audio\ActionResolver.cpp" />
@@ -231,7 +230,6 @@ ggml-cpu.lib</AdditionalDependencies>
     <ClCompile Include="Source\NoNameGestor\Utils\LogFunction.cpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\ActionRegistry.h" />
-    <ClInclude Include="Source\NoNameGestor\Audio\AudioDevice.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\CaptureDevice.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\Intent.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\Interpreter.h" />

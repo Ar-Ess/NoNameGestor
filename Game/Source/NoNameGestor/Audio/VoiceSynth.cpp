@@ -32,7 +32,12 @@ static void data_callback(ma_device* pDevice, void* pOutput, const void*, ma_uin
     static_cast<VoiceSynth*>(pDevice->pUserData)->Fill((float*)pOutput, frameCount);
 }
 
-VoiceSynth::VoiceSynth()
+VoiceSynth::~VoiceSynth()
+{
+    Stop();
+}
+
+void VoiceSynth::Start()
 {
     device = new ma_device;
 
@@ -127,7 +132,7 @@ VoiceSynth::VoiceSynth()
     );
 }
 
-VoiceSynth::~VoiceSynth()
+void VoiceSynth::Stop()
 {
     if (device != nullptr)
     {
@@ -140,6 +145,9 @@ VoiceSynth::~VoiceSynth()
 
     delete synthesizer;
     synthesizer = nullptr;
+
+    messages.clear();
+    current.clear();
 }
 
 void VoiceSynth::Generate(Response&& response)

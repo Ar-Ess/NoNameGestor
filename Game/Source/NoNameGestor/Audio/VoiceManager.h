@@ -12,8 +12,10 @@ public:
 	VoiceManager();
 	~VoiceManager();
 
+	void Start();
 	void Update();
 	void Draw();
+	void End();
 
 private:
 
@@ -29,6 +31,8 @@ private:
 	ActionResolver* resolver = nullptr;
 	ActionRegistry* registry = nullptr;
 	VoiceSynth* synth = nullptr;
+
+	bool active = false;
 
 };
 

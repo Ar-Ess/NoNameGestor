@@ -51,6 +51,8 @@ public:
     SpeechSegmenter();
     ~SpeechSegmenter();
 
+    void Start();
+    void Stop();
     void Process(const float* samples, size_t n);
     void Transcribe(Segment&& segment);
 

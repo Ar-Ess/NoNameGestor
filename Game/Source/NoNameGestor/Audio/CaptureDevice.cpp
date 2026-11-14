@@ -3,6 +3,7 @@
 #include "NoNameGestor/External/Miniaudio/miniaudio.h"
 #include "NoNameGestor/External/imgui/imgui_internal.h"
 #include <algorithm>
+#include <cmath>
 
 static void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
 {
@@ -30,16 +31,22 @@ static void data_callback(ma_device* pDevice, void* pOutput, const void* pInput,
 }
 
 CaptureDevice::CaptureDevice(std::deque<std::string>& sentences) :
-    sentences(sentences)
+    sentences(sentences), scratch(4096)
+{ }
+
+CaptureDevice::~CaptureDevice()
 {
-    scratch.resize(4096);
-    
+    Stop();
+}
+
+bool CaptureDevice::Start()
+{
     const ma_uint32 samples = 16000;
     const ma_uint32 duration = 10;
 
     ma_pcm_rb* rb = new ma_pcm_rb;
     if (ma_pcm_rb_init(ma_format_f32, 1, samples * duration, NULL, NULL, rb) != MA_SUCCESS)
-        return; // Error
+        return false; // Error
 
     ringBufferInitialized = true;
 
@@ -55,30 +62,46 @@ CaptureDevice::CaptureDevice(std::deque<std::string>& sentences) :
     ringBuffer = rb;
 
     if (ma_device_init(NULL, &dConfig, device) != MA_SUCCESS)
-        return;  // Failed to initialize the device.
+        return false;  // Failed to initialize the device.
 
     deviceInitialized = true;
 
     if (ma_device_start(device) != MA_SUCCESS)
-        return; // Failed to start device.
+        return false; // Failed to start device.
 
+    segmenter = new SpeechSegmenter;
+
+    return true;
 }
 
-CaptureDevice::~CaptureDevice()
+void CaptureDevice::Stop()
 {
+    if (segmenter != nullptr)
+    {
+        delete segmenter;
+        segmenter = nullptr;
+    }
+
     if (device != nullptr)
     {
         if (deviceInitialized)
+        {
             ma_device_uninit(device);
+            deviceInitialized = false;
+        }
 
         delete device;
+        device = nullptr;
     }
 
     if (ringBufferInitialized)
     {
         ma_pcm_rb_uninit((ma_pcm_rb*)ringBuffer);
         delete (ma_pcm_rb*)ringBuffer;
+        ringBufferInitialized = false;
     }
+
+    scratch.clear();
 
 }
 
@@ -116,7 +139,7 @@ void CaptureDevice::Update()
     while ((n = Read(scratch.data(), 4096)) > 0)
     {
         // Alimentem el detector de veu.
-        segmenter.Process(data, n);
+        segmenter->Process(data, n);
 
         for (size_t i = 0; i < n; ++i)
             sum += data[i] * data[i];
@@ -125,13 +148,13 @@ void CaptureDevice::Update()
     }
 
     SpeechSegmenter::Segment seg;
-    while (segmenter.TryPopSegment(seg))
+    while (segmenter->TryPopSegment(seg))
     {
-        segmenter.Transcribe(std::move(seg));
+        segmenter->Transcribe(std::move(seg));
     }
 
     SpeechSegmenter::Transcription tran;
-    while (segmenter.TryPopTranscription(tran))
+    while (segmenter->TryPopTranscription(tran))
     {
         lastText = tran.text;
         lastTranscribeMs = tran.ms;
@@ -150,11 +173,11 @@ void CaptureDevice::Draw()
     ImGui::SameLine();
 
     // Estat del segmentador.
-    if (!segmenter.IsValid())
+    if (!segmenter->IsValid())
         ImGui::TextColored(ImVec4(1.f, 0.2f, 0.2f, 1.f), "VAD: Error");
-    else if (segmenter.IsSpeaking())
+    else if (segmenter->IsSpeaking())
         ImGui::TextColored(ImVec4(0.2f, 1.f, 0.2f, 1.f), "Speaking");
-    else if (segmenter.IsPending())
+    else if (segmenter->IsPending())
         ImGui::TextColored(ImVec4(1.f, 0.8f, 0.2f, 1.f), "Pending...");
     else
         ImGui::TextDisabled("Silence");
@@ -164,12 +187,12 @@ void CaptureDevice::Draw()
     ImGui::Text("Last Text (%.0f ms): \"%s\"", lastTranscribeMs, lastText.c_str());
 
     // Estadístiques de segmentació.
-    ImGui::Text("Completed segments: %llu", static_cast<unsigned long long>(segmenter.GetTotalSegmentsCompleted()));
+    ImGui::Text("Completed segments: %llu", static_cast<unsigned long long>(segmenter->GetTotalSegmentsCompleted()));
 
-    ImGui::Text("Segments waiting: %llu", static_cast<unsigned long long>(segmenter.GetCompletedSegmentCount()));
+    ImGui::Text("Segments waiting: %llu", static_cast<unsigned long long>(segmenter->GetCompletedSegmentCount()));
 
-    if (segmenter.GetTotalSegmentsCompleted() > 0)
-        ImGui::Text("Last segment duration: %.2f seconds", segmenter.GetLastSegmentDurationSeconds());
+    if (segmenter->GetTotalSegmentsCompleted() > 0)
+        ImGui::Text("Last segment duration: %.2f seconds", segmenter->GetLastSegmentDurationSeconds());
     else
         ImGui::TextDisabled("Last segment duration: --");
 }

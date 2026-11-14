@@ -20,6 +20,7 @@
 
 #include "Framework/Time/TimeSpan.h"
 #include "NoNameGestor/External/imgui/imgui_internal.h"
+#include "NoNameGestor/Audio/VoiceManager.h"
 
 #define VERSION 1.4f
 #define EXTENSION ".nng"
@@ -28,8 +29,6 @@
 #define DEFAULT_FILE_DIALOG_DIRECTORY "C:\\"
 
 REGISTER_STARTUP_SCENE(EconomyScene);
-
-#include "NoNameGestor/Audio/VoiceManager.h"
 
 bool EconomyScene::Awake()
 {
@@ -676,18 +675,23 @@ void EconomyScene::LoadConfiguration()
 	if (configFile.Length() == 0) // just created
 	{
 		// User Preferences
+		// -- General
 		configFile.Write("UP_SCT", config.showContainerType);
 		configFile.Write("UP_SFU", config.showFutureUnassigned);
 		configFile.Write("UP_TFS", config.textFieldSize);
+		configFile.Write("UP_DDD", String::Empty); // Default Dialog Directory
+		// -- Backups
 		configFile.Write("UP_BUF", false); // Backup Unsaved Files?
 		configFile.Write("UP_BCD", String::Empty); // Backup Creation Directory
-		configFile.Write("UP_DDD", String::Empty); // Default Dialog Directory
 		configFile.Write("UP_ABS", false); // Automatic Backups System
 		configFile.Write("UP_AOFB", false); // Automatic Opening File Backup
 		configFile.Write("UP_ACFB", false); // Automatic Closing File Backup
 		configFile.Write("UP_ACAP", false); // Automatic Closing App Backup
 		configFile.Write("UP_AIAB", false); // Automatic Interval App Backup
 		configFile.Write("UP_AIAV", 3); // Automatic Interval App Value
+		// -- Voice
+		configFile.Write("UP_EVC", false); // Enable Voice Command
+		voice->End();
 
 		// Internal Data
 		configFile.Write("ID_RFA", FileManager::File::Array); // Recent Files Array
@@ -697,21 +701,26 @@ void EconomyScene::LoadConfiguration()
 	else
 	{
 		// User Preferences
+		// - General
 		configFile.Read("UP_SCT", config.showContainerType);
 		configFile.Read("UP_SFU", config.showFutureUnassigned);
 		configFile.Read("UP_TFS", config.textFieldSize);
+		configFile.Read("UP_DDD", config.defaultDialogDirectory);
+		if (config.defaultDialogDirectory.IsNullOrEmpty())
+			config.defaultDialogDirectory = DEFAULT_FILE_DIALOG_DIRECTORY;
+		// - Backups
 		configFile.Read("UP_BUF", config.backupUnsavedFiles);
 		configFile.Read("UP_BCD", config.backupDirectory);
 		if (config.backupDirectory.IsNullOrEmpty())
 			config.backupDirectory = DEFAULT_BACKUP_CREATION_DIRECTORY;
-		configFile.Read("UP_DDD", config.defaultDialogDirectory);
-		if (config.defaultDialogDirectory.IsNullOrEmpty())
-			config.defaultDialogDirectory = DEFAULT_FILE_DIALOG_DIRECTORY;
 		configFile.Read("UP_AOFB", config.autoOpenFileBackup);
 		configFile.Read("UP_ACFB", config.autoCloseFileBackup);
 		configFile.Read("UP_ACAB", config.autoCloseAppBackup);
 		configFile.Read("UP_AIAB", config.autoIntervalAppBackup);
 		configFile.Read("UP_AIAV", config.autoIntervalAppValue);
+		// -- Voice
+		configFile.Read("UP_EVC", config.enableVoiceCommand);
+		config.enableVoiceCommand ? voice->Start() : voice->End();
 
 		// Internal Data
 		config.recentFiles = Vector<String>(20);
@@ -1258,6 +1267,27 @@ void EconomyScene::DrawPreferencesWindow(bool& ret)
 				ImGui::EndTabItem();
 			}
 
+			if (ImGui::BeginTabItem("Voice"))
+			{
+				ImGui::RS::Spacing(1);
+
+				ImGui::RS::Helper("Enables the voice command mode.", "?"); ImGui::SameLine();
+				if (ImGui::Checkbox("Enable Voice Command", &config.enableVoiceCommand))
+				{
+					if (config.enableVoiceCommand)
+						voice->Start();
+					else
+						voice->End();
+
+					configFile.Write("UP_EVC", config.enableVoiceCommand);
+					configFile.Save();
+				}
+
+				voice->Draw();
+
+				ImGui::EndTabItem();
+			}
+
 			ImGui::EndTabBar();
 		}
 	}
@@ -1271,8 +1301,6 @@ void EconomyScene::DrawMainWindow(bool& ret)
 
 	if (ImGui::Begin("##MainWindow", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus))
 	{
-		voice->Draw();
-
 		ImGui::RS::Spacing(0);
 		ImGui::PushFont(ImGui::RS::InputTextFont);
 		ImGui::Text(file.Name().Data());

@@ -1,20 +1,18 @@
 #pragma once
 
 #include "NoNameGestor/Audio/SpeechSegmenter.h"
-#include "NoNameGestor/Audio/AudioDevice.h"
 
 struct ma_device;
 
-class CaptureDevice : public AudioDevice
+class CaptureDevice
 {
 public:
 
 	CaptureDevice(std::deque<std::string>& sentences);
-	~CaptureDevice() override;
+	~CaptureDevice();
 
-	bool Start() override { return true; }
-	void Stop() override {}
-	void SetCallback(std::function<void(const float*, size_t)> cb) override {}
+	bool Start();
+	void Stop();
 
 	size_t Read(float* dst, size_t maxFrames);
 	void Update();
@@ -29,7 +27,7 @@ private:
 
 	std::vector<float> scratch;
 
-	SpeechSegmenter segmenter;
+	SpeechSegmenter* segmenter = nullptr;
 
 	bool ringBufferInitialized = false;
 	bool deviceInitialized = false;
