@@ -74,6 +74,8 @@ private:
 
 	bool FixedUpdate(float dt) override;
 
+	bool CleanUp() override;
+
 	static void Save();
 
 	static void Load();

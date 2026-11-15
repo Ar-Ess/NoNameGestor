@@ -12,7 +12,6 @@ class Window : public Module<Window>
 {
 
 	friend class App;
-	friend class EconomyScene;
 
 public:
 
@@ -44,13 +43,13 @@ private:
 public:
 
 	static Point WorldSize;
+	static SDL_Window* window;
 
 private:
 
 	friend class Render;
 	friend class Input;
 
-	static SDL_Window* window;
 	Flag events;
 	Flag config;
 

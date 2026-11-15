@@ -7,6 +7,7 @@
 
 #include "Framework/External/SDL/include/SDL.h"
 #include "Framework/Window/Window.h"
+#include "Framework/Input/InputManager.h"
 
 #include "NoNameGestor/External/imgui/imgui_internal.h"
 #include "NoNameGestor/External/imgui/imgui_stdlib.h"
@@ -454,4 +455,56 @@ int ImGui::RS::MonthSelector(const char* id, int* value, const DateTime& base, D
 	ImGui::Text("%s %d", date->MonthName(), date->Year());
 
 	return ret;
+}
+
+bool ImGui::RS::Keybind(const char* label, KeyCode* key)
+{
+	static KeyCode* selectedKey = nullptr;
+
+	ImGui::Text("%s", label);
+	ImGui::SameLine();
+
+	const bool waiting = (selectedKey == key);
+
+	// Mostrar el nom de la tecla
+	const char* keyName = "None";
+
+	if (waiting)
+	{
+		keyName = "...";
+	}
+	else if (*key != KeyCode::UNKNOWN)
+	{
+		keyName = Input::GetKeyName(*key);
+	}
+	else
+	{
+		keyName = "Any Key";
+	}
+
+	if (ImGui::Button(keyName, ImVec2(100, 0)))
+	{
+		selectedKey = key;
+	}
+
+	// Capturar la tecla alliberada
+	if (waiting)
+	{
+		KeyCode pressedKey = Input::GetFirstKey(InputState::INP_UP);
+
+		if (pressedKey != KeyCode::UNKNOWN)
+		{
+			*key = pressedKey;
+			selectedKey = nullptr;
+		}
+	}
+
+	// Clic dret per eliminar el bind
+	if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+	{
+		*key = KeyCode::UNKNOWN;
+		selectedKey = nullptr;
+	}
+
+	return true;
 }

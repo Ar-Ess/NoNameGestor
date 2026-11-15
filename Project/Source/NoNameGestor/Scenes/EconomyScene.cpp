@@ -693,6 +693,7 @@ void EconomyScene::LoadConfiguration()
 		configFile.Write("UP_EVC", false); // Enable Voice Command
 		configFile.Write("UP_VSM", 1); // Voice Speak Mode
 		configFile.Write("UP_HTS", true); // Hold To Speak
+		configFile.Write("UP_HKB", 0); // Hold Key Bind
 		voice->End();
 
 		// Internal Data
@@ -726,6 +727,9 @@ void EconomyScene::LoadConfiguration()
 		configFile.Read("UP_VSM", config.voiceSpeakMode);
 		config.onVoiceSpeakModeChange.Invoke(config.voiceSpeakMode);
 		configFile.Read("UP_HTS", config.holdToSpeak);
+		int keyBind = 0;
+		configFile.Read("UP_HKB", keyBind);
+		config.holdKeybind = (KeyCode)keyBind;
 
 		// Internal Data
 		config.recentFiles = Vector<String>(20);
@@ -1309,6 +1313,18 @@ void EconomyScene::DrawPreferencesWindow(bool& ret)
 						configFile.Save();
 					}
 
+					ImGui::RS::Helper("Select the key for Push To Talk", "?"); ImGui::SameLine();
+					if (ImGui::RS::Keybind("Hold Key Bind", &config.holdKeybind))
+					{
+						configFile.Write("UP_HKB", (int)config.holdKeybind);
+						configFile.Save();
+					} ImGui::SameLine();
+					if (ImGui::Button("X##KeyBind"))
+					{
+						config.holdKeybind = KeyCode::UNKNOWN;
+						configFile.Write("UP_HKB", (int)config.holdKeybind);
+						configFile.Save();
+					}
 					// Any Key or Speficic Key
 				}
 				else if (config.voiceSpeakMode == 2)

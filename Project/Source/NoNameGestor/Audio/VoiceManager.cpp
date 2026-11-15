@@ -14,7 +14,11 @@ VoiceManager::VoiceManager(Configuration& config) :
 	config(config)
 {
 	resolver->AddInstruction("describe_project", { "Describe the project", "What is the project state?" });
+	resolver->AddInstruction("say_hello", { "Hello, how are you?" });
+
 	registry->Register("describe_project", [](const Intent& intent) { return Response{ "This is my description of your project." }; });
+	registry->Register("say_hello", [](const Intent& intent) { return Response{ "You are a fucking nerd." }; });
+	
 	config.onVoiceSpeakModeChange += Action<int>::Bind(this, &VoiceManager::SwitchListenMode);
 }
 
@@ -119,11 +123,16 @@ bool VoiceManager::OpenMic()
 	{
 	case 0:
 		if (config.holdToSpeak)
-			ret = Input::AnyKey();
+			ret = config.holdKeybind == KeyCode::UNKNOWN ? Input::AnyKey() : Input::GetKey(config.holdKeybind);
 		else
 		{
 			ret = micOpenSwitch;
-			if (Input::AnyKeyUp())
+			if (config.holdKeybind == KeyCode::UNKNOWN)
+			{
+				if (Input::AnyKeyUp())
+					ret = micOpenSwitch = !micOpenSwitch;
+			}
+			else if (Input::GetKeyUp(config.holdKeybind))
 				ret = micOpenSwitch = !micOpenSwitch;
 		}
 		break;

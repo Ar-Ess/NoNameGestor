@@ -3,6 +3,7 @@
 #include <string>
 #include "Framework/Data/String.h"
 #include "Framework/Time/DateTime.h"
+#include "Framework/Input/InputEnums.h"
 
 struct ImFont;
 
@@ -64,5 +65,7 @@ namespace ImGui::RS
 	int PlusMinusButtonsH(const char* id, int* value, int min, int max, const char* format = "%d");
 
 	int MonthSelector(const char* id, int* value, const DateTime& base, DateTime* date, int min, int max);
+
+	bool Keybind(const char* label, KeyCode* key);
 
 }

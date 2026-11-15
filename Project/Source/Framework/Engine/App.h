@@ -26,7 +26,11 @@ public:
 
 	enum class ConfigType
 	{
-		RELEASE_DEBUGGER_MODE = 9
+		// It will execute the release mode based on the solution directory rather than the executable directory.
+		// Release mode, by default, executes based on where the .exe is located. If you want to debug it from the
+		// solution project, you should enable this configuration.
+		// Disabled by default
+		RELEASE_LOCAL_MODE = 9
 	};
 
 	struct EngineConfig
@@ -51,7 +55,19 @@ public:
 
 	private:
 
-		mutable Flag config = Flag::AllTrue;
+		// Module Configuration
+		// Bit 0 - true  | WINDOW
+		// Bit 1 - true  | INPUT
+		// Bit 2 - true  | ASSETS
+		// Bit 3 - true  | AUDIO
+		// Bit 4 - true  | COROUTINE
+		// Bit 5 - true  | GUI
+		// Bit 6 - true  | SCENES
+		// Bit 7 - true  | RENDER
+		// Bit 8 - true  | PROGRESS
+		// Engine Configuration
+		// Bit 9 - false | RELEASE_LOCAL_MODE
+		mutable Flag config = 0b0111111111;
 	};
 
 	using EngineConfigurator = void(*)(EngineConfig&);
@@ -75,7 +91,8 @@ public:
 
 	static void Quit();
 
-	static StringView AppName();
+	static StringView GameName();
+	static StringView ExecutableName();
 	static StringView ExecutablePath();
 	static StringView ExecutableDirectory();
 	static StringView ProjectDirectory();
@@ -111,8 +128,6 @@ private:
 
 public:
 
-	static String GameName;
-
 	static const bool DebugMode;
 
 	static const DateTime OpenAppTime;
@@ -122,9 +137,9 @@ private:
 	// Arguments
 	const Array<char*> arguments;
 
-	// Data
-	String appName = nullptr;
-
+	// Dataç
+	String gameName = nullptr;
+	String executableName = nullptr;
 	String executablePath = nullptr;
 	String executableDirectory = nullptr;
 

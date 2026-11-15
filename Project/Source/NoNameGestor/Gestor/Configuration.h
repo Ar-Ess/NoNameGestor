@@ -3,6 +3,7 @@
 #include "Framework/Data/Vector.h"
 #include "Framework/Data/String.h"
 #include "Framework/Utils/Action.h"
+#include "Framework/Input/InputEnums.h"
 
 struct Configuration
 {
@@ -29,6 +30,7 @@ struct Configuration
 	Action<int> onVoiceSpeakModeChange;
 	std::string activeListenWord;
 	bool holdToSpeak = true;
+	KeyCode holdKeybind = KeyCode::UNKNOWN;
 
 	// User File Preferences
 	// -- Gestors
