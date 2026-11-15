@@ -1,15 +1,21 @@
 #include "VoiceManager.h"
 #include "NoNameGestor/External/imgui/imgui_internal.h"
+#include "NoNameGestor/Utils/ImGuiExtension.h"
+#include "NoNameGestor/Gestor/Configuration.h"
+#include "Framework/Input/InputManager.h"
+#include "Framework/Engine/App.h"
 
-VoiceManager::VoiceManager() :
+VoiceManager::VoiceManager(Configuration& config) :
 	device(new CaptureDevice(sentences)),
 	interpreter(new Interpreter),
 	resolver(new ActionResolver),
 	registry(new ActionRegistry),
-	synth(new VoiceSynth)
+	synth(new VoiceSynth),
+	config(config)
 {
 	resolver->AddInstruction("describe_project", { "Describe the project", "What is the project state?" });
 	registry->Register("describe_project", [](const Intent& intent) { return Response{ "This is my description of your project." }; });
+	config.onVoiceSpeakModeChange += Action<int>::Bind(this, &VoiceManager::SwitchListenMode);
 }
 
 VoiceManager::~VoiceManager()
@@ -37,6 +43,7 @@ void VoiceManager::Update()
 	if (!active)
 		return;
 
+	device->SetGate(OpenMic());
 	device->Update();
 	
 	std::string sentence;
@@ -64,6 +71,10 @@ void VoiceManager::Draw()
 {
 	if (!active)
 		return;
+
+	ImGui::RS::Spacing(2);
+	ImGui::Text("DEBUG"); ImGui::SameLine();
+	ImGui::RS::Separator(2);
 
 	device->Draw();
 	interpreter->Draw();
@@ -94,4 +105,37 @@ bool VoiceManager::TryPopSentence(std::string& sentence)
 	sentences.pop_front();
 
 	return true;
+}
+
+void VoiceManager::SwitchListenMode(int mode)
+{
+	device->SetGate(mode == 1);
+}
+
+bool VoiceManager::OpenMic()
+{
+	bool ret = false;
+	switch (config.voiceSpeakMode)
+	{
+	case 0:
+		if (config.holdToSpeak)
+			ret = Input::AnyKey();
+		else
+		{
+			ret = micOpenSwitch;
+			if (Input::AnyKeyUp())
+				ret = micOpenSwitch = !micOpenSwitch;
+		}
+		break;
+
+	case 1:
+		ret = true;
+		break;
+
+	case 2:
+		// Detect the activation word
+		break;
+	}
+
+	return ret;
 }

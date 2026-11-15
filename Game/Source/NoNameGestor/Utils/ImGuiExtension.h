@@ -23,6 +23,8 @@ namespace ImGui::RS
 	void Helper(const char* desc, const char* title = "(?)");
 
 	void ClearInputText(const char* name, std::string* buffer);
+	
+	bool InputText(const char* name, std::string* buffer);
 
 	void TextWithEndEllipsis(char const* aString, float aMaxWidth, bool useWordBoundaries, float aSpacing);
 

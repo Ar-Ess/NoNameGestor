@@ -18,6 +18,8 @@ public:
 	void Update();
 	void Draw();
 
+	void SetGate(bool openGate);
+
 private:
 
 	ma_device* device = nullptr;
@@ -36,6 +38,8 @@ private:
 	std::string lastText;
 
 	std::deque<std::string>& sentences;
+
+	bool openGate = true;
 
 };
 

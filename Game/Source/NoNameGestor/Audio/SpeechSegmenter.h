@@ -62,6 +62,8 @@ public:
 
     bool IsValid() const { return inst != nullptr; }
 
+    void Flush();
+
     // Recupera una frase quan ha acabat.
     bool TryPopSegment(Segment& segment);
     bool TryPopTranscription(Transcription& transcription);

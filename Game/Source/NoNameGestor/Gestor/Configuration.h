@@ -2,6 +2,7 @@
 
 #include "Framework/Data/Vector.h"
 #include "Framework/Data/String.h"
+#include "Framework/Utils/Action.h"
 
 struct Configuration
 {
@@ -23,6 +24,11 @@ struct Configuration
 	int autoIntervalAppValue = 3;
 	// -- Voice
 	bool enableVoiceCommand = false;
+	const char* comboSpeakMode[4] = { "Push To Talk", "Always Listening", "Activation Word" };
+	int voiceSpeakMode = 1;
+	Action<int> onVoiceSpeakModeChange;
+	std::string activeListenWord;
+	bool holdToSpeak = true;
 
 	// User File Preferences
 	// -- Gestors

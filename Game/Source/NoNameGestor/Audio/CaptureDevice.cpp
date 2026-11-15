@@ -2,6 +2,7 @@
 
 #include "NoNameGestor/External/Miniaudio/miniaudio.h"
 #include "NoNameGestor/External/imgui/imgui_internal.h"
+#include "Framework/Coroutine/CoroutineManager.h"
 #include <algorithm>
 #include <cmath>
 
@@ -101,8 +102,6 @@ void CaptureDevice::Stop()
         ringBufferInitialized = false;
     }
 
-    scratch.clear();
-
 }
 
 // Copia fins a maxFrames mostres a dst. Retorna quantes n'ha copiat.
@@ -139,7 +138,7 @@ void CaptureDevice::Update()
     while ((n = Read(scratch.data(), 4096)) > 0)
     {
         // Alimentem el detector de veu.
-        segmenter->Process(data, n);
+        if (openGate) segmenter->Process(data, n);
 
         for (size_t i = 0; i < n; ++i)
             sum += data[i] * data[i];
@@ -168,7 +167,9 @@ void CaptureDevice::Update()
 void CaptureDevice::Draw()
 {
     // Nivell d'àudio.
+    ImGui::BeginDisabled(!openGate);
     ImGui::ProgressBar(std::clamp(level * 3.f, 0.f, 1.f), ImVec2(200, 20), "Input RMS");
+    ImGui::EndDisabled();
 
     ImGui::SameLine();
 
@@ -195,4 +196,17 @@ void CaptureDevice::Draw()
         ImGui::Text("Last segment duration: %.2f seconds", segmenter->GetLastSegmentDurationSeconds());
     else
         ImGui::TextDisabled("Last segment duration: --");
+}
+
+static Coroutine FlushAfterSeconds(SpeechSegmenter* segmenter, float seconds)
+{
+    co_yield Yield::WaitForSeconds(seconds);
+    segmenter->Flush();
+}
+
+void CaptureDevice::SetGate(bool openGate)
+{
+    if (segmenter != nullptr && this->openGate && !openGate)
+        CoroutineManager::Begin(FlushAfterSeconds(segmenter, 0.3f));
+    this->openGate = openGate;
 }

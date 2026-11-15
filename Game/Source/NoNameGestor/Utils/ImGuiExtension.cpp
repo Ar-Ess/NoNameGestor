@@ -81,6 +81,11 @@ void ImGui::RS::ClearInputText(const char* name, std::string* buffer)
 	ImGui::PopFont();
 }
 
+bool ImGui::RS::InputText(const char* name, std::string* buffer)
+{
+	return ImGui::InputText(name, buffer);
+}
+
 void ImGui::RS::TextWithEndEllipsis(char const* aString, float aMaxWidth, bool useWordBoundaries, float aSpacing)
 {
 	char const* partStart = aString;

@@ -11,8 +11,10 @@
     "UP_BCD": "",
     "UP_BUF": true,
     "UP_DDD": "C:\\Users\\marti\\Documents\\GitHub\\NoNameGestor\\Data\\",
-    "UP_EVC": false,
+    "UP_EVC": true,
+    "UP_HTS": true,
     "UP_SCT": true,
     "UP_SFU": false,
-    "UP_TFS": 150.0
+    "UP_TFS": 150.0,
+    "UP_VSM": 0
 }

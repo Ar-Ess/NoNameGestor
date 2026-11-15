@@ -386,3 +386,16 @@ void SpeechSegmenter::SetStartTimeoutMs(uint32_t ms)
         MillisecondsToFrames(ms)
     );
 }
+
+void SpeechSegmenter::Flush()
+{
+    // Accepta també Pending: una ordre curta ("next") pot no arribar a minSpeechFrames.
+    if ((state == State::Speaking || state == State::Pending) && !currentSamples.empty())
+        FinishSpeech();
+
+    state = State::Idle;
+    currentSamples.clear();
+    preRollFrames.clear();
+    filled = 0;                       // descarta el bloc parcial
+    candidateVoicedFrames = candidateSilenceFrames = hangoverSilenceFrames = 0;
+}

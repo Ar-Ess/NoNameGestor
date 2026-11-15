@@ -5,11 +5,13 @@
 #include "NoNameGestor/Audio/ActionRegistry.h"
 #include "NoNameGestor/Audio/VoiceSynth.h"
 
+struct Configuration;
+
 class VoiceManager
 {
 public:
 
-	VoiceManager();
+	VoiceManager(Configuration& config);
 	~VoiceManager();
 
 	void Start();
@@ -20,6 +22,8 @@ public:
 private:
 
 	bool TryPopSentence(std::string& sentence);
+	void SwitchListenMode(int mode);
+	bool OpenMic();
 
 private:
 
@@ -33,6 +37,10 @@ private:
 	VoiceSynth* synth = nullptr;
 
 	bool active = false;
+
+	Configuration& config;
+
+	bool micOpenSwitch = false;
 
 };
 

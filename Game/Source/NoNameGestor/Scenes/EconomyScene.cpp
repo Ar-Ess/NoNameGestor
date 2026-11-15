@@ -32,7 +32,7 @@ REGISTER_STARTUP_SCENE(EconomyScene);
 
 bool EconomyScene::Awake()
 {
-	voice = new VoiceManager;
+	voice = new VoiceManager(config);
 
 	// Create the renderer
 	renderer = SDL_CreateRenderer(Window::window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
@@ -691,6 +691,8 @@ void EconomyScene::LoadConfiguration()
 		configFile.Write("UP_AIAV", 3); // Automatic Interval App Value
 		// -- Voice
 		configFile.Write("UP_EVC", false); // Enable Voice Command
+		configFile.Write("UP_VSM", 1); // Voice Speak Mode
+		configFile.Write("UP_HTS", true); // Hold To Speak
 		voice->End();
 
 		// Internal Data
@@ -721,6 +723,9 @@ void EconomyScene::LoadConfiguration()
 		// -- Voice
 		configFile.Read("UP_EVC", config.enableVoiceCommand);
 		config.enableVoiceCommand ? voice->Start() : voice->End();
+		configFile.Read("UP_VSM", config.voiceSpeakMode);
+		config.onVoiceSpeakModeChange.Invoke(config.voiceSpeakMode);
+		configFile.Read("UP_HTS", config.holdToSpeak);
 
 		// Internal Data
 		config.recentFiles = Vector<String>(20);
@@ -1282,6 +1287,43 @@ void EconomyScene::DrawPreferencesWindow(bool& ret)
 					configFile.Write("UP_EVC", config.enableVoiceCommand);
 					configFile.Save();
 				}
+
+				ImGui::BeginDisabled(!config.enableVoiceCommand);
+
+				ImGui::RS::Helper("Sets the Speak Mode.", "?"); ImGui::SameLine();
+				ImGui::PushItemWidth(200);
+				if (ImGui::Combo("Voice Speak Mode", &config.voiceSpeakMode, config.comboSpeakMode, 3))
+				{
+					configFile.Write("UP_VSM", config.voiceSpeakMode);
+					configFile.Save();
+					config.onVoiceSpeakModeChange.Invoke(config.voiceSpeakMode);
+				}
+				ImGui::PopItemWidth();
+
+				if (config.voiceSpeakMode == 0)
+				{
+					ImGui::RS::Helper("True: hold the key to speak and release to stop.\nFalse: Click the key to speak and click it again to stop.", "?"); ImGui::SameLine();
+					if (ImGui::Checkbox("Hold To Speak", &config.holdToSpeak))
+					{
+						configFile.Write("UP_HTS", config.holdToSpeak);
+						configFile.Save();
+					}
+
+					// Any Key or Speficic Key
+				}
+				else if (config.voiceSpeakMode == 2)
+				{
+					ImGui::RS::Helper("Choose the word to activate the listen command.", "?"); ImGui::SameLine();
+					ImGui::PushItemWidth(200);
+					if (ImGui::RS::InputText("Active Listen Word", &config.activeListenWord))
+					{
+						configFile.Write("UP_ALW", config.activeListenWord.c_str());
+						configFile.Save();
+					}
+					ImGui::PopItemWidth();
+				}
+
+				ImGui::EndDisabled();
 
 				voice->Draw();
 
