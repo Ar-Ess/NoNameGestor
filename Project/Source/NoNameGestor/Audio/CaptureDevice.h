@@ -1,6 +1,7 @@
 #pragma once
 
 #include "NoNameGestor/Audio/SpeechSegmenter.h"
+#include "Framework/Coroutine/Coroutine.h"
 
 struct ma_device;
 
@@ -40,6 +41,8 @@ private:
 	std::deque<std::string>& sentences;
 
 	bool openGate = true;
+	bool closing = false;
+	std::chrono::steady_clock::time_point closeAt;
 
 };
 

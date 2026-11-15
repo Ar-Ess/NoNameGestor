@@ -694,6 +694,8 @@ void EconomyScene::LoadConfiguration()
 		configFile.Write("UP_VSM", 1); // Voice Speak Mode
 		configFile.Write("UP_HTS", true); // Hold To Speak
 		configFile.Write("UP_HKB", 0); // Hold Key Bind
+		configFile.Write("UP_ALW", "Gestor"); // Hold Key Bind
+		configFile.Write("UP_ALWAT", 8); // Hold Key Bind
 		voice->End();
 
 		// Internal Data
@@ -730,6 +732,9 @@ void EconomyScene::LoadConfiguration()
 		int keyBind = 0;
 		configFile.Read("UP_HKB", keyBind);
 		config.holdKeybind = (KeyCode)keyBind;
+		configFile.Read("UP_ALW", config.activeListenWord);
+		config.activeListenWordNormalized = Interpreter::Normalize(config.activeListenWord);
+		configFile.Read("UP_ALWAT", config.activeListenWordAwakeTime);
 
 		// Internal Data
 		config.recentFiles = Vector<String>(20);
@@ -1333,7 +1338,17 @@ void EconomyScene::DrawPreferencesWindow(bool& ret)
 					ImGui::PushItemWidth(200);
 					if (ImGui::RS::InputText("Active Listen Word", &config.activeListenWord))
 					{
+						config.activeListenWordNormalized = Interpreter::Normalize(config.activeListenWord);
 						configFile.Write("UP_ALW", config.activeListenWord.c_str());
+						configFile.Save();
+					}
+					ImGui::PopItemWidth();
+
+					ImGui::RS::Helper("Seconds that the assistant remains listening\nafter detecting the Active Listen Word.", "?"); ImGui::SameLine();
+					ImGui::PushItemWidth(200);
+					if (ImGui::DragInt("Listen Awake Time", &config.activeListenWordAwakeTime, 1, 2, 12, "%dsec", ImGuiSliderFlags_ClampOnInput))
+					{
+						configFile.Write("UP_ALWAT", config.activeListenWordAwakeTime);
 						configFile.Save();
 					}
 					ImGui::PopItemWidth();

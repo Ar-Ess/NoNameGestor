@@ -39,6 +39,9 @@ VoiceSynth::~VoiceSynth()
 
 void VoiceSynth::Start()
 {
+    if (device != nullptr)
+        return;
+
     device = new ma_device;
 
     ma_device_config cfg = ma_device_config_init(ma_device_type_playback);
@@ -148,15 +151,23 @@ void VoiceSynth::Stop()
 
     messages.clear();
     current.clear();
+
+    deviceInitialized = false;
 }
 
 void VoiceSynth::Generate(Response&& response)
 {
+    if (synthesizer == nullptr || device == nullptr)
+        return;
+
     synthesizer->Push(std::move(response));
 }
 
 void VoiceSynth::Speak()
 {
+    if (synthesizer == nullptr || device == nullptr)
+        return;
+
     std::vector<float> audio;
     while (synthesizer->TryPop(audio))
     {

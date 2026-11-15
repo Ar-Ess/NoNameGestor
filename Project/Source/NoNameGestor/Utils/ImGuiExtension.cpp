@@ -84,7 +84,7 @@ void ImGui::RS::ClearInputText(const char* name, std::string* buffer)
 
 bool ImGui::RS::InputText(const char* name, std::string* buffer)
 {
-	return ImGui::InputText(name, buffer);
+	return ImGui::InputText(name, buffer, ImGuiInputTextFlags_EnterReturnsTrue);
 }
 
 void ImGui::RS::TextWithEndEllipsis(char const* aString, float aMaxWidth, bool useWordBoundaries, float aSpacing)

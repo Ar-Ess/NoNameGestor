@@ -128,6 +128,7 @@
     <ClCompile Include="Source\NoNameGestor\External\Miniaudio\MiniaudioImpl.cpp">
       <Filter>External\Miniaudio</Filter>
     </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Audio\AwakeDetector.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -292,6 +293,7 @@
     <ClInclude Include="Source\NoNameGestor\Audio\VoiceSynth.h">
       <Filter>Audio</Filter>
     </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Audio\AwakeDetector.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="External">

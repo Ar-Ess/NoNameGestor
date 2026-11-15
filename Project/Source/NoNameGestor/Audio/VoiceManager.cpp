@@ -11,6 +11,7 @@ VoiceManager::VoiceManager(Configuration& config) :
 	resolver(new ActionResolver),
 	registry(new ActionRegistry),
 	synth(new VoiceSynth),
+	awake(new AwakeDetector(config)),
 	config(config)
 {
 	resolver->AddInstruction("describe_project", { "Describe the project", "What is the project state?" });
@@ -47,7 +48,7 @@ void VoiceManager::Update()
 	if (!active)
 		return;
 
-	device->SetGate(OpenMic());
+	device->SetGate(OpenMicLogic());
 	device->Update();
 	
 	std::string sentence;
@@ -56,6 +57,20 @@ void VoiceManager::Update()
 		Intent intent = interpreter->Process(sentence);
 		if (!intent.IsValid())
 			continue;
+
+		if (config.voiceSpeakMode == 2)
+		{
+			AwakeDetector::Result result = awake->Filter(intent.normalized);
+			if (result == AwakeDetector::Result::IGNORED)
+				continue;
+			else if (result == AwakeDetector::Result::WOKE)
+			{
+				Response woke = { "Tell me! "};
+				responses.emplace_back(woke);
+				synth->Generate(std::move(woke));
+				continue;
+			}
+		}
 
 		resolver->Resolve(intent);
 		Response response;
@@ -116,7 +131,7 @@ void VoiceManager::SwitchListenMode(int mode)
 	device->SetGate(mode == 1);
 }
 
-bool VoiceManager::OpenMic()
+bool VoiceManager::OpenMicLogic()
 {
 	bool ret = false;
 	switch (config.voiceSpeakMode)
@@ -138,11 +153,8 @@ bool VoiceManager::OpenMic()
 		break;
 
 	case 1:
-		ret = true;
-		break;
-
 	case 2:
-		// Detect the activation word
+		ret = true;
 		break;
 	}
 

@@ -4,6 +4,7 @@
 #include "Framework/Data/String.h"
 #include "Framework/Utils/Action.h"
 #include "Framework/Input/InputEnums.h"
+#include <string>
 
 struct Configuration
 {
@@ -29,8 +30,10 @@ struct Configuration
 	int voiceSpeakMode = 1;
 	Action<int> onVoiceSpeakModeChange;
 	std::string activeListenWord;
+	std::string activeListenWordNormalized;
 	bool holdToSpeak = true;
 	KeyCode holdKeybind = KeyCode::UNKNOWN;
+	int activeListenWordAwakeTime = 8;
 
 	// User File Preferences
 	// -- Gestors

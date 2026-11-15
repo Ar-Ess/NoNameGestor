@@ -4,6 +4,7 @@
 #include "NoNameGestor/Audio/ActionResolver.h"
 #include "NoNameGestor/Audio/ActionRegistry.h"
 #include "NoNameGestor/Audio/VoiceSynth.h"
+#include "NoNameGestor/Audio/AwakeDetector.h"
 
 struct Configuration;
 
@@ -23,7 +24,7 @@ private:
 
 	bool TryPopSentence(std::string& sentence);
 	void SwitchListenMode(int mode);
-	bool OpenMic();
+	bool OpenMicLogic();
 
 private:
 
@@ -35,6 +36,7 @@ private:
 	ActionResolver* resolver = nullptr;
 	ActionRegistry* registry = nullptr;
 	VoiceSynth* synth = nullptr;
+	AwakeDetector* awake = nullptr;
 
 	bool active = false;
 

@@ -2,7 +2,6 @@
 
 #include "NoNameGestor/External/Miniaudio/miniaudio.h"
 #include "NoNameGestor/External/imgui/imgui_internal.h"
-#include "Framework/Coroutine/CoroutineManager.h"
 #include <algorithm>
 #include <cmath>
 
@@ -47,7 +46,10 @@ bool CaptureDevice::Start()
 
     ma_pcm_rb* rb = new ma_pcm_rb;
     if (ma_pcm_rb_init(ma_format_f32, 1, samples * duration, NULL, NULL, rb) != MA_SUCCESS)
+    {
+        delete rb;
         return false; // Error
+    }
 
     ringBufferInitialized = true;
 
@@ -63,7 +65,11 @@ bool CaptureDevice::Start()
     ringBuffer = rb;
 
     if (ma_device_init(NULL, &dConfig, device) != MA_SUCCESS)
+    {
+        delete rb;
+        delete device;
         return false;  // Failed to initialize the device.
+    }
 
     deviceInitialized = true;
 
@@ -129,6 +135,13 @@ void CaptureDevice::Update()
 {
     if (!deviceInitialized)
         return;
+
+    if (closing && std::chrono::steady_clock::now() >= closeAt)
+    {
+        segmenter->Flush();
+        openGate = false;
+        closing = false;
+    }
 
     double sum = 0.0;
     size_t count = 0;
@@ -198,15 +211,18 @@ void CaptureDevice::Draw()
         ImGui::TextDisabled("Last segment duration: --");
 }
 
-static Coroutine FlushAfterSeconds(SpeechSegmenter* segmenter, float seconds)
-{
-    co_yield Yield::WaitForSeconds(seconds);
-    segmenter->Flush();
-}
-
 void CaptureDevice::SetGate(bool openGate)
 {
-    if (segmenter != nullptr && this->openGate && !openGate)
-        CoroutineManager::Begin(FlushAfterSeconds(segmenter, 0.3f));
-    this->openGate = openGate;
+    if (!segmenter) return;
+
+    if (openGate)                       // obrir cancel·la qualsevol tancament pendent
+    {
+        this->openGate = true;
+        closing = false;
+    }
+    else if (this->openGate && !closing)  // només s'arma un cop
+    {
+        closing = true;
+        closeAt = std::chrono::steady_clock::now() + std::chrono::milliseconds(300);
+    }
 }
