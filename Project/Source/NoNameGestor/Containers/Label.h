@@ -8,6 +8,7 @@
 #include "NoNameGestor/External/imgui/imgui_stdlib.h"
 
 #include <string>
+#include <format>
 
 struct Label : public VoiceNode
 {
@@ -62,6 +63,38 @@ struct Label : public VoiceNode
 	float money = 0;
 
 	std::vector<VoiceNode*> Children() const override { return std::vector<VoiceNode*>(); }
-	virtual std::string Describe(DetailLevel level) const override { return "Label named " + name + " contains " + std::to_string(money); }
+	virtual std::string Describe(DetailLevel level) const override
+	{
+		std::string ret;
+		switch (level)
+		{
+		case DetailLevel::BRIEF:
+			ret = "Label named " + name + ", contains " + std::format("{:.2f}", money);
+			break;
+		case DetailLevel::NORMAL:
+			//ret = std::string("We are currently in a NNG file called ") + file.Name().Data()
+			//	+ ", which has " + std::to_string(gestors.size()) + " gestors in it.";
+			break;
+		case DetailLevel::FULL:
+		{
+			//ret = std::string("We are currently in NoNameGestor app, with an open NNG file called ") + file.Name().Data()
+			//	+ ". It has a total amount of " + std::to_string(gestors.size()) + " gestors in it. ";
+			//static std::string numerals[4] = { "The first one", "The second one", "The third one", "The forth one" };
+			//int i = 0;
+			//for (GestorSystem* g : gestors)
+			//	ret += numerals[i++] + " is called " + g->Name().data() + ". ";
+
+			break;
+		}
+		default:
+			ret = "";
+			break;
+		}
+		return ret;
+	}
 	// TODO: Describe better
+	virtual std::string Locate(DetailLevel level) const override
+	{
+		return "I am in a label named " + name;
+	}
 };

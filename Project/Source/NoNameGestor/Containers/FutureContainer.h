@@ -18,9 +18,10 @@ public: // Functions
 
 	void NewLabel(std::string&& name = "New Future", float money = 0.0f);
 
-	const char* TypeName() const override
+	std::string TypeName() const override
 	{
-		return "FUTURE";
+		static std::string futureContainerTypeName = "FUTURE";
+		return futureContainerTypeName;
 	}
 
 	ContainerType TypeEnum() const override

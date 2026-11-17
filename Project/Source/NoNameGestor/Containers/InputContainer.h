@@ -14,9 +14,10 @@ public: // Functions
 
 	void Draw() override;
 
-	const char* TypeName() const override
+	std::string TypeName() const override
 	{
-		return "INPUT ";
+		static std::string inputContainerTypeName = "INPUT ";
+		return inputContainerTypeName;
 	}
 
 	ContainerType TypeEnum() const override

@@ -66,7 +66,7 @@ std::string GestorSystem::Describe(DetailLevel level) const
 	{
 	case DetailLevel::BRIEF:
 		ret = "Gestor name " + name + ". It has " + std::to_string(containers.size()) + " containers. "
-			+ "Total Money Amount is " + std::to_string(inputContainer->Money()) + ". Total left money is " + std::to_string(totalContainer->Money());
+			+ "Total Money Amount is " + std::format("{:.2f}", inputContainer->Money()) + ". Total left money is " + std::format("{:.2f}",totalContainer->Money());
 		break;
 	case DetailLevel::NORMAL:
 		//ret = std::string("We are currently in a NNG file called ") + file.Name().Data()
@@ -88,6 +88,11 @@ std::string GestorSystem::Describe(DetailLevel level) const
 		break;
 	}
 	return ret;
+}
+
+std::string GestorSystem::Locate(DetailLevel level) const
+{
+	return "I'm in the Gestor named " + name;
 }
 
 bool GestorSystem::Update()

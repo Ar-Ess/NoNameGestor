@@ -35,10 +35,13 @@ private:
 	bool OpenMicLogic();
 	void Respond(Response&& response);
 	void Respond(const char* response);
-	std::string DescribeTree(VoiceNode* node, DetailLevel level);
+	Response StartReading(DetailLevel detail);
+	void Cancel();
 
 	bool FindPath(VoiceNode* from, uint64_t id, std::vector<VoiceNode*>& path);
 	VoiceNode* ResolveCurrent();
+	std::vector<VoiceNode*> ResolveChain();
+	bool Advance();
 
 private:
 

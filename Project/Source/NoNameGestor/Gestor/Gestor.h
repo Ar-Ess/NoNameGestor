@@ -27,6 +27,7 @@ public:
 
 	std::vector<VoiceNode*> Children() const override;
 	std::string Describe(DetailLevel level) const override;
+	std::string Locate(DetailLevel level) const override;
 
 private:
 

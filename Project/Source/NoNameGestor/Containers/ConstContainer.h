@@ -44,7 +44,7 @@ public: // Functions
 
 	void NewLabel(std::string&& name = "New Const", float money = 0.0f, float perMonth = 0.0f, const DateTime& expectedRunoutDate = DateTime::BaseEpoch, float expectedRunoutMoney = 0, int offsetMonths = 0);
 
-	const char* TypeName() const override;
+	std::string TypeName() const override;
 
 	ContainerType TypeEnum() const override;
 

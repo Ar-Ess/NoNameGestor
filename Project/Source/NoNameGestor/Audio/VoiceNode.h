@@ -17,6 +17,7 @@ public:
 	virtual ~VoiceNode() = default;
 	virtual std::vector<VoiceNode*> Children() const = 0;
 	virtual std::string Describe(DetailLevel level) const = 0;
+	virtual std::string Locate(DetailLevel level) const = 0;
 	
 	const std::string_view Type() const { return type; };
 	const std::string_view Name() const { return name; };

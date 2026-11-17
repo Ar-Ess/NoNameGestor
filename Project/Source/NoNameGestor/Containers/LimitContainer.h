@@ -31,9 +31,10 @@ public: // Functions
 
 	void NewLabel(std::string&& name = "New Limit", float money = 0.0f, float limit = 0.0f);
 
-	const char* TypeName() const override
+	std::string TypeName() const override
 	{
-		return "LIMIT ";
+		static std::string limitContainerTypeName = "LIMIT ";
+		return limitContainerTypeName;
 	}
 
 	ContainerType TypeEnum() const override

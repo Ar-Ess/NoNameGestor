@@ -12,6 +12,8 @@
 #include "NoNameGestor/External/imgui/imgui_stdlib.h"
 #include "NoNameGestor/External/imgui/imgui_internal.h"
 
+#include <format>
+
 bool Container::UpdateOpenState = false;
 
 Container::~Container()
@@ -25,7 +27,38 @@ std::vector<VoiceNode*> Container::Children() const
 
 std::string Container::Describe(DetailLevel level) const
 {
-	return std::string();
+	std::string ret;
+	switch (level)
+	{
+	case DetailLevel::BRIEF:
+		ret = TypeName() + " container name is " + name + " . It has " + std::to_string(labels.size()) + " labels. "
+			+ "Added container amount is " + std::format("{:.2f}", money);
+		break;
+	case DetailLevel::NORMAL:
+		//ret = std::string("We are currently in a NNG file called ") + file.Name().Data()
+		//	+ ", which has " + std::to_string(gestors.size()) + " gestors in it.";
+		break;
+	case DetailLevel::FULL:
+	{
+		//ret = std::string("We are currently in NoNameGestor app, with an open NNG file called ") + file.Name().Data()
+		//	+ ". It has a total amount of " + std::to_string(gestors.size()) + " gestors in it. ";
+		//static std::string numerals[4] = { "The first one", "The second one", "The third one", "The forth one" };
+		//int i = 0;
+		//for (GestorSystem* g : gestors)
+		//	ret += numerals[i++] + " is called " + g->Name().data() + ". ";
+
+		break;
+	}
+	default:
+		ret = "";
+		break;
+	}
+	return ret;
+}
+
+std::string Container::Locate(DetailLevel level) const
+{
+	return "I am in a " + TypeName() + " container named " + name;
 }
 
 bool Container::Update(Aggregate& agg)
@@ -63,7 +96,7 @@ void Container::DrawBase(float maxWidth, bool& erase, ID& move)
 		ImGui::Dummy({ 20, 0 }); ImGui::SameLine();
 
 		// Add the container type if user defined
-		if (config->showContainerType) ImGui::Text(TypeName()); ImGui::SameLine();
+		if (config->showContainerType) ImGui::Text(TypeName().c_str()); ImGui::SameLine();
 
 		// Push text user defined width and create the Input Texts for the container name
 		ImGui::PushItemWidth(config->textFieldSize);
@@ -195,9 +228,10 @@ const std::string* Container::CurrentName() const
 	return !unified || labels.empty() ? &name : &labels[0]->name;
 }
 
-const char* Container::TypeName() const
+std::string Container::TypeName() const
 {
-	return "NO CONTAINER";
+	static std::string containerTypeName = "NO CONTAINER";
+	return containerTypeName;
 }
 
 ContainerType Container::TypeEnum() const

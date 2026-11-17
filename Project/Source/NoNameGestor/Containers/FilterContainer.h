@@ -18,9 +18,10 @@ public: // Functions
 
 	void NewLabel(std::string&& name = "New Filter", float money = 0.0f);
 
-	const char* TypeName() const override
+	std::string TypeName() const override
 	{
-		return "FILTER";
+		static std::string filterContainerTypeName = "FILTER";
+		return filterContainerTypeName;
 	}
 
 	ContainerType TypeEnum() const override

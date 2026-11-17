@@ -136,9 +136,8 @@ std::string Gestor::Describe(DetailLevel level) const
 		ret = std::string("We are currently in NoNameGestor app, with an open NNG file called ") + file.Name().Data()
 			+ ". It has a total amount of " + std::to_string(gestors.size()) + " gestors in it. ";
 		static std::string numerals[4] = { "The first one", "The second one", "The third one", "The forth one" };
-		int i = 0;
-		for (GestorSystem* g : gestors)
-			ret += numerals[i++] + " is called " + g->Name().data() + ". ";
+		for (int i = 0; i < 4; ++i)
+			ret += numerals[i] + " is called " + gestors[i]->Name().data() + ". ";
 
 		break;
 	}
@@ -148,6 +147,12 @@ std::string Gestor::Describe(DetailLevel level) const
 	}
 	return ret;
 }
+
+std::string Gestor::Locate(DetailLevel level) const
+{
+	return "I am in the root of the project.";
+}
+
 
 void Gestor::NewFile()
 {

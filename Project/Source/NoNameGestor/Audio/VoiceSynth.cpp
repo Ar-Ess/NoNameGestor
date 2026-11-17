@@ -153,12 +153,16 @@ void VoiceSynth::Stop()
     current.clear();
 
     deviceInitialized = false;
+    toDiscard = 0;
+    pending = 0;
 }
 
 void VoiceSynth::Generate(Response&& response)
 {
     if (synthesizer == nullptr || device == nullptr)
         return;
+
+    ++pending;
 
     synthesizer->Push(std::move(response));
 }
@@ -171,8 +175,16 @@ void VoiceSynth::Speak()
     std::vector<float> audio;
     while (synthesizer->TryPop(audio))
     {
+        --pending;
+
+        if (toDiscard > 0) // this result belongs to something we cancelled
+        {
+            --toDiscard;
+            continue;
+        }
+
         if (audio.empty())
-            continue;               // la síntesi ha fallat: no encuis res
+            continue;
 
         {
             std::lock_guard<std::mutex> l(mtx);
@@ -209,4 +221,26 @@ void VoiceSynth::Fill(float* out, size_t frames)
 
     // El que no hem omplert, silenci.
     memset(out + written, 0, (frames - written) * sizeof(float));
+}
+
+bool VoiceSynth::IsBusy()
+{
+    if (pending > 0)
+        return true;
+
+    std::lock_guard<std::mutex> l(mtx);
+    return pos < current.size() || !messages.empty();
+}
+
+void VoiceSynth::Clear()
+{
+    {
+        std::lock_guard<std::mutex> l(mtx);
+        messages.clear();
+        current.clear();
+        pos = 0;
+    }
+
+    // Anything still being synthesized must be thrown away when it comes back.
+    toDiscard = pending;
 }

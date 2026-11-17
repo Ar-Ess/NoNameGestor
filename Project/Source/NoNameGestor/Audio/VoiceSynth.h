@@ -20,6 +20,8 @@ public:
 	void Generate(Response&& response);
 	void Speak();
 	void Fill(float* out, size_t frames);
+	bool IsBusy();
+	void Clear();
 
 private:
 
@@ -33,6 +35,8 @@ private:
 	std::mutex mtx;
 	std::vector<float> current;
 	size_t pos = 0;
+	int pending = 0;
+	int toDiscard = 0;
 
 };
 

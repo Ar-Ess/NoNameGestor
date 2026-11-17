@@ -396,9 +396,10 @@ void ConstContainer::NewLabel(std::string&& name, float money, float perMonth, c
 	Container::NewLabel(new ConstLabel(std::move(name), money, perMonth, expectedRunoutDate, expectedRunoutMoney, offsetMonths));
 }
 
-const char* ConstContainer::TypeName() const
+std::string ConstContainer::TypeName() const
 {
-	return "CONST ";
+	static std::string constContainerTypeName = "CONST ";
+	return constContainerTypeName;
 }
 
 ContainerType ConstContainer::TypeEnum() const

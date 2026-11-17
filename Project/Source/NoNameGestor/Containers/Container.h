@@ -22,7 +22,8 @@ public: // Functions
 	virtual ~Container() override;
 
 	std::vector<VoiceNode*> Children() const override;
-	std::string Describe(DetailLevel level) const override;
+	virtual std::string Describe(DetailLevel level) const override;
+	virtual std::string Locate(DetailLevel level) const override;
 
 	virtual void Awake() {}
 
@@ -42,7 +43,7 @@ public: // Functions
 
 	const std::string* CurrentName() const;
 
-	virtual const char* TypeName() const;
+	virtual std::string TypeName() const;
 
 	virtual ContainerType TypeEnum() const;
 

@@ -12,9 +12,10 @@ public: // Functions
 
 	void Draw() override;
 
-	const char* TypeName() const override
+	std::string TypeName() const override
 	{
-		return "TOTAL ";
+		static std::string totalContainerTypeName = "TOTAL ";
+		return totalContainerTypeName;
 	}
 
 	ContainerType TypeEnum() const override

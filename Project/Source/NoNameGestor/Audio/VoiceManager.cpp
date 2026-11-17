@@ -15,41 +15,54 @@ VoiceManager::VoiceManager(Configuration& config) :
 	context(new DialogueContext),
 	config(config)
 {
-	AddCommand(
-		"describe_project_brief",
-		{ "Briefly describe the project", "Shortly describe the project", "Summarize the project"},
-		[this](const CommandContext& ctx)
-		{
-			if (!ctx.node)
-				return Response{ "There is no project open." };
+	auto describe = [this](DetailLevel d) { return [this, d](const CommandContext&) { return StartReading(d); }; };
 
-			return Response{ DescribeTree(root, DetailLevel::BRIEF) };
-		}
-	);
+	AddCommand("describe_project_brief",
+		{ "Briefly describe the project", "Shortly describe the project", "Summarize the project" },
+		describe(DetailLevel::BRIEF));
 
-	AddCommand(
-		"describe_project_normal",
+	AddCommand("describe_project_normal",
 		{ "Describe the project" },
+		describe(DetailLevel::NORMAL));
+
+	AddCommand("describe_project_full",
+		{ "Fully describe the project", "Describe the project with detail" },
+		describe(DetailLevel::FULL));
+
+	AddCommand("continue", { "Continue" },
 		[this](const CommandContext& ctx)
 		{
 			if (!ctx.node)
 				return Response{ "There is no project open." };
 
-			return Response{ DescribeTree(root, DetailLevel::NORMAL) };
-		}
-	);
+			context->reading = true;
+			return Response{ "Okay. " + ctx.node->Describe(context->readDetail)};
+		});
 
-	AddCommand(
-		"describe_project_full",
-		{ "Fully describe the project", "Describe the project with detail"},
+	AddCommand("stop", { "Stop", "Wait", "That's enough", "Hold on" },
+		[this](const CommandContext&)
+		{
+			Cancel();
+			return Response{ "Okay." };
+		});
+
+	AddCommand("locate_current", { "Where are you?" },
 		[this](const CommandContext& ctx)
 		{
 			if (!ctx.node)
 				return Response{ "There is no project open." };
 
-			return Response{ DescribeTree(root, DetailLevel::FULL) };
-		}
-	);
+			return Response{ ctx.node->Locate(context->readDetail) };
+		});
+
+	AddCommand("describe_current", { "Describe current" },
+		[this](const CommandContext& ctx)
+		{
+			if (!ctx.node)
+				return Response{ "There is no project open." };
+
+			return Response{ ctx.node->Describe(context->readDetail) };
+		});
 
 	// TODO: Això utilitza directament config. No pot ser això, ja que necesitem que sigui algo independent de NoNameGestor!!
 	config.onVoiceSpeakModeChange += Action<int>::Bind(this, &VoiceManager::SwitchListenMode);
@@ -80,7 +93,8 @@ void VoiceManager::Update()
 	if (!active)
 		return;
 
-	device->SetGate(OpenMicLogic());
+	const bool micOpen = OpenMicLogic();
+	device->SetGate(micOpen);
 	device->Update();
 	
 	std::string sentence;
@@ -116,6 +130,13 @@ void VoiceManager::Update()
 			registry->Respond(intent, ResolveCurrent()) :
 			Response{ "Sorry, I couldn't understand you." }
 		);
+	}
+
+	if (context->reading && !synth->IsBusy())
+	{
+		VoiceNode* n = Advance() ? ResolveCurrent() : nullptr;
+		if (n) Respond(Response{ n->Describe(context->readDetail) });
+		else { context->reading = false; Respond("That's all."); }
 	}
 
 	synth->Speak();
@@ -213,6 +234,27 @@ void VoiceManager::Respond(const char* response)
 	Respond(Response{ response });
 }
 
+Response VoiceManager::StartReading(DetailLevel detail)
+{
+	if (root == nullptr)
+		return Response{ "There is no project open." };
+
+	synth->Clear(); // cut anything still being said
+
+	context->Path({ root->Id().Data() }); // cursor = root
+	context->scopeId = root->Id().Data(); // stop when we leave this subtree
+	context->readDetail = detail;
+	context->reading = true;
+
+	return Response{ root->Describe(detail) }; // first node; the tick does the rest
+}
+
+void VoiceManager::Cancel()
+{
+	context->reading = false;
+	synth->Clear();
+}
+
 bool VoiceManager::FindPath(VoiceNode* from, uint64_t id, std::vector<VoiceNode*>& path)
 {
 	path.push_back(from);
@@ -234,9 +276,15 @@ void VoiceManager::SetRoot(VoiceNode* node)
 
 VoiceNode* VoiceManager::ResolveCurrent()
 {
+	auto chain = ResolveChain();
+	return chain.empty() ? nullptr : chain.back();
+}
+
+std::vector<VoiceNode*> VoiceManager::ResolveChain()
+{
 	// Si no hi ha root, no es pot resoldre res.
 	if (root == nullptr)
-		return nullptr;
+		return {};
 
 	// Agafar la referència del path
 	auto& path = context->Path();
@@ -246,11 +294,12 @@ VoiceNode* VoiceManager::ResolveCurrent()
 	if (path.empty() || path[0] != root->Id().Data())
 	{
 		context->Path({ root->Id().Data() });
-		return root;
+		return { root };
 	}
 
 	// Variables necesàries
 	VoiceNode* node = root;
+	std::vector<VoiceNode*> chain { root };
 	size_t i = 1;
 
 	// Iterar cada path
@@ -267,6 +316,7 @@ VoiceNode* VoiceManager::ResolveCurrent()
 			{
 				found = true;
 				node = n;
+				chain.push_back(n);
 				break;
 			}
 		}
@@ -277,26 +327,36 @@ VoiceNode* VoiceManager::ResolveCurrent()
 
 	// Si ha sigut el cas de que no s'ha trobat un node, hem de retallar el path fins a aquell node.
 	if (i < path.size())
-	{
-		auto p = path;
-		p.resize(i);
-		context->Path(std::move(p));
-	}
+		context->Truncate(i);
 
-	return node;
+	return chain;
 }
 
-std::string VoiceManager::DescribeTree(VoiceNode* node, DetailLevel level)
+bool VoiceManager::Advance()
 {
-	std::string out = node->Describe(level);
+	auto chain = ResolveChain();
+	if (chain.empty()) return false;
 
-	const auto& children = node->Children();
+	// 1. First child, if any
+	auto kids = chain.back()->Children();
+	if (!kids.empty()) { context->Push(kids[0]->Id().Data()); return true; }
 
-	if (children.empty())
-		return out;
+	// 2. Otherwise next sibling, going up as many levels as needed
+	for (size_t i = chain.size() - 1; i > 0; --i)
+	{
+		if (chain[i]->Id().Data() == context->scopeId)
+			return false;                       // we'd leave the scope: done
 
-	for (VoiceNode* child : children)
-		out += " " + DescribeTree(child, level);
-
-	return out;
+		auto siblings = chain[i - 1]->Children();
+		for (size_t s = 0; s + 1 < siblings.size(); ++s)
+		{
+			if (siblings[s]->Id() == chain[i]->Id())
+			{
+				context->Truncate(i);               // drop this node and below
+				context->Push(siblings[s + 1]->Id().Data());
+				return true;
+			}
+		}
+	}
+	return false;                                   // nothing left
 }
