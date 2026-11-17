@@ -189,6 +189,7 @@ ggml-cpu.lib</AdditionalDependencies>
     <ClCompile Include="Source\NoNameGestor\Audio\ActionRegistry.cpp" />
     <ClCompile Include="Source\NoNameGestor\Audio\AwakeDetector.cpp" />
     <ClCompile Include="Source\NoNameGestor\Audio\CaptureDevice.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Audio\DialogueContext.cpp" />
     <ClCompile Include="Source\NoNameGestor\Audio\Interpreter.cpp" />
     <ClCompile Include="Source\NoNameGestor\Audio\ActionResolver.cpp" />
     <ClCompile Include="Source\NoNameGestor\Audio\SpeechSegmenter.cpp" />
@@ -222,6 +223,7 @@ ggml-cpu.lib</AdditionalDependencies>
     <ClCompile Include="Source\NoNameGestor\External\libfvad\src\vad\vad_filterbank.c" />
     <ClCompile Include="Source\NoNameGestor\External\libfvad\src\vad\vad_gmm.c" />
     <ClCompile Include="Source\NoNameGestor\External\libfvad\src\vad\vad_sp.c" />
+    <ClCompile Include="Source\NoNameGestor\Gestor\Gestor.cpp" />
     <ClCompile Include="Source\NoNameGestor\Gestor\GestorSystem.cpp" />
     <ClCompile Include="Source\NoNameGestor\Main.cpp" />
     <ClCompile Include="Source\NoNameGestor\Scenes\EconomyScene.cpp" />
@@ -233,6 +235,9 @@ ggml-cpu.lib</AdditionalDependencies>
     <ClInclude Include="Source\NoNameGestor\Audio\ActionRegistry.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\AwakeDetector.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\CaptureDevice.h" />
+    <ClInclude Include="Source\NoNameGestor\Audio\CommandContext.h" />
+    <ClInclude Include="Source\NoNameGestor\Audio\DetailLevel.h" />
+    <ClInclude Include="Source\NoNameGestor\Audio\DialogueContext.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\Intent.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\Interpreter.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\ActionResolver.h" />
@@ -240,6 +245,7 @@ ggml-cpu.lib</AdditionalDependencies>
     <ClInclude Include="Source\NoNameGestor\Audio\SpeechSegmenter.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\ThreadWorker.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\VoiceManager.h" />
+    <ClInclude Include="Source\NoNameGestor\Audio\VoiceNode.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\VoiceSynth.h" />
     <ClInclude Include="Source\NoNameGestor\Containers\ConstContainer.h" />
     <ClInclude Include="Source\NoNameGestor\Containers\Container.h" />
@@ -275,6 +281,7 @@ ggml-cpu.lib</AdditionalDependencies>
     <ClInclude Include="Source\NoNameGestor\Gestor\Aggregate.h" />
     <ClInclude Include="Source\NoNameGestor\Gestor\Configuration.h" />
     <ClInclude Include="Source\NoNameGestor\Gestor\Currency.h" />
+    <ClInclude Include="Source\NoNameGestor\Gestor\Gestor.h" />
     <ClInclude Include="Source\NoNameGestor\Gestor\GestorSystem.h" />
     <ClInclude Include="Source\NoNameGestor\Scenes\EconomyScene.h" />
     <ClInclude Include="Source\NoNameGestor\Utils\Chrono.h" />

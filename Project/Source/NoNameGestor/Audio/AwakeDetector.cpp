@@ -19,6 +19,8 @@ AwakeDetector::Result AwakeDetector::Filter(std::string& normalized)
 
     if (pos != std::string::npos)
     {
+        const bool hadBefore = pos > 0;
+
         // Tot el que hi ha fins a la paraula (inclosa) es descarta.
         size_t after = pos + word.size();
         if (after < normalized.size())
@@ -26,7 +28,10 @@ AwakeDetector::Result AwakeDetector::Filter(std::string& normalized)
         normalized.erase(0, after);
 
         awakeUntil = now + window;
-        return normalized.empty() ? Result::WOKE : Result::COMMAND;
+        if (!normalized.empty())
+            return Result::COMMAND;
+
+        return hadBefore ? Result::WOKE_WITH_LEFTOVER : Result::WOKE;
     }
 
     if (now >= awakeUntil)

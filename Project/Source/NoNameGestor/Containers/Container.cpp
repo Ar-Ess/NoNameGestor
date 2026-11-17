@@ -18,11 +18,21 @@ Container::~Container()
 {
 }
 
+std::vector<VoiceNode*> Container::Children() const
+{
+	return std::vector<VoiceNode*>(labels.begin(), labels.end());
+}
+
+std::string Container::Describe(DetailLevel level) const
+{
+	return std::string();
+}
+
 bool Container::Update(Aggregate& agg)
 {
 	money = 0;
-	labels.Iterate([&](Label* l)
-		{ money += l->money; });
+	for (Label* l : labels)
+		money += l->money;
 
 	return !hidden;
 }
@@ -76,7 +86,7 @@ void Container::DrawBase(float maxWidth, bool& erase, ID& move)
 				erase = true;
 
 			// Unify Container
-			if (labels.Size() <= 1) ImGui::MenuItem("Unify", "", &unified);
+			if (labels.size() <= 1) ImGui::MenuItem("Unify", "", &unified);
 
 			// Hide Container
 			ImGui::MenuItem("Hide", "", &hidden);
@@ -150,7 +160,7 @@ void Container::DrawBase(float maxWidth, bool& erase, ID& move)
 void Container::Save(FileManager::FileNode node) const
 {
 	node.Write("name", name.c_str());
-	node.Write("type", (int)Type());
+	node.Write("type", (int)TypeEnum());
 	node.Write("money", money);
 	node.Write("hide", hidden);
 	node.Write("open", open);
@@ -158,33 +168,31 @@ void Container::Save(FileManager::FileNode node) const
 	node.Write("labels", FileManager::File::Array);
 	auto lnode = node.Access("labels");
 
-	labels.Iterate(
-		[&](Label* l)
-		{
-			// Push a new object
-			int index = lnode.Push(FileManager::File::Object);
+	for (Label* l : labels)
+	{
+		// Push a new object
+		int index = lnode.Push(FileManager::File::Object);
 
-			// Assure it is correctly pushed
-			Debug::Assert(index != -1, "Internal Save Error: Pushing New Container returned an error.");
+		// Assure it is correctly pushed
+		Debug::Assert(index != -1, "Internal Save Error: Pushing New Container returned an error.");
 
-			// Find the specific object
-			auto newNode = lnode.Access(index);
+		// Find the specific object
+		auto newNode = lnode.Access(index);
 
-			// Add the values
-			newNode.Write("name", l->name);
-			newNode.Write("money", l->money);
-		}
-	);
+		// Add the values
+		newNode.Write("name", l->Name());
+		newNode.Write("money", l->money);
+	}
 }
 
 std::string* Container::CurrentName()
 {
-	return !unified || labels.IsEmpty() ? &name : &labels[0]->name;
+	return !unified || labels.empty() ? &name : &labels[0]->name;
 }
 
 const std::string* Container::CurrentName() const
 {
-	return !unified || labels.IsEmpty() ? &name : &labels[0]->name;
+	return !unified || labels.empty() ? &name : &labels[0]->name;
 }
 
 const char* Container::TypeName() const
@@ -192,7 +200,7 @@ const char* Container::TypeName() const
 	return "NO CONTAINER";
 }
 
-ContainerType Container::Type() const
+ContainerType Container::TypeEnum() const
 {
 	return ContainerType::NO_CONTAINER;
 }
@@ -204,7 +212,7 @@ float Container::Money() const
 
 unsigned int Container::Size() const
 {
-	return labels.Size();
+	return labels.size();
 }
 
 void Container::Export(std::ofstream& exp) const
@@ -217,20 +225,15 @@ void Container::Export(std::ofstream& exp) const
 	else
 	{
 		exp << std::endl;
-		labels.Iterate(
-			[&](Label* l)
-			{
-				exp << " - " << l->name << ": " << l->money << " " << currency << std::endl << std::endl;
-			}
-		);
+		for (Label* l : labels)
+			exp << " - " << l->name << ": " << l->money << " " << currency << std::endl << std::endl;
 	}
 }
 
-Container::Container(const std::string& name, bool hidden, bool open, bool unified, String* format, Configuration* config) :
-	id(ID::New()),
+Container::Container(std::string&& name, bool hidden, bool open, bool unified, String* format, Configuration* config) :
+	VoiceNode(std::move(name), TypeName()),
 	labelDrawID(ID::Empty),
 	money(0),
-	name(name),
 	hidden(hidden),
 	open(open),
 	unified(unified),
@@ -241,7 +244,7 @@ Container::Container(const std::string& name, bool hidden, bool open, bool unifi
 }
 
 Container::Container(const FileManager::FileNode& node, String* format, Configuration* config) :
-	id(ID::New()),
+	VoiceNode("", TypeName()),
 	labelDrawID(ID::Empty),
 	format(format),
 	maxWidth(maxWidth),
@@ -258,15 +261,15 @@ Container::Container(const FileManager::FileNode& node, String* format, Configur
 
 void Container::NewLabel(Label* label)
 {
-	if (!labels.IsEmpty() && !UpdateOpenState)
+	if (!labels.empty() && !UpdateOpenState)
 		unified = false;
 
-	labels.PushBack(label);
+	labels.push_back(label);
 }
 
 void Container::DrawUserMessage(Label* label)
 {
-	if (message.IsNull() || !labelDrawID.HasValue() || labelDrawID.Value() != label->id)
+	if (message.IsNull() || !labelDrawID.HasValue() || labelDrawID.Value() != label->Id())
 		return;
 
 	ImVec4 col = ImVec4(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
@@ -294,7 +297,7 @@ void Container::SetMessage(Label* label, const char* message, float time, float 
 	
 	color = c;
 	this->message = message;
-	labelDrawID = label->id;
+	labelDrawID = label->Id();
 	CoroutineManager::Begin(RunMessage(time, fade));
 }
 

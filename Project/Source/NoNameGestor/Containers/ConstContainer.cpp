@@ -8,13 +8,13 @@
 #include "NoNameGestor/Gestor/Configuration.h"
 #include "NoNameGestor/Utils/ImGuiExtension.h"
 
+#include <cmath>
 #include "NoNameGestor/External/imgui/imgui.h"
 #include "NoNameGestor/External/imgui/imgui_stdlib.h"
 
-#include <cmath>
 
-ConstContainer::ConstLabel::ConstLabel(const std::string& name, float money, float perMonth, const DateTime& expectedRunoutDate, float expectedRunoutMoney, int offsetMonths) :
-	Label(name, money), perMonth(perMonth), expectedRunoutDate(expectedRunoutDate), expectedRunoutMoney(expectedRunoutMoney), offsetMonths(offsetMonths)
+ConstContainer::ConstLabel::ConstLabel(std::string&& name, float money, float perMonth, const DateTime& expectedRunoutDate, float expectedRunoutMoney, int offsetMonths) :
+	Label(std::move(name), money), perMonth(perMonth), expectedRunoutDate(expectedRunoutDate), expectedRunoutMoney(expectedRunoutMoney), offsetMonths(offsetMonths)
 {
 	availableMoney = 0;
 	finalPlannedMonths = 0;
@@ -58,8 +58,78 @@ void ConstContainer::ConstLabel::CalculateBaseMoneyState()
 	}
 }
 
-ConstContainer::ConstContainer(const std::string& name, bool hidden, bool open, bool unified, String* format, Configuration* config) :
-	Container(name, hidden, open, unified, format, config)
+Flag ConstContainer::ConstLabel::Draw(bool unified, bool first, bool single, int textFieldSize, String* format)
+{
+	Flag ret = Flag::AllFalse;
+
+	ImGui::PushID(id.Data());
+	{
+		if (first) { if (ImGui::Button("+")) ret.Set(0, true); }
+		else ImGui::Dummy({ 33, 0 });
+
+		ImGui::SameLine();
+
+		float width = 100.0f;
+		if (!unified)
+		{
+			if (!single)
+			{
+				if (ImGui::Button("X"))
+					ret.Set(1, true);
+			}
+			else ImGui::Dummy({ 15, 0 });
+
+			ImGui::SameLine();
+
+			ImGui::PushItemWidth(textFieldSize);
+			ImGui::InputText("##ConstName", &name);
+			ImGui::PopItemWidth(); ImGui::SameLine();
+		}
+		else width += 50;
+
+		// Progress Bar
+		ImGui::BeginGroup();
+		{
+			ImGui::PushItemWidth(width);
+			ImGui::DragFloat("##Drag", &money, 1.0f, 0.0f, MAX_MONEY, format->Str(), ImGuiSliderFlags_AlwaysClamp);
+			ImVec2 itemSize = ImGui::GetItemRectSize();
+			itemSize.y -= 15;
+			ImGui::PopItemWidth();
+
+			bool negAvailableMoney = availableMoney < 0;
+			if (negAvailableMoney) ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(1, 0.1, 0.1, 1));
+			float ratio = Maths::Approximately(perMonth, 0) ? 1 : availableMoney / perMonth;
+			ImGui::ProgressBar(ratio, itemSize, "");
+			if (negAvailableMoney) ImGui::PopStyleColor();
+		}
+		ImGui::EndGroup();
+
+		ImGui::SameLine();
+
+		ImGui::Text("| %.2f/", availableMoney); ImGui::SameLine(0, 0);
+		ImGui::Text(format->Str(), perMonth); ImGui::SameLine(0, 1);
+		ImGui::Text("x%d", finalPlannedMonths); ImGui::SameLine(0, 5);
+		if (!HasExpectedRunout())
+		{
+			int remainingMonths = maxPlannedMonths - offsetMonths;
+			if (ImGui::RS::PlusMinusButtonsV("##PlusMinusConst", &remainingMonths, 0, maxPlannedMonths, "x%d") > 0)
+				offsetMonths = maxPlannedMonths - remainingMonths;
+			ImGui::SameLine();
+		}
+
+		if (ImGui::Button("Edit"))
+		{
+			ImGui::OpenPopup("Edit Const Popup");
+			ret.Set(2, true);
+		}
+	}
+	ImGui::PopID();
+
+	return ret;
+}
+
+ConstContainer::ConstContainer(std::string&& name, bool hidden, bool open, bool unified, String* format, Configuration* config) :
+	Container(std::move(name), hidden, open, unified, format, config)
 {
 }
 
@@ -93,62 +163,60 @@ bool ConstContainer::Update(Aggregate& agg)
 	if (!Container::Update(agg))
 		return false;
 
-	labels.Iterate(
-		[&](Label* label)
+	for (Label* label : labels)
+	{
+		ConstLabel* l = (ConstLabel*)label;
+
+		l->CalculateBaseMoneyState();
+
+		if (l->HasExpectedRunout())
 		{
-			ConstLabel* l = (ConstLabel*)label;
+			// Calculate months until runout
+			const int runoutMonths = currentTime.MonthsUntil(l->expectedRunoutDate);
 
-			l->CalculateBaseMoneyState();
-
-			if (l->HasExpectedRunout())
+			// If expected runout has been reached
+			if (runoutMonths <= 0)
 			{
-				// Calculate months until runout
-				const int runoutMonths = currentTime.MonthsUntil(l->expectedRunoutDate);
+				l->expectedRunoutDate = DateTime::BaseEpoch;
+				l->expectedRunoutMoney = 0.0f;
 
-				// If expected runout has been reached
-				if (runoutMonths <= 0)
-				{
-					l->expectedRunoutDate = DateTime::BaseEpoch;
-					l->expectedRunoutMoney = 0.0f;
-
-					// Continue using normal mode.
-				}
-				// Money was increased after setting the expected runout.
-				else if (l->money > l->expectedRunoutMoney)
-				{
-					SetWarningMessage(label, "Warning: Money increased after setting the Expected Runout. Expected Runout has been disabled.");
-
-					l->expectedRunoutDate = DateTime::BaseEpoch;
-					l->expectedRunoutMoney = 0.0f;
-
-					// Continue using normal mode.
-				}
-				// In Runout Mode
-				else
-				{
-					// Set max planned months
-					l->maxPlannedMonths = runoutMonths;
-					// Set final planned months
-					l->finalPlannedMonths = runoutMonths;
-					// Calculate available money
-					l->availableMoney = l->money - l->perMonth * runoutMonths;
-					return true;
-				}
+				// Continue using normal mode.
 			}
+			// Money was increased after setting the expected runout.
+			else if (l->money > l->expectedRunoutMoney)
+			{
+				SetWarningMessage(label, "Warning: Money increased after setting the Expected Runout. Expected Runout has been disabled.");
 
-			// Normal mode
-			// Clamp offset between max planned months and 0
-			l->offsetMonths = Maths::Clamp(l->offsetMonths, 0, l->maxPlannedMonths);
+				l->expectedRunoutDate = DateTime::BaseEpoch;
+				l->expectedRunoutMoney = 0.0f;
 
-			// Add the offset extra money
-			l->availableMoney += l->offsetMonths * l->perMonth;
-
-			// Clamp final planned months
-			l->finalPlannedMonths = Maths::Max(l->maxPlannedMonths - l->offsetMonths, 0);
-
-			return true;
+				// Continue using normal mode.
+			}
+			// In Runout Mode
+			else
+			{
+				// Set max planned months
+				l->maxPlannedMonths = runoutMonths;
+				// Set final planned months
+				l->finalPlannedMonths = runoutMonths;
+				// Calculate available money
+				l->availableMoney = l->money - l->perMonth * runoutMonths;
+				return true;
+			}
 		}
-	);
+
+		// Normal mode
+		// Clamp offset between max planned months and 0
+		l->offsetMonths = Maths::Clamp(l->offsetMonths, 0, l->maxPlannedMonths);
+
+		// Add the offset extra money
+		l->availableMoney += l->offsetMonths * l->perMonth;
+
+		// Clamp final planned months
+		l->finalPlannedMonths = Maths::Max(l->maxPlannedMonths - l->offsetMonths, 0);
+
+		return true;
+	}
 
 	agg.assigned += money;
 	return true;
@@ -169,79 +237,19 @@ void ConstContainer::Draw()
 
 	int erase = -1;
 
-	labels.Iterate(
-		[&](Label* label, int i, int size)
-		{
-			ConstLabel* l = (ConstLabel*)label;
+	for (int i = 0; i < labels.size(); ++i)
+	{
+		ConstLabel* l = (ConstLabel*)labels[i];
+		Flag f = l->Draw(unified, i == 0, labels.size() <= 1, config->textFieldSize, format);
 
-			ImGui::PushID(l->id.Data());
-			{
-				if (i == 0) { if (ImGui::Button("+")) NewLabel("New Const"); }
-				else ImGui::Dummy({ 33, 0 });
+		if (f.Get(0)) NewLabel("New Const");
+		else if (f.Get(1)) erase = i;
+		else if (f.Get(2)) select = l;
 
-				ImGui::SameLine();
+		DrawUserMessage(labels[i]);
+	}
 
-				float width = 100.0f;
-				if (!unified)
-				{
-					if (size > 1)
-					{
-						if (ImGui::Button("X"))
-							erase = i;
-					}
-					else ImGui::Dummy({ 15, 0 });
-
-					ImGui::SameLine();
-
-					ImGui::PushItemWidth(config->textFieldSize);
-					ImGui::InputText("##ConstName", &l->name);
-					ImGui::PopItemWidth(); ImGui::SameLine();
-				}
-				else width += 50;
-
-				// Progress Bar
-				ImGui::BeginGroup();
-				{
-					ImGui::PushItemWidth(width);
-					ImGui::DragFloat("##Drag", &l->money, 1.0f, 0.0f, MAX_MONEY, format->Str(), ImGuiSliderFlags_AlwaysClamp);
-					ImVec2 itemSize = ImGui::GetItemRectSize();
-					itemSize.y -= 15;
-					ImGui::PopItemWidth();
-
-					bool negAvailableMoney = l->availableMoney < 0;
-					if (negAvailableMoney) ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(1, 0.1, 0.1, 1));
-					float ratio = Maths::Approximately(l->perMonth, 0) ? 1 : l->availableMoney / l->perMonth;
-					ImGui::ProgressBar(ratio, itemSize, "");
-					if (negAvailableMoney) ImGui::PopStyleColor();
-				}
-				ImGui::EndGroup();
-
-				ImGui::SameLine();
-
-				ImGui::Text("| %.2f/", l->availableMoney); ImGui::SameLine(0, 0);
-				ImGui::Text(format->Str(), l->perMonth); ImGui::SameLine(0, 1);
-				ImGui::Text("x%d", l->finalPlannedMonths); ImGui::SameLine(0, 5);
-				if (!l->HasExpectedRunout())
-				{
-					int remainingMonths = l->maxPlannedMonths - l->offsetMonths;
-					if (ImGui::RS::PlusMinusButtonsV("##PlusMinusConst", &remainingMonths, 0, l->maxPlannedMonths, "x%d") > 0)
-						l->offsetMonths = l->maxPlannedMonths - remainingMonths;
-					ImGui::SameLine();
-				}
-
-				if (ImGui::Button("Edit"))
-				{
-					ImGui::OpenPopup("Edit Const Popup");
-					select = l;
-				}
-			}
-			ImGui::PopID();
-
-			DrawUserMessage(label);
-		}
-	);
-
-	if (erase != -1) labels.Erase(erase);
+	if (erase != -1) labels.erase(labels.begin() + erase);
 
 	if (hidden) ImGui::EndDisabled();
 
@@ -251,7 +259,7 @@ void ConstContainer::Draw()
 	ImGui::RS::CenterNextWindow();
 	ImGui::SetNextWindowSize(ImVec2(260, 170));
 
-	ImGui::PushID(select->id.Data());
+	ImGui::PushID(select->Id().Data());
 	{
 		if (ImGui::BeginPopupModal("Edit Const Popup", nullptr, ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
 		{
@@ -343,27 +351,25 @@ void ConstContainer::DrawCashFlow(float widthRatio, float initX) const
 	ImGui::PushID(id.Data());
 	if (ImGui::CollapsingHeader(name.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_DrawLinesNone))
 	{
-		labels.Iterate(
-			[&](Label* label)
+		for (Label* label : labels)
+		{
+			ConstLabel* l = (ConstLabel*)label;
+			ImGui::PushID(l->Id().Data());
 			{
-				ConstLabel* l = (ConstLabel*)label;
-				ImGui::PushID(l->id.Data());
+				ImGui::Dummy(ImVec2(0, 0)); ImGui::SameLine(33);
+				ImGui::Text(label->Name().data());
+				ImGui::RS::Separator();
+				if (l->money >= 0.5f)
 				{
-					ImGui::Dummy(ImVec2(0, 0)); ImGui::SameLine(33);
-					ImGui::Text(label->name.c_str());
-					ImGui::RS::Separator();
-					if (l->money >= 0.5f)
-					{
-						ImVec2 pos = ImGui::GetCursorPos();
-						pos.x += initX - 8;
-						pos.y += 11;
-						float width = (widthRatio * l->finalPlannedMonths) + (widthRatio * (l->availableMoney / l->perMonth));
-						ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(pos.x, pos.y), ImVec2(pos.x + width, pos.y - 15), IM_COL32(80, 140, 255, 200));
-					}
+					ImVec2 pos = ImGui::GetCursorPos();
+					pos.x += initX - 8;
+					pos.y += 11;
+					float width = (widthRatio * l->finalPlannedMonths) + (widthRatio * (l->availableMoney / l->perMonth));
+					ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(pos.x, pos.y), ImVec2(pos.x + width, pos.y - 15), IM_COL32(80, 140, 255, 200));
 				}
-				ImGui::PopID();
 			}
-		);
+			ImGui::PopID();
+		}
 	}
 	ImGui::PopID();
 }
@@ -373,23 +379,21 @@ void ConstContainer::Save(FileManager::FileNode node) const
 	Container::Save(node);
 
 	auto lnode = node.Access("labels");
-	labels.Iterate(
-		[&](Label* label, int i)
-		{
-			auto inode = lnode.Access(i);
-			ConstLabel* l = (ConstLabel*)label;
-			inode.Write("per_month", l->perMonth);
-			inode.Write("offset_months", l->offsetMonths);
-			//TODO: Framework: Open internal milliseconds as a returnable info
-			inode.Write("runout_date", -l->expectedRunoutDate.MsUntil(0));
-			inode.Write("runout_money", l->expectedRunoutMoney);
-		}
-	);
+	for (int i = 0; i < labels.size(); ++i)
+	{
+		ConstLabel* l = (ConstLabel*)labels[i];
+		auto inode = lnode.Access(i);
+		inode.Write("per_month", l->perMonth);
+		inode.Write("offset_months", l->offsetMonths);
+		//TODO: Framework: Open internal milliseconds as a returnable info
+		inode.Write("runout_date", -l->expectedRunoutDate.MsUntil(0));
+		inode.Write("runout_money", l->expectedRunoutMoney);
+	}
 }
 
-void ConstContainer::NewLabel(const std::string& name, float money, float perMonth, const DateTime& expectedRunoutDate, float expectedRunoutMoney, int offsetMonths)
+void ConstContainer::NewLabel(std::string&& name, float money, float perMonth, const DateTime& expectedRunoutDate, float expectedRunoutMoney, int offsetMonths)
 {
-	Container::NewLabel(new ConstLabel(name, money, perMonth, expectedRunoutDate, expectedRunoutMoney, offsetMonths));
+	Container::NewLabel(new ConstLabel(std::move(name), money, perMonth, expectedRunoutDate, expectedRunoutMoney, offsetMonths));
 }
 
 const char* ConstContainer::TypeName() const
@@ -397,7 +401,7 @@ const char* ConstContainer::TypeName() const
 	return "CONST ";
 }
 
-ContainerType ConstContainer::Type() const
+ContainerType ConstContainer::TypeEnum() const
 {
 	return ContainerType::CONSTANT;
 }

@@ -8,14 +8,16 @@ class LimitContainer : public Container
 {
 	struct LimitLabel : public Label
 	{
-		LimitLabel(const std::string& name, float money, float limit);
+		LimitLabel(std::string&& name, float money, float limit);
+
+		Flag Draw(bool unified, bool first, bool single, int textFieldSize, String* format) override;
 
 		float limit;
 	};
 
 public: // Functions
 
-	LimitContainer(const std::string& name, bool hidden, bool open, bool unified, String* format, Configuration* config);
+	LimitContainer(std::string&& name, bool hidden, bool open, bool unified, String* format, Configuration* config);
 
 	LimitContainer(const FileManager::FileNode& node, String* format, Configuration* config);
 
@@ -27,14 +29,14 @@ public: // Functions
 
 	void Save(FileManager::FileNode node) const override;
 
-	void NewLabel(const std::string& name = "New Limit", float money = 0.0f, float limit = 0.0f);
+	void NewLabel(std::string&& name = "New Limit", float money = 0.0f, float limit = 0.0f);
 
 	const char* TypeName() const override
 	{
 		return "LIMIT ";
 	}
 
-	ContainerType Type() const override
+	ContainerType TypeEnum() const override
 	{
 		return ContainerType::LIMIT;
 	}

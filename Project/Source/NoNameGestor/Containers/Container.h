@@ -1,25 +1,28 @@
 #pragma once
 
 #include "Framework/Data/Vector.h"
-#include "Framework/Engine/ID.h"
 #include "Framework/Render/Color.h"
 
+#include "NoNameGestor/Audio/VoiceNode.h"
 #include "NoNameGestor/Containers/ContainerEnum.h"
 #include "NoNameGestor/Containers/Label.h"
 #include "NoNameGestor/Gestor/Currency.h" //TODO: Use this class instead of format
 #include "NoNameGestor/Utils/FileManager.h"
 
-class Configuration;
+struct Configuration;
 class Coroutine;
 struct Aggregate;
 
 constexpr auto MAX_MONEY = 340282000000000000000000000000000000000.0f;
 
-class Container
+class Container : public VoiceNode
 {
 public: // Functions
 
-	virtual ~Container();
+	virtual ~Container() override;
+
+	std::vector<VoiceNode*> Children() const override;
+	std::string Describe(DetailLevel level) const override;
 
 	virtual void Awake() {}
 
@@ -41,7 +44,7 @@ public: // Functions
 
 	virtual const char* TypeName() const;
 
-	virtual ContainerType Type() const;
+	virtual ContainerType TypeEnum() const;
 
 	float Money() const;
 
@@ -51,7 +54,7 @@ public: // Functions
 
 protected: // Functions
 
-	Container(const std::string& name, bool hidden, bool open, bool unified, String* format, Configuration* config);
+	Container(std::string&& name, bool hidden, bool open, bool unified, String* format, Configuration* config);
 
 	Container(const FileManager::FileNode& node, String* format, Configuration* config);
 
@@ -75,13 +78,11 @@ public: // Variables
 	bool unified = true;
 	bool open = false;
 	bool exporting = false;
-	ID id;
 
 protected: // Variables
 
-	Vector<Label*, true> labels;
+	std::vector<Label*> labels;
 	float money = 0.0f;
-	std::string name;
 	String* format = nullptr;
 	Configuration* config = nullptr;
 

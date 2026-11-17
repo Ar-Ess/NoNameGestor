@@ -6,11 +6,13 @@ class ConstContainer : public Container
 {
 	struct ConstLabel : public Label
 	{
-		ConstLabel(const std::string& name, float money, float perMonth, const DateTime& expectedRunoutDate, float expectedRunoutMoney, int offsetMonths);
+		ConstLabel(std::string&& name, float money, float perMonth, const DateTime& expectedRunoutDate, float expectedRunoutMoney, int offsetMonths);
 
 		bool CanSetExpectedRunout() const;
 		bool HasExpectedRunout() const;
 		void CalculateBaseMoneyState();
+
+		Flag Draw(bool unified, bool first, bool single, int textFieldSize, String* format) override;
 
 		DateTime expectedRunoutDate;
 		float expectedRunoutMoney;
@@ -24,7 +26,7 @@ class ConstContainer : public Container
 
 public: // Functions
 
-	ConstContainer(const std::string& name, bool hidden, bool open, bool unified, String* format, Configuration* config);
+	ConstContainer(std::string&& name, bool hidden, bool open, bool unified, String* format, Configuration* config);
 
 	ConstContainer(const FileManager::FileNode& node, String* format, Configuration* config);
 
@@ -40,11 +42,11 @@ public: // Functions
 
 	void Save(FileManager::FileNode node) const override;
 
-	void NewLabel(const std::string& name = "New Const", float money = 0.0f, float perMonth = 0.0f, const DateTime& expectedRunoutDate = DateTime::BaseEpoch, float expectedRunoutMoney = 0, int offsetMonths = 0);
+	void NewLabel(std::string&& name = "New Const", float money = 0.0f, float perMonth = 0.0f, const DateTime& expectedRunoutDate = DateTime::BaseEpoch, float expectedRunoutMoney = 0, int offsetMonths = 0);
 
 	const char* TypeName() const override;
 
-	ContainerType Type() const override;
+	ContainerType TypeEnum() const override;
 
 private:
 

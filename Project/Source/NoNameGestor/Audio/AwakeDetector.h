@@ -9,7 +9,7 @@ class AwakeDetector
 {
 public:
 
-	enum class Result { IGNORED, WOKE, COMMAND };
+	enum class Result { IGNORED, WOKE, WOKE_WITH_LEFTOVER, COMMAND };
 
 public:
 

@@ -6,8 +6,8 @@
 #include "NoNameGestor/External/imgui/imgui.h"
 #include "NoNameGestor/External/imgui/imgui_stdlib.h"
 
-FutureContainer::FutureContainer(const std::string& name, bool hidden, bool open, bool unified, String* format, Configuration* config) :
-	Container(name, hidden, open, unified, format, config)
+FutureContainer::FutureContainer(std::string&& name, bool hidden, bool open, bool unified, String* format, Configuration* config) :
+	Container(std::move(name), hidden, open, unified, format, config)
 {
 }
 
@@ -42,52 +42,21 @@ void FutureContainer::Draw()
 
 	int erase = -1;
 
-	labels.Iterate(
-		[&](Label* l, int i, int size)
-		{
-			ImGui::PushID(l->id.Data());
-			{
-				if (i == 0) { if (ImGui::Button("+")) NewLabel("New Future"); }
-				else ImGui::Dummy({ 33, 0 });
+	for (int i = 0; i < labels.size(); ++i)
+	{
+		Label* l = labels[i];
+		Flag f = l->Draw(unified, i == 0, labels.size() <= 1, config->textFieldSize, format);
 
-				ImGui::SameLine();
+		if (f.Get(0)) NewLabel("New Future");
+		else if (f.Get(1)) erase = i;
+	}
 
-				float width = 100.0f;
-				if (!unified)
-				{
-					if (size > 1)
-					{
-						if (ImGui::Button("X"))
-							erase = i;
-					}
-					else ImGui::Dummy({ 15, 0 });
-
-					ImGui::SameLine();
-
-					ImGui::PushItemWidth(config->textFieldSize);
-					{
-						ImGui::InputText("##FutureName", &l->name);
-					}
-					ImGui::PopItemWidth(); ImGui::SameLine();
-				}
-				else width += 50;
-
-				ImGui::PushItemWidth(width);
-				{
-					ImGui::DragFloat("##Drag", &l->money, 1.0f, 0.0f, MAX_MONEY, format->Str(), ImGuiSliderFlags_AlwaysClamp);
-				}
-				ImGui::PopItemWidth();
-			}
-			ImGui::PopID();
-		}
-	);
-
-	if (erase != -1) labels.Erase(erase);
+	if (erase != -1) labels.erase(labels.begin() + erase);
 
 	if (hidden) ImGui::EndDisabled();
 }
 
-void FutureContainer::NewLabel(const std::string& name, float money)
+void FutureContainer::NewLabel(std::string&& name, float money)
 {
-	Container::NewLabel(new Label(name, money));
+	Container::NewLabel(new Label(std::move(name), money));
 }

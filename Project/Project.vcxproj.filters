@@ -128,7 +128,15 @@
     <ClCompile Include="Source\NoNameGestor\External\Miniaudio\MiniaudioImpl.cpp">
       <Filter>External\Miniaudio</Filter>
     </ClCompile>
-    <ClCompile Include="Source\NoNameGestor\Audio\AwakeDetector.cpp" />
+    <ClCompile Include="Source\NoNameGestor\Audio\AwakeDetector.cpp">
+      <Filter>Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Audio\DialogueContext.cpp">
+      <Filter>Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NoNameGestor\Gestor\Gestor.cpp">
+      <Filter>Gestor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -293,7 +301,24 @@
     <ClInclude Include="Source\NoNameGestor\Audio\VoiceSynth.h">
       <Filter>Audio</Filter>
     </ClInclude>
-    <ClInclude Include="Source\NoNameGestor\Audio\AwakeDetector.h" />
+    <ClInclude Include="Source\NoNameGestor\Audio\AwakeDetector.h">
+      <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Audio\VoiceNode.h">
+      <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Audio\DetailLevel.h">
+      <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Audio\DialogueContext.h">
+      <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Audio\CommandContext.h">
+      <Filter>Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Gestor\Gestor.h">
+      <Filter>Gestor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="External">

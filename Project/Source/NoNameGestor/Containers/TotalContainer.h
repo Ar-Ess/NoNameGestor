@@ -17,7 +17,7 @@ public: // Functions
 		return "TOTAL ";
 	}
 
-	ContainerType Type() const override
+	ContainerType TypeEnum() const override
 	{
 		return ContainerType::TOTAL_MONEY;
 	}

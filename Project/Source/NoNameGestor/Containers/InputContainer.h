@@ -19,7 +19,7 @@ public: // Functions
 		return "INPUT ";
 	}
 
-	ContainerType Type() const override
+	ContainerType TypeEnum() const override
 	{
 		return ContainerType::INPUT_MONEY;
 	}

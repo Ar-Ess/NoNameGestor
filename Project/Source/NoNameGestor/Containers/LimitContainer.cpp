@@ -5,16 +5,73 @@
 #include "NoNameGestor/Gestor/Configuration.h"
 #include "NoNameGestor/Utils/ImGuiExtension.h"
 
-#include "NoNameGestor/External/imgui/imgui.h"
-#include "NoNameGestor/External/imgui/imgui_stdlib.h"
-
-LimitContainer::LimitLabel::LimitLabel(const std::string& name, float money, float limit) :
-	Label(name, money), limit(limit)
+LimitContainer::LimitLabel::LimitLabel(std::string&& name, float money, float limit) :
+	Label(std::move(name), money), limit(limit)
 {
 }
 
-LimitContainer::LimitContainer(const std::string& name, bool hidden, bool open, bool unified, String* format, Configuration* config) :
-	Container(name, hidden, open, unified, format, config)
+Flag LimitContainer::LimitLabel::Draw(bool unified, bool first, bool single, int textFieldSize, String* format)
+{
+	Flag ret = Flag::AllFalse;
+	ImGui::PushID(id.Data());
+	{
+		if (first) { if (ImGui::Button("+")) ret.Set(0, true); }
+		else ImGui::Dummy({ 33, 0 });
+
+		ImGui::SameLine();
+
+		float width = 100.0f;
+		if (!unified)
+		{
+			if (!single)
+			{
+				if (ImGui::Button("X"))
+					ret.Set(1, true);
+			}
+			else ImGui::Dummy({ 15, 0 });
+
+			ImGui::SameLine();
+
+			ImGui::PushItemWidth(textFieldSize);
+			ImGui::InputText("##LimitName", &name);
+			ImGui::PopItemWidth(); ImGui::SameLine();
+		}
+		else width += 50;
+
+		ImGui::BeginGroup();
+		{
+			ImVec2 itemSize;
+			ImGui::PushItemWidth(width);
+			{
+				ImGui::DragFloat("##Drag", &money, 1.0f, 0.0f, limit, format->Str(), ImGuiSliderFlags_AlwaysClamp);
+				money = Maths::Clamp(money, 0, limit);
+				itemSize = ImGui::GetItemRectSize();
+				itemSize.y -= 15;
+			}
+			ImGui::PopItemWidth();
+
+			float ratio = Maths::Approximately(limit, 0) ? 1 : money / limit;
+			ImGui::ProgressBar(ratio, itemSize, "");
+		}
+		ImGui::EndGroup();
+
+		ImGui::SameLine();
+
+		ImGui::Text("/"); ImGui::SameLine();
+		ImGui::Text(format->Str(), limit); ImGui::SameLine();
+		if (ImGui::Button("Edit"))
+		{
+			ImGui::OpenPopup("Edit Limit Popup");
+			ret.Set(2, true);
+		}
+	}
+	ImGui::PopID();
+
+	return ret;
+}
+
+LimitContainer::LimitContainer(std::string&& name, bool hidden, bool open, bool unified, String* format, Configuration* config) :
+	Container(std::move(name), hidden, open, unified, format, config)
 {
 }
 
@@ -50,67 +107,17 @@ void LimitContainer::Draw()
 
 	int erase = -1;
 
-	labels.Iterate(
-		[&](Label* label, int i, int size)
-		{
-			LimitLabel* l = (LimitLabel*)label;
-			ImGui::PushID(l->id.Data());
-			{
-				if (i == 0) { if (ImGui::Button("+")) NewLabel("New Limit"); }
-				else ImGui::Dummy({ 33, 0 });
+	for (int i = 0; i < labels.size(); ++i)
+	{
+		LimitLabel* l = (LimitLabel*)labels[i];
+		Flag f = l->Draw(unified, i == 0, labels.size() <= 1, config->textFieldSize, format);
 
-				ImGui::SameLine();
+		if (f.Get(0)) NewLabel("New Limit");
+		else if (f.Get(1)) erase = i;
+		else if (f.Get(2)) select = l;
+	}
 
-				float width = 100.0f;
-				if (!unified)
-				{
-					if (size > 1)
-					{
-						if (ImGui::Button("X"))
-							erase = i;
-					}
-					else ImGui::Dummy({ 15, 0 });
-
-					ImGui::SameLine();
-
-					ImGui::PushItemWidth(config->textFieldSize);
-					ImGui::InputText("##LimitName", &l->name);
-					ImGui::PopItemWidth(); ImGui::SameLine();
-				}
-				else width += 50;
-
-				ImGui::BeginGroup();
-				{
-					ImVec2 itemSize;
-					ImGui::PushItemWidth(width);
-					{
-						ImGui::DragFloat("##Drag", &l->money, 1.0f, 0.0f, l->limit, format->Str(), ImGuiSliderFlags_AlwaysClamp);
-						l->money = Maths::Clamp(l->money, 0, l->limit);
-						itemSize = ImGui::GetItemRectSize();
-						itemSize.y -= 15;
-					}
-					ImGui::PopItemWidth();
-
-					float ratio = Maths::Approximately(l->limit, 0) ? 1 : l->money / l->limit;
-					ImGui::ProgressBar(ratio, itemSize, "");
-				}
-				ImGui::EndGroup();
-
-				ImGui::SameLine();
-
-				ImGui::Text("/"); ImGui::SameLine();
-				ImGui::Text(format->Str(), l->limit); ImGui::SameLine();
-				if (ImGui::Button("Edit"))
-				{
-					ImGui::OpenPopup("Edit Limit Popup");
-					select = l;
-				}
-			}
-			ImGui::PopID();
-		}
-	);
-
-	if (erase != -1) labels.Erase(erase);
+	if (erase != -1) labels.erase(labels.begin() + erase);
 
 	if (hidden) ImGui::EndDisabled();
 
@@ -120,7 +127,7 @@ void LimitContainer::Draw()
 	ImGui::RS::CenterNextWindow();
 	ImGui::SetNextWindowSize(ImVec2(140, 100));
 
-	ImGui::PushID(select->id.Data());
+	ImGui::PushID(select->Id().Data());
 
 	if (ImGui::BeginPopupModal("Edit Limit Popup", nullptr, ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
 	{
@@ -148,15 +155,11 @@ void LimitContainer::Save(FileManager::FileNode node) const
 	Container::Save(node);
 
 	auto lnode = node.Access("labels");
-	labels.Iterate(
-		[&](Label* l, int i)
-		{
-			lnode.Access(i).Write("limit", ((LimitLabel*)l)->limit);
-		}
-	);
+	for (int i = 0; i < labels.size(); ++i)
+		lnode.Access(i).Write("limit", ((LimitLabel*)labels[i])->limit);
 }
 
-void LimitContainer::NewLabel(const std::string& name, float money, float limit)
+void LimitContainer::NewLabel(std::string&& name, float money, float limit)
 {
-	Container::NewLabel(new LimitLabel(name, money, limit));
+	Container::NewLabel(new LimitLabel(std::move(name), money, limit));
 }

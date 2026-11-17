@@ -7,13 +7,13 @@
 #include "NoNameGestor/Gestor/Configuration.h"
 #include "NoNameGestor/Gestor/Aggregate.h"
 
+#include "NoNameGestor/External/imgui/imgui.h"
 #include "NoNameGestor/External/imgui/imgui_internal.h"
 #include <filesystem>
 #include "Framework/Engine/App.h"
 
-GestorSystem::GestorSystem(int index, const char* name, float totalMoney, FileManager::File* file, Configuration* config, String* errorMessage) :
-	id(ID::New()),
-	name(name),
+GestorSystem::GestorSystem(int index, std::string&& name, float totalMoney, FileManager::File* file, Configuration* config, String* errorMessage) :
+	VoiceNode(std::move(name), "Gestor"),
 	file(file),
 	config(config),
 	errorMessage(errorMessage),
@@ -24,7 +24,7 @@ GestorSystem::GestorSystem(int index, const char* name, float totalMoney, FileMa
 }
 
 GestorSystem::GestorSystem(int index, const FileManager::FileNode& gestorNode, FileManager::File* file, Configuration* config, String* errorMessage) :
-	id(ID::New()),
+	VoiceNode("", "Gestor"),
 	file(file),
 	config(config),
 	errorMessage(errorMessage),
@@ -54,15 +54,50 @@ GestorSystem::~GestorSystem()
 	totalContainer = nullptr;
 }
 
+std::vector<VoiceNode*> GestorSystem::Children() const
+{
+	return std::vector<VoiceNode*>(containers.begin(), containers.end());
+}
+
+std::string GestorSystem::Describe(DetailLevel level) const
+{
+	std::string ret;
+	switch (level)
+	{
+	case DetailLevel::BRIEF:
+		ret = "Gestor name " + name + ". It has " + std::to_string(containers.size()) + " containers. "
+			+ "Total Money Amount is " + std::to_string(inputContainer->Money()) + ". Total left money is " + std::to_string(totalContainer->Money());
+		break;
+	case DetailLevel::NORMAL:
+		//ret = std::string("We are currently in a NNG file called ") + file.Name().Data()
+		//	+ ", which has " + std::to_string(gestors.size()) + " gestors in it.";
+		break;
+	case DetailLevel::FULL:
+	{
+		//ret = std::string("We are currently in NoNameGestor app, with an open NNG file called ") + file.Name().Data()
+		//	+ ". It has a total amount of " + std::to_string(gestors.size()) + " gestors in it. ";
+		//static std::string numerals[4] = { "The first one", "The second one", "The third one", "The forth one" };
+		//int i = 0;
+		//for (GestorSystem* g : gestors)
+		//	ret += numerals[i++] + " is called " + g->Name().data() + ". ";
+
+		break;
+	}
+	default:
+		ret = "";
+		break;
+	}
+	return ret;
+}
+
 bool GestorSystem::Update()
 {
 	Aggregate set;
 
 	inputContainer->Update(set);
 
-	containers.Iterate(
-		[&](Container* c) { c->Update(set); }
-	);
+	for (Container* c : containers)
+		c->Update(set);
 
 	totalContainer->Update(set);
 
@@ -87,28 +122,33 @@ bool GestorSystem::Draw(float maxWidth, Flag& enable)
 	ID move = ID::Empty;
 	bool erase = false;
 
-	containers.Iterate(
-		[&](Container* c, int i, int size)
-		{
-			if (c->Type() == ContainerType::CONSTANT) enable(0, true);
+	for (int i = 0; i < containers.size(); ++i)
+	{
+		Container* c = containers[i];
 
-			c->DrawBase(maxWidth, erase, move);
+		if (c->TypeEnum() == ContainerType::CONSTANT) enable(0, true);
 
-			if (index == -1 && (erase || !move.IsEmpty()))
-				index = i;
+		c->DrawBase(maxWidth, erase, move);
 
-		}
-	);
+		if (index == -1 && (erase || !move.IsEmpty()))
+			index = i;
+	}
 
 	if (!move.IsEmpty())
 	{
-		int i = containers.Find([&](const Container* c) { return c->id == move; });
+		int i = 0;
+		for (; i < containers.size(); ++i)
+		{
+			if (containers[i]->Id() == move)
+				break;
+		}
+		//int i = containers.Find([&](const Container* c) { return c->Id() == move; });
 		Debug::Assert(i != -1, "Container Drag&Drop Error: Couldn't find the container by ID.");
 		MoveContainer(i, index);
 	}
 	else if (erase && index != -1)
 	{
-		containers.Erase(index);
+		containers.erase(containers.begin() + index);
 	}
 
 	Container::UpdateOpenState = index != -1;
@@ -127,19 +167,17 @@ void GestorSystem::DrawExport() const
 	if (ImGui::BeginMenu(("> " + name).c_str()))
 	{
 		bool selected = false;
-		bool empty = containers.IsEmpty();
+		bool empty = containers.empty();
 
 		if (!empty)
 		{
 			ImGui::Text("Select the containers:");
 			ImGui::RS::Spacing();
-			containers.Iterate(
-				[&](const Container* c)
-				{
-					bool s = c->DrawExport();
-					if (!selected) selected = s;
-				}
-			);
+			for (const Container* c : containers)
+			{
+				bool s = c->DrawExport();
+				if (!selected) selected = s;
+			}
 		}
 		else
 		{
@@ -154,16 +192,16 @@ void GestorSystem::DrawExport() const
 
 		if (ImGui::Selectable("  Export", false, ImGuiSelectableFlags_None, { 70, 14 }))
 		{
-			Array<Container*> exp;
-			if (containers.RetrieveAll([](const Container* c) { return c->exporting; }, exp))
-				Export(exp);
+			std::vector<Container*> result;
+			std::copy_if(containers.begin(), containers.end(), std::back_inserter(result), [](const Container* c) { return c->exporting; });
+			Export(result);
 		}
 		if (!selected && !empty) ImGui::EndDisabled();
 		ImGui::SameLine();
 		ImGui::Text("|");
 		ImGui::SameLine();
 		if (ImGui::Selectable("Export All", false, ImGuiSelectableFlags_None, { 70, 14 }))
-			Export(containers.ToArray());
+			Export(containers);
 		if (empty) ImGui::EndDisabled();
 		ImGui::EndMenu();
 	}
@@ -172,18 +210,16 @@ void GestorSystem::DrawExport() const
 
 void GestorSystem::DrawCashFlow(float widthRatio, float initX) const
 {
-	containers.Iterate(
-		[&](Container* container)
-		{
-			if (container->Type() != ContainerType::CONSTANT)
-				return true;
+	for (Container* c : containers)
+	{
+		if (c->TypeEnum() != ContainerType::CONSTANT)
+			continue;
 
-			container->DrawCashFlow(widthRatio, initX);
-		}
-	);
+		c->DrawCashFlow(widthRatio, initX);
+	}
 }
 
-void GestorSystem::Export(const Array<Container*>& exporting) const
+void GestorSystem::Export(const std::vector<Container*>& exporting) const
 {
 	String path = App::DataDirectory() + "Export\\";
 
@@ -204,9 +240,8 @@ void GestorSystem::Export(const Array<Container*>& exporting) const
 		return;
 	}
 
-	exporting.Iterate(
-		[&](const Container* c) { c->Export(exp); }
-	);
+	for (const Container* c : exporting)
+		c->Export(exp);
 
 	exp.close();
 }
@@ -219,17 +254,15 @@ bool GestorSystem::Save(int index, FileManager::FileNode node) const
 	node.Write("containers", FileManager::File::Array);
 	auto cnode = node.Access("containers");
 
-	containers.Iterate(
-		[&](const Container* c)
-		{
-			// Push an object representing a new gestor
-			int index = cnode.Push(FileManager::File::Object);
-			// Assure it is correctly pushed
-			Debug::Assert(index != -1, "Internal Save Error: Pushing New Container returned an error.");
-			// Access to that gestor and send it to be written
-			c->Save(cnode.Access(index));
-		}
-	);
+	for (const Container* c : containers)
+	{
+		// Push an object representing a new gestor
+		int index = cnode.Push(FileManager::File::Object);
+		// Assure it is correctly pushed
+		Debug::Assert(index != -1, "Internal Save Error: Pushing New Container returned an error.");
+		// Access to that gestor and send it to be written
+		c->Save(cnode.Access(index));
+	}
 
 	return true;
 }
@@ -241,18 +274,18 @@ void GestorSystem::SetFormat(const char* format, int currency)
 	this->format += config->comboCurrency[currency];
 }
 
-Container* GestorSystem::CreateContainer(ContainerType container, const std::string& name, bool hidden, bool open, bool unified)
+Container* GestorSystem::CreateContainer(ContainerType container, std::string&& name, bool hidden, bool open, bool unified)
 {
 	switch (container)
 	{
-	case ContainerType::FILTER:   containers.PushBack(new FilterContainer(name, hidden, open, unified, &format, config)); break;
-	case ContainerType::LIMIT:    containers.PushBack(new  LimitContainer(name, hidden, open, unified, &format, config)); break;
-	case ContainerType::FUTURE:   containers.PushBack(new FutureContainer(name, hidden, open, unified, &format, config)); break;
-	case ContainerType::CONSTANT: containers.PushBack(new  ConstContainer(name, hidden, open, unified, &format, config)); break;
+	case ContainerType::FILTER:   containers.push_back(new FilterContainer(std::move(name), hidden, open, unified, &format, config)); break;
+	case ContainerType::LIMIT:    containers.push_back(new  LimitContainer(std::move(name), hidden, open, unified, &format, config)); break;
+	case ContainerType::FUTURE:   containers.push_back(new FutureContainer(std::move(name), hidden, open, unified, &format, config)); break;
+	case ContainerType::CONSTANT: containers.push_back(new  ConstContainer(std::move(name), hidden, open, unified, &format, config)); break;
 	default: break;
 	}
 
-	Container* c = containers.Back();
+	Container* c = containers.back();
 	c->Awake();
 
 	return c;
@@ -262,30 +295,34 @@ Container* GestorSystem::CreateContainer(ContainerType container, const FileMana
 {
 	switch (container)
 	{
-	case ContainerType::FILTER:   containers.PushBack(new FilterContainer(containerNode, &format, config)); break;
-	case ContainerType::LIMIT:    containers.PushBack(new  LimitContainer(containerNode, &format, config)); break;
-	case ContainerType::FUTURE:   containers.PushBack(new FutureContainer(containerNode, &format, config)); break;
-	case ContainerType::CONSTANT: containers.PushBack(new  ConstContainer(containerNode, &format, config)); break;
+	case ContainerType::FILTER:   containers.push_back(new FilterContainer(containerNode, &format, config)); break;
+	case ContainerType::LIMIT:    containers.push_back(new  LimitContainer(containerNode, &format, config)); break;
+	case ContainerType::FUTURE:   containers.push_back(new FutureContainer(containerNode, &format, config)); break;
+	case ContainerType::CONSTANT: containers.push_back(new  ConstContainer(containerNode, &format, config)); break;
 	default: break;
 	}
 
-	Container* c = containers.Back();
+	Container* c = containers.back();
 	c->Awake();
 
 	return c;
-}
-
-StringView GestorSystem::Name() const
-{
-	return name.c_str();
 }
 
 void GestorSystem::MoveContainer(unsigned short index, unsigned short position)
 {
 	if (index == position) return;
 
-	Debug::Assert(index >= 0 && index < containers.Size());
-	Debug::Assert(position >= 0 && position < containers.Size());
+	Debug::Assert(index >= 0 && index < containers.size());
+	Debug::Assert(position >= 0 && position < containers.size());
 
-	containers.Move(index, position);
+	if (position > index)
+		std::rotate(containers.begin() + index,
+			containers.begin() + index + 1,
+			containers.begin() + position + 1);
+	else if (position < index)
+		std::rotate(containers.begin() + position,
+			containers.begin() + index,
+			containers.begin() + index + 1);
+
+	//containers.Move(index, position);
 }
