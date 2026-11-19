@@ -1,5 +1,6 @@
 #pragma once
 
+#include "NoNameGestor/Audio/ProgramState.h"
 #include "NoNameGestor/Audio/Response.h"
 #include "NoNameGestor/Audio/Intent.h"
 #include "NoNameGestor/Audio/CommandContext.h"
@@ -11,7 +12,7 @@ class ActionRegistry
 public:
 
 	void Register(std::string&& name, std::function<Response(const CommandContext&)>&& handler);
-	Response Respond(const Intent& intent, VoiceNode* node);
+	Response Respond(const Intent& intent, VoiceNode* node, ProgramState state, bool resumable);
 
 private:
 

@@ -17,36 +17,36 @@ VoiceManager::VoiceManager(Configuration& config) :
 {
 	auto describe = [this](DetailLevel d) { return [this, d](const CommandContext&) { return StartReading(d); }; };
 
-	AddCommand("describe_project_brief",
-		{ "Briefly describe the project", "Shortly describe the project", "Summarize the project" },
+	AddCommand("describe_project_brief", { "Briefly describe the project", "Shortly describe the project", "Summarize the project" },
 		describe(DetailLevel::BRIEF));
 
-	AddCommand("describe_project_normal",
-		{ "Describe the project" },
+	AddCommand("describe_project_normal", { "Describe the project" },
 		describe(DetailLevel::NORMAL));
 
-	AddCommand("describe_project_full",
-		{ "Fully describe the project", "Describe the project with detail" },
+	AddCommand("describe_project_full", { "Fully describe the project", "Describe the project with detail" },
 		describe(DetailLevel::FULL));
 
-	AddCommand("continue", { "Continue" },
+	AddCommand("continue", { "Continue", "Resume" },
 		[this](const CommandContext& ctx)
 		{
 			if (!ctx.node)
 				return Response{ "There is no project open." };
+
+			if (!ctx.resumable)
+				return Response{ "There is nothing to continue." };
 
 			context->reading = true;
 			return Response{ "Okay. " + ctx.node->Describe(context->readDetail)};
 		});
 
 	AddCommand("stop", { "Stop", "Wait", "That's enough", "Hold on" },
-		[this](const CommandContext&)
+		[this](const CommandContext& c)
 		{
-			Cancel();
-			return Response{ "Okay." };
+			context->resumable = (c.state == ProgramState::RUNNING);
+			return Response{ c.state == ProgramState::IDLE ? "Nothing is running." : "Okay." };
 		});
 
-	AddCommand("locate_current", { "Where are you?" },
+	AddCommand("locate_current", { "Where are you?", "Where am I?", "Where are we?" },
 		[this](const CommandContext& ctx)
 		{
 			if (!ctx.node)
@@ -55,13 +55,35 @@ VoiceManager::VoiceManager(Configuration& config) :
 			return Response{ ctx.node->Locate(context->readDetail) };
 		});
 
-	AddCommand("describe_current", { "Describe current" },
+	AddCommand("describe_current", { "Describe current", "Describe" },
 		[this](const CommandContext& ctx)
 		{
 			if (!ctx.node)
 				return Response{ "There is no project open." };
 
 			return Response{ ctx.node->Describe(context->readDetail) };
+		});
+
+	AddCommand("next", { "Next", "Go next", "Advance one", "Skip to the next one" },
+		[this](const CommandContext&) { return MoveAndLocate(Advance(), "That is the end."); });
+
+	AddCommand("previous", { "Previous", "Go back one", "Go to the previous one" },
+		[this](const CommandContext&) { return MoveAndLocate(Retreat(), "You are at the start."); });
+
+	AddCommand("go_start", { "Go to the start", "Reset", "Go to the root" },
+		[this](const CommandContext&)
+		{
+			if (root) context->Path({ root->Id().Data() });
+			return MoveAndLocate(root != nullptr, "");
+		});
+
+	AddCommand("go_up", { "Go up", "Go to the parent" },
+		[this](const CommandContext&)
+		{
+			auto chain = ResolveChain();
+			const bool moved = chain.size() > 1;
+			if (moved) context->Truncate(chain.size() - 1);
+			return MoveAndLocate(moved, "You are at the top.");
 		});
 
 	// TODO: Això utilitza directament config. No pot ser això, ja que necesitem que sigui algo independent de NoNameGestor!!
@@ -104,37 +126,22 @@ void VoiceManager::Update()
 		if (!intent.IsValid())
 			continue;
 
-		if (config.voiceSpeakMode == 2)
-		{
-			switch (awake->Filter(intent.normalized))
-			{
-			case AwakeDetector::Result::IGNORED:
-				continue;
+		const ProgramState state = GetState();
 
-			case AwakeDetector::Result::WOKE:
-				Respond("Tell me!");
-				continue;
-
-			case AwakeDetector::Result::WOKE_WITH_LEFTOVER:
-				Respond("Sorry, I didn't catch that. Say the command after my name.");
-				continue;
-
-			case AwakeDetector::Result::COMMAND:
-				break;
-			}
-		}
+		if (config.voiceSpeakMode == 2 && !PassesWakeWord(intent, state))
+			continue;
 
 		resolver->Resolve(intent);
 
-		Respond(intent.IsUnderstood() ?
-			registry->Respond(intent, ResolveCurrent()) :
-			Response{ "Sorry, I couldn't understand you." }
-		);
+		if (intent.IsUnderstood())
+			HandleKnown(intent, state);
+		else
+			HandleUnknown(state);
 	}
 
 	if (context->reading && !synth->IsBusy())
 	{
-		VoiceNode* n = Advance() ? ResolveCurrent() : nullptr;
+		VoiceNode* n = Advance(context->scopeId) ? ResolveCurrent() : nullptr;
 		if (n) Respond(Response{ n->Describe(context->readDetail) });
 		else { context->reading = false; Respond("That's all."); }
 	}
@@ -249,10 +256,13 @@ Response VoiceManager::StartReading(DetailLevel detail)
 	return Response{ root->Describe(detail) }; // first node; the tick does the rest
 }
 
-void VoiceManager::Cancel()
+bool VoiceManager::Cancel()
 {
+	//TODO: Review later, add if context is waiting or not.
+	const bool wasActive = context->reading || synth->IsBusy() /* || context->waiting, later */;
 	context->reading = false;
 	synth->Clear();
+	return wasActive;
 }
 
 bool VoiceManager::FindPath(VoiceNode* from, uint64_t id, std::vector<VoiceNode*>& path)
@@ -272,6 +282,8 @@ bool VoiceManager::FindPath(VoiceNode* from, uint64_t id, std::vector<VoiceNode*
 void VoiceManager::SetRoot(VoiceNode* node)
 {
 	root = node;
+	context->Clear();
+	context->scopeId = node ? node->Id().Data() : 0;
 }
 
 VoiceNode* VoiceManager::ResolveCurrent()
@@ -332,7 +344,7 @@ std::vector<VoiceNode*> VoiceManager::ResolveChain()
 	return chain;
 }
 
-bool VoiceManager::Advance()
+bool VoiceManager::Advance(uint64_t scope)
 {
 	auto chain = ResolveChain();
 	if (chain.empty()) return false;
@@ -344,7 +356,7 @@ bool VoiceManager::Advance()
 	// 2. Otherwise next sibling, going up as many levels as needed
 	for (size_t i = chain.size() - 1; i > 0; --i)
 	{
-		if (chain[i]->Id().Data() == context->scopeId)
+		if (chain[i]->Id().Data() == scope)
 			return false;                       // we'd leave the scope: done
 
 		auto siblings = chain[i - 1]->Children();
@@ -359,4 +371,100 @@ bool VoiceManager::Advance()
 		}
 	}
 	return false;                                   // nothing left
+}
+
+bool VoiceManager::Retreat()
+{
+	auto chain = ResolveChain();
+	if (chain.size() < 2)
+		return false;                                    // at the root
+
+	auto siblings = chain[chain.size() - 2]->Children();
+	size_t idx = 0;
+	while (idx < siblings.size() && siblings[idx]->Id() != chain.back()->Id())
+		++idx;
+
+	context->Truncate(chain.size() - 1);                 // go up to the parent
+
+	if (idx == 0 || idx >= siblings.size())
+		return true;                                     // first child: the parent is the previous node
+
+	VoiceNode* n = siblings[idx - 1];                    // previous sibling...
+	context->Push(n->Id().Data());
+	for (auto kids = n->Children(); !kids.empty(); kids = n->Children())
+	{
+		n = kids.back();                                 // ...then its last descendant
+		context->Push(n->Id().Data());
+	}
+	return true;
+}
+
+Response VoiceManager::MoveAndLocate(bool moved, const char* edgeMessage)
+{
+	if (!root)
+		return Response{ "There is no project open." };
+
+	if (!moved)
+		return Response{ edgeMessage };
+
+	VoiceNode* n = ResolveCurrent(); // c.node is stale after a move
+	return Response{ n ? n->Locate(DetailLevel::BRIEF) : "There is no project open." };
+}
+
+bool VoiceManager::PassesWakeWord(Intent& intent, ProgramState state)
+{
+	switch (awake->Filter(intent.normalized))
+	{
+	case AwakeDetector::Result::IGNORED:
+		return false;
+
+	case AwakeDetector::Result::WOKE:
+		if (state == ProgramState::IDLE) Respond("Tell me!"); // chart: ignored while busy
+		return false;
+
+	case AwakeDetector::Result::WOKE_WITH_LEFTOVER:
+		if (state == ProgramState::IDLE)
+			Respond("Sorry, I didn't catch that. Say the command after my name.");
+		return false;
+
+	case AwakeDetector::Result::COMMAND:
+		return true;
+	}
+	return false;
+}
+
+void VoiceManager::HandleKnown(const Intent& intent, ProgramState state)
+{
+	// WAITING (later): first try the question's answer parser; if it fits, consume it
+	// as the answer and return. Otherwise fall through: the question is abandoned.
+	const bool wasResumable = context->resumable;   // sampled before anything clears it
+	context->resumable = false;
+	Cancel();
+	Respond(registry->Respond(intent, ResolveCurrent(), state, wasResumable));
+}
+
+void VoiceManager::HandleUnknown(ProgramState state)
+{
+	switch (state)
+	{
+	case ProgramState::IDLE:
+		Respond("Sorry, I couldn't understand you.");
+		break;
+
+	case ProgramState::RUNNING:
+	case ProgramState::MID_SENTENCE:
+		break;   // ignored on purpose; goes to the conversation log later
+
+	case ProgramState::WAITING:
+		// TODO: re-ask the question + "Say stop to cancel."
+		break;
+	}
+}
+
+ProgramState VoiceManager::GetState() const
+{
+	if (context->waiting)   return ProgramState::WAITING;
+	if (context->reading)   return ProgramState::RUNNING;
+	if (synth->IsBusy())    return ProgramState::MID_SENTENCE;
+	return ProgramState::IDLE;
 }

@@ -241,6 +241,7 @@ ggml-cpu.lib</AdditionalDependencies>
     <ClInclude Include="Source\NoNameGestor\Audio\Intent.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\Interpreter.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\ActionResolver.h" />
+    <ClInclude Include="Source\NoNameGestor\Audio\ProgramState.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\Response.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\SpeechSegmenter.h" />
     <ClInclude Include="Source\NoNameGestor\Audio\ThreadWorker.h" />

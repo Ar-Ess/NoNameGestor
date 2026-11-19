@@ -319,6 +319,9 @@
     <ClInclude Include="Source\NoNameGestor\Gestor\Gestor.h">
       <Filter>Gestor</Filter>
     </ClInclude>
+    <ClInclude Include="Source\NoNameGestor\Audio\ProgramState.h">
+      <Filter>Audio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="External">

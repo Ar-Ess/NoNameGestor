@@ -21,6 +21,8 @@ private:
 
     std::vector<uint64_t> path;
     bool reading = false;
+    bool waiting = false;
+    bool resumable = false;
     DetailLevel readDetail = DetailLevel::BRIEF;
     uint64_t scopeId = 0;
 

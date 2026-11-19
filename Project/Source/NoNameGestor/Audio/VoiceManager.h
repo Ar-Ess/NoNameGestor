@@ -7,6 +7,7 @@
 #include "NoNameGestor/Audio/AwakeDetector.h"
 #include "NoNameGestor/Audio/VoiceNode.h"
 #include "NoNameGestor/Audio/DialogueContext.h"
+#include "NoNameGestor/Audio/ProgramState.h"
 
 struct Configuration;
 
@@ -36,12 +37,25 @@ private:
 	void Respond(Response&& response);
 	void Respond(const char* response);
 	Response StartReading(DetailLevel detail);
-	void Cancel();
+	ProgramState GetState() const;
+
+	/// <summary>
+	/// Cancels the current action.
+	/// </summary>
+	/// <returns>Whether there was a current action or not.</returns>
+	bool Cancel();
 
 	bool FindPath(VoiceNode* from, uint64_t id, std::vector<VoiceNode*>& path);
 	VoiceNode* ResolveCurrent();
 	std::vector<VoiceNode*> ResolveChain();
-	bool Advance();
+
+	bool Advance(uint64_t scope = 0);
+	bool Retreat();
+	Response MoveAndLocate(bool moved, const char* edgeMessage);
+
+	bool PassesWakeWord(Intent& intent, ProgramState state);
+	void HandleKnown(const Intent& intent, ProgramState state);
+	void HandleUnknown(ProgramState state);
 
 private:
 
