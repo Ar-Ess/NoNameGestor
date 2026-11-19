@@ -1,3 +1,7 @@
-[submodule "whisper.cpp"]
-	path = whisper.cpp
+
+[submodule "Project/Source/NoNameGestor/External/whisper.cpp"]
+	path = Project/Source/NoNameGestor/External/whisper.cpp
 	url = https://github.com/ggml-org/whisper.cpp
+[submodule "Project/Source/NoNameGestor/External/libfvad"]
+	path = Project/Source/NoNameGestor/External/libfvad
+	url = https://github.com/dpirch/libfvad.git
