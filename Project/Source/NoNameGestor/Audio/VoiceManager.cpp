@@ -29,11 +29,11 @@ VoiceManager::VoiceManager(Configuration& config) :
 	AddCommand("continue", { "Continue", "Resume" },
 		[this](const CommandContext& ctx)
 		{
-			if (!ctx.node)
-				return Response{ "There is no project open." };
-
 			if (!ctx.resumable)
 				return Response{ "There is nothing to continue." };
+
+			if (!ctx.node)
+				return Response{ "There is no project open." };
 
 			context->reading = true;
 			return Response{ "Okay. " + ctx.node->Describe(context->readDetail)};
@@ -98,6 +98,8 @@ VoiceManager::~VoiceManager()
 	delete resolver;
 	delete registry;
 	delete synth;
+	delete context;
+	delete awake;
 }
 
 void VoiceManager::Start()
